@@ -14,16 +14,16 @@ Easy Questions.
 **4E1.** In the model definition below, which line is the likelihood:
 
 ![latex
-\\begin{align}
+\\begin{align\*}
 y\_i &\\sim \\text{Normal}(\\mu, \\sigma) & \\text{This is the likelihood}\\\\
 \\mu &\\sim \\text{Normal}(0, 10) \\\\
 \\sigma &\\sim \\text{Normal}(0,10)
-\\end{align} ](https://latex.codecogs.com/png.latex?latex%0A%5Cbegin%7Balign%7D%0Ay_i%20%26%5Csim%20%5Ctext%7BNormal%7D%28%5Cmu%2C%20%5Csigma%29%20%26%20%5Ctext%7BThis%20is%20the%20likelihood%7D%5C%5C%0A%5Cmu%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C%2010%29%20%5C%5C%0A%5Csigma%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C10%29%0A%5Cend%7Balign%7D%20 "latex
-\begin{align}
+\\end{align\*} ](https://latex.codecogs.com/png.latex?latex%0A%5Cbegin%7Balign%2A%7D%0Ay_i%20%26%5Csim%20%5Ctext%7BNormal%7D%28%5Cmu%2C%20%5Csigma%29%20%26%20%5Ctext%7BThis%20is%20the%20likelihood%7D%5C%5C%0A%5Cmu%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C%2010%29%20%5C%5C%0A%5Csigma%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C10%29%0A%5Cend%7Balign%2A%7D%20 "latex
+\begin{align*}
 y_i &\sim \text{Normal}(\mu, \sigma) & \text{This is the likelihood}\\
 \mu &\sim \text{Normal}(0, 10) \\
 \sigma &\sim \text{Normal}(0,10)
-\end{align} ")
+\end{align*} ")
 
 **4E2.** In the model definition just above, how many parameters are in the posterior distribution?
 
@@ -31,21 +31,21 @@ There are **2** parameters, ![\\mu](https://latex.codecogs.com/png.latex?%5Cmu "
 
 **4E3.** Write down the appropriate form of Bayes' theorem that includes the proper likelihood and priors.
 
-![\\begin{align}
+![\\begin{align\*}
 P(\\mu, \\sigma| y\_i) &\\propto \\text{Likelihood } \\times \\text{ Prior probability} \\\\
 \\\\
 P(\\mu, \\sigma| y\_i) &= \\frac{\\prod\_i \\text{Normal}(y\_i|\\mu, \\sigma) \\times 
 \\text{Normal}(\\mu| 0,10) \\times \\text{Normal}(\\sigma|0,10) }
 {\\int \\prod\_i \\text{Normal}(y\_i|\\mu, \\sigma) \\times 
 \\text{Normal}(\\mu| 0,10) \\times \\text{Normal}(\\sigma|0,10) \\text{ d}\\mu\\text{d}\\sigma} 
-\\end{align}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%7D%0AP%28%5Cmu%2C%20%5Csigma%7C%20y_i%29%20%26%5Cpropto%20%5Ctext%7BLikelihood%20%7D%20%5Ctimes%20%5Ctext%7B%20Prior%20probability%7D%20%5C%5C%0A%5C%5C%0AP%28%5Cmu%2C%20%5Csigma%7C%20y_i%29%20%26%3D%20%5Cfrac%7B%5Cprod_i%20%5Ctext%7BNormal%7D%28y_i%7C%5Cmu%2C%20%5Csigma%29%20%5Ctimes%20%0A%5Ctext%7BNormal%7D%28%5Cmu%7C%200%2C10%29%20%5Ctimes%20%5Ctext%7BNormal%7D%28%5Csigma%7C0%2C10%29%20%7D%0A%7B%5Cint%20%5Cprod_i%20%5Ctext%7BNormal%7D%28y_i%7C%5Cmu%2C%20%5Csigma%29%20%5Ctimes%20%0A%5Ctext%7BNormal%7D%28%5Cmu%7C%200%2C10%29%20%5Ctimes%20%5Ctext%7BNormal%7D%28%5Csigma%7C0%2C10%29%20%5Ctext%7B%20d%7D%5Cmu%5Ctext%7Bd%7D%5Csigma%7D%20%0A%5Cend%7Balign%7D "\begin{align}
+\\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0AP%28%5Cmu%2C%20%5Csigma%7C%20y_i%29%20%26%5Cpropto%20%5Ctext%7BLikelihood%20%7D%20%5Ctimes%20%5Ctext%7B%20Prior%20probability%7D%20%5C%5C%0A%5C%5C%0AP%28%5Cmu%2C%20%5Csigma%7C%20y_i%29%20%26%3D%20%5Cfrac%7B%5Cprod_i%20%5Ctext%7BNormal%7D%28y_i%7C%5Cmu%2C%20%5Csigma%29%20%5Ctimes%20%0A%5Ctext%7BNormal%7D%28%5Cmu%7C%200%2C10%29%20%5Ctimes%20%5Ctext%7BNormal%7D%28%5Csigma%7C0%2C10%29%20%7D%0A%7B%5Cint%20%5Cprod_i%20%5Ctext%7BNormal%7D%28y_i%7C%5Cmu%2C%20%5Csigma%29%20%5Ctimes%20%0A%5Ctext%7BNormal%7D%28%5Cmu%7C%200%2C10%29%20%5Ctimes%20%5Ctext%7BNormal%7D%28%5Csigma%7C0%2C10%29%20%5Ctext%7B%20d%7D%5Cmu%5Ctext%7Bd%7D%5Csigma%7D%20%0A%5Cend%7Balign%2A%7D "\begin{align*}
 P(\mu, \sigma| y_i) &\propto \text{Likelihood } \times \text{ Prior probability} \\
 \\
 P(\mu, \sigma| y_i) &= \frac{\prod_i \text{Normal}(y_i|\mu, \sigma) \times 
 \text{Normal}(\mu| 0,10) \times \text{Normal}(\sigma|0,10) }
 {\int \prod_i \text{Normal}(y_i|\mu, \sigma) \times 
 \text{Normal}(\mu| 0,10) \times \text{Normal}(\sigma|0,10) \text{ d}\mu\text{d}\sigma} 
-\end{align}")
+\end{align*}")
 
  where
 
@@ -55,19 +55,19 @@ P(\mu, \sigma| y_i) &= \frac{\prod_i \text{Normal}(y_i|\mu, \sigma) \times
 
 **4E4.** In the model definition below, which line is the linear model?
 
-![\\begin{align}
+![\\begin{align\*}
 y\_i &\\sim \\text{Normal}(\\mu\_i, \\sigma) \\\\
 \\mu\_i &= \\alpha + \\beta x\_i & \\text{This is the linear model}\\\\
 \\alpha &\\sim \\text{Normal}(0,10) \\\\
 \\beta &\\sim \\text{Normal}(0,1) \\\\
 \\sigma &\\sim \\text{Uniform}(0,10)
-\\end{align}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%7D%0Ay_i%20%26%5Csim%20%5Ctext%7BNormal%7D%28%5Cmu_i%2C%20%5Csigma%29%20%5C%5C%0A%5Cmu_i%20%26%3D%20%5Calpha%20%2B%20%5Cbeta%20x_i%20%26%20%5Ctext%7BThis%20is%20the%20linear%20model%7D%5C%5C%0A%5Calpha%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C10%29%20%5C%5C%0A%5Cbeta%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C1%29%20%5C%5C%0A%5Csigma%20%26%5Csim%20%5Ctext%7BUniform%7D%280%2C10%29%0A%5Cend%7Balign%7D "\begin{align}
+\\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0Ay_i%20%26%5Csim%20%5Ctext%7BNormal%7D%28%5Cmu_i%2C%20%5Csigma%29%20%5C%5C%0A%5Cmu_i%20%26%3D%20%5Calpha%20%2B%20%5Cbeta%20x_i%20%26%20%5Ctext%7BThis%20is%20the%20linear%20model%7D%5C%5C%0A%5Calpha%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C10%29%20%5C%5C%0A%5Cbeta%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C1%29%20%5C%5C%0A%5Csigma%20%26%5Csim%20%5Ctext%7BUniform%7D%280%2C10%29%0A%5Cend%7Balign%2A%7D "\begin{align*}
 y_i &\sim \text{Normal}(\mu_i, \sigma) \\
 \mu_i &= \alpha + \beta x_i & \text{This is the linear model}\\
 \alpha &\sim \text{Normal}(0,10) \\
 \beta &\sim \text{Normal}(0,1) \\
 \sigma &\sim \text{Uniform}(0,10)
-\end{align}")
+\end{align*}")
 
 **4E5.** In the model definition just above, how many parameters are in the posterior distribution?
 
@@ -78,15 +78,15 @@ Medium questions.
 
 **4M1.** For the model definition below, simulate observed heights from the prior (not the posterior).
 
-![\\begin{align}
+![\\begin{align\*}
 y\_i &\\sim \\text{Normal}(\\mu, \\sigma) \\\\
 \\mu &\\sim \\text{Normal}(0, 10) \\\\
 \\sigma &\\sim \\text{Uniform}(0,10)
-\\end{align}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%7D%0Ay_i%20%26%5Csim%20%5Ctext%7BNormal%7D%28%5Cmu%2C%20%5Csigma%29%20%5C%5C%0A%5Cmu%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C%2010%29%20%5C%5C%0A%5Csigma%20%26%5Csim%20%5Ctext%7BUniform%7D%280%2C10%29%0A%5Cend%7Balign%7D "\begin{align}
+\\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0Ay_i%20%26%5Csim%20%5Ctext%7BNormal%7D%28%5Cmu%2C%20%5Csigma%29%20%5C%5C%0A%5Cmu%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C%2010%29%20%5C%5C%0A%5Csigma%20%26%5Csim%20%5Ctext%7BUniform%7D%280%2C10%29%0A%5Cend%7Balign%2A%7D "\begin{align*}
 y_i &\sim \text{Normal}(\mu, \sigma) \\
 \mu &\sim \text{Normal}(0, 10) \\
 \sigma &\sim \text{Uniform}(0,10)
-\end{align}")
+\end{align*}")
 
 ``` r
 n <- 10000
@@ -122,47 +122,47 @@ flist <- alist(
 
 The mathematical definition:
 
-![\\begin{align}
+![\\begin{align\*}
 y\_i &\\sim \\text{Normal}(\\mu\_i, \\sigma) \\\\
 \\mu\_i &= \\alpha + \\beta x\_i \\\\
 \\alpha &\\sim \\text{Normal}(0,50) \\\\
 \\beta &\\sim  \\text{Uniform}(0,10) \\\\
 \\sigma &\\sim \\text{Uniform}(0,50) 
-\\end{align}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%7D%0Ay_i%20%26%5Csim%20%5Ctext%7BNormal%7D%28%5Cmu_i%2C%20%5Csigma%29%20%5C%5C%0A%5Cmu_i%20%26%3D%20%5Calpha%20%2B%20%5Cbeta%20x_i%20%5C%5C%0A%5Calpha%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C50%29%20%5C%5C%0A%5Cbeta%20%26%5Csim%20%20%5Ctext%7BUniform%7D%280%2C10%29%20%5C%5C%0A%5Csigma%20%26%5Csim%20%5Ctext%7BUniform%7D%280%2C50%29%20%0A%5Cend%7Balign%7D "\begin{align}
+\\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0Ay_i%20%26%5Csim%20%5Ctext%7BNormal%7D%28%5Cmu_i%2C%20%5Csigma%29%20%5C%5C%0A%5Cmu_i%20%26%3D%20%5Calpha%20%2B%20%5Cbeta%20x_i%20%5C%5C%0A%5Calpha%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C50%29%20%5C%5C%0A%5Cbeta%20%26%5Csim%20%20%5Ctext%7BUniform%7D%280%2C10%29%20%5C%5C%0A%5Csigma%20%26%5Csim%20%5Ctext%7BUniform%7D%280%2C50%29%20%0A%5Cend%7Balign%2A%7D "\begin{align*}
 y_i &\sim \text{Normal}(\mu_i, \sigma) \\
 \mu_i &= \alpha + \beta x_i \\
 \alpha &\sim \text{Normal}(0,50) \\
 \beta &\sim  \text{Uniform}(0,10) \\
 \sigma &\sim \text{Uniform}(0,50) 
-\end{align}")
+\end{align*}")
 
 **4M4.** A sample of students is measured for height each year for three years. You want to fit a linear regression, using year as a prediction. Write down the mathematical model definition.
 
-![\\begin{align}
+![\\begin{align\*}
 h\_i &\\sim \\text{Normal}(\\mu\_i, \\sigma) \\\\
 \\mu\_i &= \\alpha + \\beta t\_i \\\\
 \\alpha &\\sim \\text{Normal}(160, 50) \\\\
 \\beta &\\sim \\text{Normal}(0, 10) \\\\
 \\sigma &\\sim \\text{Uniform}(0, 50)
-\\end{align}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%7D%0Ah_i%20%26%5Csim%20%5Ctext%7BNormal%7D%28%5Cmu_i%2C%20%5Csigma%29%20%5C%5C%0A%5Cmu_i%20%26%3D%20%5Calpha%20%2B%20%5Cbeta%20t_i%20%5C%5C%0A%5Calpha%20%26%5Csim%20%5Ctext%7BNormal%7D%28160%2C%2050%29%20%5C%5C%0A%5Cbeta%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C%2010%29%20%5C%5C%0A%5Csigma%20%26%5Csim%20%5Ctext%7BUniform%7D%280%2C%2050%29%0A%5Cend%7Balign%7D "\begin{align}
+\\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0Ah_i%20%26%5Csim%20%5Ctext%7BNormal%7D%28%5Cmu_i%2C%20%5Csigma%29%20%5C%5C%0A%5Cmu_i%20%26%3D%20%5Calpha%20%2B%20%5Cbeta%20t_i%20%5C%5C%0A%5Calpha%20%26%5Csim%20%5Ctext%7BNormal%7D%28160%2C%2050%29%20%5C%5C%0A%5Cbeta%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C%2010%29%20%5C%5C%0A%5Csigma%20%26%5Csim%20%5Ctext%7BUniform%7D%280%2C%2050%29%0A%5Cend%7Balign%2A%7D "\begin{align*}
 h_i &\sim \text{Normal}(\mu_i, \sigma) \\
 \mu_i &= \alpha + \beta t_i \\
 \alpha &\sim \text{Normal}(160, 50) \\
 \beta &\sim \text{Normal}(0, 10) \\
 \sigma &\sim \text{Uniform}(0, 50)
-\end{align}")
+\end{align*}")
 
  Here, ![h\_i](https://latex.codecogs.com/png.latex?h_i "h_i") is the height and ![t\_i](https://latex.codecogs.com/png.latex?t_i "t_i") is the year of the ![i](https://latex.codecogs.com/png.latex?i "i")th observation. Since ![\\alpha](https://latex.codecogs.com/png.latex?%5Calpha "\alpha") is the average height of a student at year zero, I picked a normal distribution with mean 160 (assuming an average height of 160cm) and standard deviation 50, this is relatively weak, leaving a wide range of possible heights. For ![\\beta](https://latex.codecogs.com/png.latex?%5Cbeta "\beta"), I picked a normal distribution with mean 0 and standard deviation 10, meaning on average, a person grows 0cm per year with standard deviation 10cm, since I don't expect many people to grow or shrink more than 20cm per year.
 
 **4M5.** Now suppose, the average in the first year was 120cm and that every student got taller each year. I will change my priors as follows:
 
-![\\begin{align}
+![\\begin{align\*}
 \\alpha &\\sim \\text{Normal}(120, 50) \\\\
 \\beta &\\sim \\text{Uniform}(0, 20)
-\\end{align}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%7D%0A%5Calpha%20%26%5Csim%20%5Ctext%7BNormal%7D%28120%2C%2050%29%20%5C%5C%0A%5Cbeta%20%26%5Csim%20%5Ctext%7BUniform%7D%280%2C%2020%29%0A%5Cend%7Balign%7D "\begin{align}
+\\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%5Calpha%20%26%5Csim%20%5Ctext%7BNormal%7D%28120%2C%2050%29%20%5C%5C%0A%5Cbeta%20%26%5Csim%20%5Ctext%7BUniform%7D%280%2C%2020%29%0A%5Cend%7Balign%2A%7D "\begin{align*}
 \alpha &\sim \text{Normal}(120, 50) \\
 \beta &\sim \text{Uniform}(0, 20)
-\end{align}")
+\end{align*}")
 
  I adjusted the mean for the average height accordingly and changed ![\\beta](https://latex.codecogs.com/png.latex?%5Cbeta "\beta") to a uniform distribution, so that ![\\beta](https://latex.codecogs.com/png.latex?%5Cbeta "\beta"), the indicator for growth per year, is greater or equal than zero. I still don't expect people to grow more than 20cm per year.
 
@@ -231,11 +231,11 @@ pred_df
 ```
 
     ##   individual weight exptected_height PI_89_lower PI_89_upper
-    ## 1          1  46.95         156.4494    148.2784    164.3908
-    ## 2          2  43.72         153.5343    145.3700    161.7026
-    ## 3          3  64.78         172.4552    164.2835    180.6866
-    ## 4          4  32.59         143.3941    135.2299    151.6082
-    ## 5          5  54.63         163.2432    154.9608    171.3471
+    ## 1          1  46.95         156.3494    148.1657    164.5174
+    ## 2          2  43.72         153.3438    145.0099    161.6660
+    ## 3          3  64.78         172.4697    164.2334    180.7199
+    ## 4          4  32.59         143.3905    135.3294    151.5512
+    ## 5          5  54.63         163.3429    155.2578    171.5821
 
 **4H2.** Select the rows from the `Howell1` data with age below 18 years.
 
@@ -305,19 +305,19 @@ shade( height.HPDI, weight.seq)                                 # draw HPDI regi
 
 1.  Use the entire `Howell1` data frame using the following model:
 
-    ![\\begin{align}
+    ![\\begin{align\*}
     h\_i &\\sim \\text{Normal}(\\mu\_i, \\sigma) \\\\
     \\mu\_i &= \\alpha + \\beta \\log(w\_i) \\\\
     \\alpha &\\sim \\text{Normal}(178, 100) \\\\
     \\beta &\\sim \\text{Normal}(0, 100) \\\\
     \\sigma &\\sim \\text{Uniform}(0, 50)
-    \\end{align}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%7D%0Ah_i%20%26%5Csim%20%5Ctext%7BNormal%7D%28%5Cmu_i%2C%20%5Csigma%29%20%5C%5C%0A%5Cmu_i%20%26%3D%20%5Calpha%20%2B%20%5Cbeta%20%5Clog%28w_i%29%20%5C%5C%0A%5Calpha%20%26%5Csim%20%5Ctext%7BNormal%7D%28178%2C%20100%29%20%5C%5C%0A%5Cbeta%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C%20100%29%20%5C%5C%0A%5Csigma%20%26%5Csim%20%5Ctext%7BUniform%7D%280%2C%2050%29%0A%5Cend%7Balign%7D "\begin{align}
+    \\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0Ah_i%20%26%5Csim%20%5Ctext%7BNormal%7D%28%5Cmu_i%2C%20%5Csigma%29%20%5C%5C%0A%5Cmu_i%20%26%3D%20%5Calpha%20%2B%20%5Cbeta%20%5Clog%28w_i%29%20%5C%5C%0A%5Calpha%20%26%5Csim%20%5Ctext%7BNormal%7D%28178%2C%20100%29%20%5C%5C%0A%5Cbeta%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C%20100%29%20%5C%5C%0A%5Csigma%20%26%5Csim%20%5Ctext%7BUniform%7D%280%2C%2050%29%0A%5Cend%7Balign%2A%7D "\begin{align*}
     h_i &\sim \text{Normal}(\mu_i, \sigma) \\
     \mu_i &= \alpha + \beta \log(w_i) \\
     \alpha &\sim \text{Normal}(178, 100) \\
     \beta &\sim \text{Normal}(0, 100) \\
     \sigma &\sim \text{Uniform}(0, 50)
-    \end{align}")
+    \end{align*}")
 
      Here the model description in R:
 
@@ -339,25 +339,25 @@ precis(model.l)
 ```
 
     ##         Mean StdDev   5.5%  94.5%
-    ## a     -23.79   1.34 -25.92 -21.65
-    ## b      47.08   0.38  46.46  47.69
-    ## sigma   5.14   0.16   4.89   5.38
+    ## a     -23.79   1.34 -25.92 -21.66
+    ## b      47.08   0.38  46.47  47.69
+    ## sigma   5.13   0.16   4.89   5.38
 
 Interpreting these results is a bit more difficult since we transformed the weights using the logarithm. Furthermore, the data is not centralized as before, so the intercept `a` corresponds to the average height of someone whose log weight is zero, i.e. whose weight is 1kg. How to interpret the `b` value? If we raise the weight by one unit, we get the following expression for mu:
 
-![\\begin{align}
+![\\begin{align\*}
 \\mu &= \\alpha + \\beta \\log(\\text{weight} + 1) 
-\\end{align}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%7D%0A%5Cmu%20%26%3D%20%5Calpha%20%2B%20%5Cbeta%20%5Clog%28%5Ctext%7Bweight%7D%20%2B%201%29%20%0A%5Cend%7Balign%7D "\begin{align}
+\\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%5Cmu%20%26%3D%20%5Calpha%20%2B%20%5Cbeta%20%5Clog%28%5Ctext%7Bweight%7D%20%2B%201%29%20%0A%5Cend%7Balign%2A%7D "\begin{align*}
 \mu &= \alpha + \beta \log(\text{weight} + 1) 
-\end{align}")
+\end{align*}")
 
  Using some rules for logarithms, we get:
 
-![\\begin{align}
+![\\begin{align\*}
 \\mu &= \\alpha + \\beta \\log(\\text{weight}) + \\beta \\log(1 + \\frac{1}{\\text{weight}})
-\\end{align}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%7D%0A%5Cmu%20%26%3D%20%5Calpha%20%2B%20%5Cbeta%20%5Clog%28%5Ctext%7Bweight%7D%29%20%2B%20%5Cbeta%20%5Clog%281%20%2B%20%5Cfrac%7B1%7D%7B%5Ctext%7Bweight%7D%7D%29%0A%5Cend%7Balign%7D "\begin{align}
+\\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%5Cmu%20%26%3D%20%5Calpha%20%2B%20%5Cbeta%20%5Clog%28%5Ctext%7Bweight%7D%29%20%2B%20%5Cbeta%20%5Clog%281%20%2B%20%5Cfrac%7B1%7D%7B%5Ctext%7Bweight%7D%7D%29%0A%5Cend%7Balign%2A%7D "\begin{align*}
 \mu &= \alpha + \beta \log(\text{weight}) + \beta \log(1 + \frac{1}{\text{weight}})
-\end{align}")
+\end{align*}")
 
  That is, an increase of one unit in the weight variable is associated with an increase of the mean ![\\mu](https://latex.codecogs.com/png.latex?%5Cmu "\mu") of ![\\beta \\log(1 + \\frac{1}{\\text{weight}})](https://latex.codecogs.com/png.latex?%5Cbeta%20%5Clog%281%20%2B%20%5Cfrac%7B1%7D%7B%5Ctext%7Bweight%7D%7D%29 "\beta \log(1 + \frac{1}{\text{weight}})"). I personally find that not very intuitive, so let's have a look at some plots as well.
 

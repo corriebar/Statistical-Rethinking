@@ -19,11 +19,11 @@ These are my solutions to the practice questions of chapter 4, Linear Models, of
 ## Easy Questions.
 __4E1.__ In the model definition below, which line is the likelihood:
 $$latex
-\begin{align}
+\begin{align*}
 y_i &\sim \text{Normal}(\mu, \sigma) & \text{This is the likelihood}\\
 \mu &\sim \text{Normal}(0, 10) \\
 \sigma &\sim \text{Normal}(0,10)
-\end{align} $$
+\end{align*} $$
 
 __4E2.__ In the model definition just above, how many parameters are in the posterior distribution?
 
@@ -31,25 +31,25 @@ There are __2__ parameters, $\mu$ and $\sigma$.
 
 __4E3.__ Write down the appropriate form of Bayes' theorem that includes the proper likelihood and priors.
 
-$$\begin{align}
+$$\begin{align*}
 P(\mu, \sigma| y_i) &\propto \text{Likelihood } \times \text{ Prior probability} \\
 \\
 P(\mu, \sigma| y_i) &= \frac{\prod_i \text{Normal}(y_i|\mu, \sigma) \times 
 \text{Normal}(\mu| 0,10) \times \text{Normal}(\sigma|0,10) }
 {\int \prod_i \text{Normal}(y_i|\mu, \sigma) \times 
 \text{Normal}(\mu| 0,10) \times \text{Normal}(\sigma|0,10) \text{ d}\mu\text{d}\sigma} 
-\end{align}$$
+\end{align*}$$
 where
 $$\text{Normal}(x|\mu, \sigma) = \frac{1}{\sqrt{2\pi \sigma^2} }\exp(- \frac{(x-\mu)^2}{2\sigma^2})$$.
 
 __4E4.__ In the model definition below, which line is the linear model?
-$$\begin{align}
+$$\begin{align*}
 y_i &\sim \text{Normal}(\mu_i, \sigma) \\
 \mu_i &= \alpha + \beta x_i & \text{This is the linear model}\\
 \alpha &\sim \text{Normal}(0,10) \\
 \beta &\sim \text{Normal}(0,1) \\
 \sigma &\sim \text{Uniform}(0,10)
-\end{align}$$
+\end{align*}$$
 
 __4E5.__ In the model definition just above, how many parameters are in the posterior distribution?
 
@@ -57,11 +57,11 @@ There are __3__ parameters in the posterior distribution, $\alpha$, $\beta$, and
 
 ## Medium questions.
 __4M1.__ For the model definition below, simulate observed heights from the prior (not the posterior).
-$$\begin{align}
+$$\begin{align*}
 y_i &\sim \text{Normal}(\mu, \sigma) \\
 \mu &\sim \text{Normal}(0, 10) \\
 \sigma &\sim \text{Uniform}(0,10)
-\end{align}$$
+\end{align*}$$
 
 ```{r}
 n <- 10000
@@ -91,29 +91,29 @@ flist <- alist(
 )
 ```
 The mathematical definition:
-$$\begin{align}
+$$\begin{align*}
 y_i &\sim \text{Normal}(\mu_i, \sigma) \\
 \mu_i &= \alpha + \beta x_i \\
 \alpha &\sim \text{Normal}(0,50) \\
 \beta &\sim  \text{Uniform}(0,10) \\
 \sigma &\sim \text{Uniform}(0,50) 
-\end{align}$$
+\end{align*}$$
 
 __4M4.__ A sample of students is measured for height each year for three years. You want to fit a linear regression, using year as a prediction. Write down the mathematical model definition.
-$$\begin{align}
+$$\begin{align*}
 h_i &\sim \text{Normal}(\mu_i, \sigma) \\
 \mu_i &= \alpha + \beta t_i \\
 \alpha &\sim \text{Normal}(160, 50) \\
 \beta &\sim \text{Normal}(0, 10) \\
 \sigma &\sim \text{Uniform}(0, 50)
-\end{align}$$
+\end{align*}$$
 Here, $h_i$ is the height and $t_i$ is the year of the $i$th observation. Since $\alpha$ is the average height of a student at year zero, I picked a normal distribution with mean 160 (assuming an average height of 160cm) and  standard deviation 50, this is relatively weak, leaving a wide range of possible heights. For $\beta$, I picked a normal distribution with mean 0 and standard deviation 10, meaning on average, a person grows 0cm per year with standard deviation 10cm, since I don't expect many people to grow or shrink more than 20cm per year.
 
 __4M5.__ Now suppose, the average in the first year was 120cm and that every student got taller each year. I will change my priors as follows:
-$$\begin{align}
+$$\begin{align*}
 \alpha &\sim \text{Normal}(120, 50) \\
 \beta &\sim \text{Uniform}(0, 20)
-\end{align}$$
+\end{align*}$$
 I adjusted the mean for the average height accordingly and changed $\beta$ to a uniform distribution, so that $\beta$, the indicator for growth per year, is greater or equal than zero. I still don't expect people to grow more than 20cm per year.
 
 __4M6.__ Now suppose, the variance among heights for students of the same age is  never more than 64cm. I thus change my priors as follows:
@@ -230,13 +230,13 @@ The linear model doesn't seem to be a very good fit for the data. It performs ve
 __4H3.__ A colleague exclaims: "Only the _logarithm_ of body weight scales with height!" Let's try this out.
 
 (a) Use the entire `Howell1` data frame using the following model:
-$$\begin{align}
+$$\begin{align*}
 h_i &\sim \text{Normal}(\mu_i, \sigma) \\
 \mu_i &= \alpha + \beta \log(w_i) \\
 \alpha &\sim \text{Normal}(178, 100) \\
 \beta &\sim \text{Normal}(0, 100) \\
 \sigma &\sim \text{Uniform}(0, 50)
-\end{align}$$
+\end{align*}$$
 Here the model description in R:
 ```{r}
 d <- Howell1
@@ -258,13 +258,13 @@ precis(model.l)
 Interpreting these results is a bit more difficult since we transformed the weights using the logarithm. Furthermore, the data is not centralized as before, so the intercept `a` corresponds to the average height of someone whose log weight is zero, i.e. whose weight is 1kg. 
 How to interpret the `b` value?
 If we raise the weight by one unit, we get the following expression for mu:
-$$\begin{align}
+$$\begin{align*}
 \mu &= \alpha + \beta \log(\text{weight} + 1) 
-\end{align}$$
+\end{align*}$$
 Using some rules for logarithms, we get:
-$$\begin{align}
+$$\begin{align*}
 \mu &= \alpha + \beta \log(\text{weight}) + \beta \log(1 + \frac{1}{\text{weight}})
-\end{align}$$
+\end{align*}$$
 That is, an increase of one unit in the weight variable is associated with an increase of the mean $\mu$ of $\beta \log(1 + \frac{1}{\text{weight}})$.
 I personally find that not very intuitive, so let's have a look at some plots as well.
 ```{r}
