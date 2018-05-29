@@ -18,9 +18,9 @@ These are my solutions to the practice questions of chapter 4, Linear Models, of
 
 ## Easy Questions.
 __4E1.__ In the model definition below, which line is the likelihood:
-$$latex
+$$
 \begin{align*}
-y_i &\sim \text{Normal}(\mu, \sigma) & \text{This is the likelihood}\\
+y_i &\sim \text{Normal}(\mu, \sigma) & & \text{This is the likelihood}\\
 \mu &\sim \text{Normal}(0, 10) \\
 \sigma &\sim \text{Normal}(0,10)
 \end{align*} $$

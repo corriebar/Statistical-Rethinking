@@ -13,14 +13,14 @@ Easy Questions.
 
 **4E1.** In the model definition below, which line is the likelihood:
 
-![latex
+![
 \\begin{align\*}
-y\_i &\\sim \\text{Normal}(\\mu, \\sigma) & \\text{This is the likelihood}\\\\
+y\_i &\\sim \\text{Normal}(\\mu, \\sigma) & & \\text{This is the likelihood}\\\\
 \\mu &\\sim \\text{Normal}(0, 10) \\\\
 \\sigma &\\sim \\text{Normal}(0,10)
-\\end{align\*} ](https://latex.codecogs.com/png.latex?latex%0A%5Cbegin%7Balign%2A%7D%0Ay_i%20%26%5Csim%20%5Ctext%7BNormal%7D%28%5Cmu%2C%20%5Csigma%29%20%26%20%5Ctext%7BThis%20is%20the%20likelihood%7D%5C%5C%0A%5Cmu%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C%2010%29%20%5C%5C%0A%5Csigma%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C10%29%0A%5Cend%7Balign%2A%7D%20 "latex
+\\end{align\*} ](https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Balign%2A%7D%0Ay_i%20%26%5Csim%20%5Ctext%7BNormal%7D%28%5Cmu%2C%20%5Csigma%29%20%26%20%26%20%5Ctext%7BThis%20is%20the%20likelihood%7D%5C%5C%0A%5Cmu%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C%2010%29%20%5C%5C%0A%5Csigma%20%26%5Csim%20%5Ctext%7BNormal%7D%280%2C10%29%0A%5Cend%7Balign%2A%7D%20 "
 \begin{align*}
-y_i &\sim \text{Normal}(\mu, \sigma) & \text{This is the likelihood}\\
+y_i &\sim \text{Normal}(\mu, \sigma) & & \text{This is the likelihood}\\
 \mu &\sim \text{Normal}(0, 10) \\
 \sigma &\sim \text{Normal}(0,10)
 \end{align*} ")
@@ -204,7 +204,7 @@ precis( model)
 ```
 
     ##         Mean StdDev   5.5%  94.5%
-    ## a     154.60   0.27 154.17 155.03
+    ## a     154.60   0.27 154.16 155.03
     ## b       0.91   0.04   0.84   0.97
     ## sigma   5.07   0.19   4.77   5.38
 
@@ -231,11 +231,11 @@ pred_df
 ```
 
     ##   individual weight exptected_height PI_89_lower PI_89_upper
-    ## 1          1  46.95         156.3494    148.1657    164.5174
-    ## 2          2  43.72         153.3438    145.0099    161.6660
-    ## 3          3  64.78         172.4697    164.2334    180.7199
-    ## 4          4  32.59         143.3905    135.3294    151.5512
-    ## 5          5  54.63         163.3429    155.2578    171.5821
+    ## 1          1  46.95         156.3224    148.3251    164.3983
+    ## 2          2  43.72         153.4239    145.3221    161.5781
+    ## 3          3  64.78         172.5458    164.0980    180.8043
+    ## 4          4  32.59         143.4240    135.3113    151.5789
+    ## 5          5  54.63         163.2388    155.0021    171.3934
 
 **4H2.** Select the rows from the `Howell1` data with age below 18 years.
 
@@ -339,8 +339,8 @@ precis(model.l)
 ```
 
     ##         Mean StdDev   5.5%  94.5%
-    ## a     -23.79   1.34 -25.92 -21.66
-    ## b      47.08   0.38  46.47  47.69
+    ## a     -23.78   1.34 -25.92 -21.65
+    ## b      47.08   0.38  46.46  47.69
     ## sigma   5.13   0.16   4.89   5.38
 
 Interpreting these results is a bit more difficult since we transformed the weights using the logarithm. Furthermore, the data is not centralized as before, so the intercept `a` corresponds to the average height of someone whose log weight is zero, i.e. whose weight is 1kg. How to interpret the `b` value? If we raise the weight by one unit, we get the following expression for mu:
