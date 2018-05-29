@@ -2,7 +2,10 @@
 title: "Chapter 4 exercise"
 author: "Corrie"
 date: "May 21, 2018"
-output: md_document
+output: 
+  github_document:
+    pandoc_args: --webtex
+
 ---
 
 ```{r setup, include=FALSE}
