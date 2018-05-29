@@ -8,16 +8,17 @@ Easy Questions.
 ---------------
 
 **4E1.** In the model definition below, which line is the likelihood:
-$$\\begin{align}
+$$latex
+\\begin{align}
 y\_i &\\sim \\text{Normal}(\\mu, \\sigma) & \\text{This is the likelihood}\\\\
 \\mu &\\sim \\text{Normal}(0, 10) \\\\
 \\sigma &\\sim \\text{Normal}(0,10)
-\\end{align}$$
+\\end{align} $$
 
 **4E2.** In the model definition just above, how many parameters are in
 the posterior distribution?
 
-There are *2* parameters, *μ* and *σ*.
+There are **2** parameters, *μ* and *σ*.
 
 **4E3.** Write down the appropriate form of Bayes' theorem that includes
 the proper likelihood and priors.
@@ -197,15 +198,19 @@ need to center the given weights now.
     pred_df
 
     ##   individual weight exptected_height PI_89_lower PI_89_upper
-    ## 1          1  46.95         156.3197    148.2231    164.3597
-    ## 2          2  43.72         153.4994    145.3110    161.6988
-    ## 3          3  64.78         172.4916    164.2808    180.6838
-    ## 4          4  32.59         143.3747    135.1086    151.6747
-    ## 5          5  54.63         163.3618    155.2152    171.3482
+    ## 1          1  46.95         156.3915    148.2946    164.5698
+    ## 2          2  43.72         153.4793    145.3852    161.4140
+    ## 3          3  64.78         172.3988    163.9840    180.6531
+    ## 4          4  32.59         143.4479    135.1573    151.7596
+    ## 5          5  54.63         163.3413    155.1318    171.4915
 
 **4H2.** Select the rows from the `Howell1` data with age below 18
-years. (a) Fit a linear regression to these data, using `map`. I will
-use the same model as above.
+years.
+
+1.  Fit a linear regression to these data, using `map`. I will use the
+    same model as above.
+
+<!-- -->
 
     d18 <- d[ d$age < 18, ]
     d18$weight.c <- d18$weight - mean(d18$weight)   # centering the data
@@ -227,7 +232,7 @@ use the same model as above.
     ##         Mean StdDev   5.5%  94.5%
     ## a     108.32   0.61 107.35 109.29
     ## b       2.72   0.07   2.61   2.83
-    ## sigma   8.44   0.43   7.75   9.12
+    ## sigma   8.44   0.43   7.75   9.13
 
 As above, since we centered the weights, the intercept `a` corresponds
 to the average height, which is here 108.3. This is much lower than in
@@ -282,16 +287,19 @@ higher uncertainty in the predictions.
     instead.
 
 **4H3.** A colleague exclaims: "Only the *logarithm* of body weight
-scales with height!" Let's try this out. (a) Use the entire `Howell1`
-data frame using the following model:
-$$\\begin{align}
-h\_i &\\sim \\text{Normal}(\\mu\_i, \\sigma) \\\\
-\\mu\_i &= \\alpha + \\beta \\log(w\_i) \\\\
-\\alpha &\\sim \\text{Normal}(178, 100) \\\\
-\\beta &\\sim \\text{Normal}(0, 100) \\\\
-\\sigma &\\sim \\text{Uniform}(0, 50)
-\\end{align}$$
- Here the model description in R:
+scales with height!" Let's try this out.
+
+1.  Use the entire `Howell1` data frame using the following model:
+    $$\\begin{align}
+    h\_i &\\sim \\text{Normal}(\\mu\_i, \\sigma) \\\\
+    \\mu\_i &= \\alpha + \\beta \\log(w\_i) \\\\
+    \\alpha &\\sim \\text{Normal}(178, 100) \\\\
+    \\beta &\\sim \\text{Normal}(0, 100) \\\\
+    \\sigma &\\sim \\text{Uniform}(0, 50)
+    \\end{align}$$
+     Here the model description in R:
+
+<!-- -->
 
     d <- Howell1
     # fit the model
@@ -301,7 +309,7 @@ h\_i &\\sim \\text{Normal}(\\mu\_i, \\sigma) \\\\
         height ~ dnorm( mu, sigma) ,
         mu <- a + b*log(weight) ,
         a ~ dnorm( 178, 100) ,
-        b ~ dnorm( 0, 100) ,                # 
+        b ~ dnorm( 0, 100) ,                
         sigma ~ dunif(0, 50)
       ),
       data=d

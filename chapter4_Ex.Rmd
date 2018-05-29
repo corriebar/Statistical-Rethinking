@@ -15,15 +15,16 @@ These are my solutions to the practice questions of chapter 4, Linear Models, of
 
 ## Easy Questions.
 __4E1.__ In the model definition below, which line is the likelihood:
-$$\begin{align}
+$$latex
+\begin{align}
 y_i &\sim \text{Normal}(\mu, \sigma) & \text{This is the likelihood}\\
 \mu &\sim \text{Normal}(0, 10) \\
 \sigma &\sim \text{Normal}(0,10)
-\end{align}$$
+\end{align} $$
 
 __4E2.__ In the model definition just above, how many parameters are in the posterior distribution?
 
-There are _2_ parameters, $\mu$ and $\sigma$.
+There are __2__ parameters, $\mu$ and $\sigma$.
 
 __4E3.__ Write down the appropriate form of Bayes' theorem that includes the proper likelihood and priors.
 
@@ -165,6 +166,7 @@ pred_df
 ```
 
 __4H2.__ Select the rows from the `Howell1` data with age below 18 years.
+
 (a) Fit a linear regression to these data, using `map`.
 I will use the same model as above.
 ```{r}
@@ -223,6 +225,7 @@ shade( height.HPDI, weight.seq)                                 # draw HPDI regi
 The linear model doesn't seem to be a very good fit for the data. It performs very poorly for the lower and higher values of weight. One possibility to improve the model could be to use a polynomial model (e.g. of 2nd order) instead.
 
 __4H3.__ A colleague exclaims: "Only the _logarithm_ of body weight scales with height!" Let's try this out.
+
 (a) Use the entire `Howell1` data frame using the following model:
 $$\begin{align}
 h_i &\sim \text{Normal}(\mu_i, \sigma) \\
@@ -241,7 +244,7 @@ model.l <- map(
     height ~ dnorm( mu, sigma) ,
     mu <- a + b*log(weight) ,
     a ~ dnorm( 178, 100) ,
-    b ~ dnorm( 0, 100) ,                # 
+    b ~ dnorm( 0, 100) ,                
     sigma ~ dunif(0, 50)
   ),
   data=d
