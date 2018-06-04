@@ -1,0 +1,57 @@
+---
+title: "Chapter 5 - Exercises"
+author: "Corrie"
+date: "June 3, 2018"
+output: html
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Chapter 5 - Exercises
+These are my solutions to the exercises from chapter 5.
+
+## Easy.
+__5E1.__ The following linear models are multiple linear regressions:
+
+- $\mu_i = \beta_x x_i + \beta_z z_i $
+- $\mu_i = \alpha + \beta_x x_i + \beta_z z_i$
+whereas the following are bivariate linear regressions:
+
+- $\mu_i = \alpha + \beta x_i$
+- $\mu_i = \alpha + \beta(x_i - z_i) $
+
+__5E2.__ Write down a multiple regression to evaluate the claim: _Animal diversity is linearly related to latitude, but only after controlling for plant diversity._
+$$
+\begin{align*}
+\text{animal diversity}_i &\sim \text{Normal}( \mu_i, \sigma) \\
+\mu_i &= \alpha + \beta_{lat}\text{latitude}_i + \beta_{plant}\text{plant diversity}_i 
+\end{align*}$$
+__5E3.__ Write down a multiple regression to evaluate the claim:
+_Neither amount of funding nor size of laboratory is by itself a good predictor of time to PhD degree; but together these variables are both positively associated with time to degree._
+
+$$\begin{align*}
+\text{time to PhD}_i &\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &= \alpha + \beta_{f}\text{funding}_i + \beta_{l} \text{lab size}_i
+\end{align*}$$
+The parameters $\beta_f$ and $\beta_l$ should be both positive ($>0$).
+
+__5E4.__ Categorical predictor with 4 levels, labeled A, B, C, and D. $A_i$, $B_i$, $C_i$, and $D_i$ are the respective indicator variables.
+The following are inferentially equivalent ways to include the categorical variables in a regression:
+
+- $\mu_i = \alpha + \beta_A A_i + \beta_B B_i + \beta_C C_i$
+- $\mu_i = \alpha + \beta_B B_i + \beta_C C_i + \beta_D D_i$
+
+## Medium.
+__5M1.__
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
