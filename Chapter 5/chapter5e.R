@@ -31,3 +31,6 @@ data(cars)
 glimmer( dist ~ speed, data=cars)
 
 glimmer( y ~ ., data=d)
+
+m5.25 <- glimmer( dist ~ speed, data=cars)
+m5.25s <- map(m5.25$f, data=m5.25$d)
