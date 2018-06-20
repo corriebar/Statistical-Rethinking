@@ -2,7 +2,9 @@
 title: "Chapter 5 - Exercises"
 author: "Corrie"
 date: "June 3, 2018"
-output: html
+output: 
+  github_document:
+    pandoc_args: --webtex
 ---
 
 ```{r setup, include=FALSE}
@@ -295,15 +297,152 @@ pairs( weight ~ groupsize + area, data=d)
 
 Groupsize is strongly correlated with area: a larger territory is associated with a larger group of foxes (makes sense, right?). Both area and groupsize are also correlated with weight: area is positively correlated with weight, while groupsize is negatively correlated with weight. This circumstance leads to a masked association: the two predictor variables cancel each other out and thus don't seem important.
 
-
-
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+__5H3.__ Let's add the average amount of food variable. We fit two more multivariate regressions:
+  (1) `weight ~ avgfood + groupsize`
+  (2) `weight ~ avgfood + groupsize + area`
+```{r}
+d$avgfood.s <- (d$avgfood - mean(d$avgfood)) / sd(d$avgfood)
+mod8 <- map(
+  alist(
+    weight ~ dnorm( mu, sigma),
+    mu <- a + bF*avgfood.s + bG*groupsize.s,
+    a ~ dnorm(0, 10),
+    bF ~ dnorm(0,1),
+    bG ~ dnorm(0,1),
+    sigma ~ dunif(0,10)
+  ), data=d
+)
+plot( precis( mod8))
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+mod9 <- map(
+  alist(
+    weight ~ dnorm( mu, sigma),
+    mu <- a + bF*avgfood.s + bG*groupsize.s + bA*area.s,
+    a ~ dnorm(0, 10),
+    c(bF, bG, bA) ~ dnorm(0, 1),
+    sigma ~ dunif(0, 10)
+  ), data=d
+)
+plot( precis( mod9))
+```
+
+Adding both average amount of food and the area of the territory leads to a decrease in their paramaters for both predictor variables, compared with the regressions that contain only of the two. 
+  (a) Is `avgfood` or `area` a better predictor to include in a model?
+```{r}
+# Predictor residual plot
+mod9.1 <- map(
+  alist(
+    avgfood.s ~ dnorm( mu, sigma) ,
+    mu <- a + b*area.s,
+    a ~ dnorm(0, 10),
+    b ~ dnorm(0,1),
+    sigma ~ dunif(0, 10)
+  ), data=d
+)
+
+# cpmpute residuals
+mu <- coef(mod9.1)['a'] + coef(mod9.1)['b']*d$area.s
+
+# compute residuals
+f.resid <- d$avgfood.s - mu
+
+plot( avgfood.s ~ area.s, d, col=rangi2)
+abline(mod9.1)
+for (i in 1:length(f.resid)) {
+  x <- d$area.s[i]
+  y <- d$avgfood.s[i]
+  # draw the lines segment
+  lines( c(x,x), c(mu[i], y), lwd=0.5, col=col.alpha("black", 0.5))
+}
+```
+This residual plot shows the residual average amount of food after accounting for the linear association with area. Each line segment is a residual, that is. the distance of observed average amount of food from the expected value, when trying to predict the amount of average food with the area alone. Thus foxes above the regression line have more food than expected and the one below the line have less than expected, according to the area. The residuals are the variation in average amount of food that is left over, after taking out the purely linear relationship between area and average food. We can use these residuals to plot them against the actual outcome of interest, the weight. These are also called predictor residual plots.
+```{r}
+plot( d$weight ~ f.resid, col=rangi2, xlab="Average food residuals", ylab="Weight")
+abline(a=coef(mod9)['a'], b=coef(mod9)['bF'])
+abline(v=0, lty=2)
+```
+```{r}
+# Predictor residual plot
+mod9.2 <- map(
+  alist(
+    area.s ~ dnorm( mu, sigma) ,
+    mu <- a + b*avgfood.s,
+    a ~ dnorm(0, 10),
+    b ~ dnorm(0,1),
+    sigma ~ dunif(0, 10)
+  ), data=d
+)
+
+# cpmpute residuals
+mu <- coef(mod9.2)['a'] + coef(mod9.2)['b']*d$avgfood.s
+
+# compute residuals
+a.resid <- d$area.s - mu
+
+plot( d$weight ~  a.resid, col=rangi2, xlab="Area residuals", ylab="Weight")
+abline(a=coef(mod9)['a'], b=coef(mod9)['bA'])
+abline(v=0, lty=2)
+
+```
+These predictor residual plots can be interpreted as follows: The vertical dashed line indicates an area that exactly matches the expectation from the average amount of food. Thus points to the right of the line represent foxes having more area than expected  for their average food and the one to the left have less area than expected for their amount of average food. To both sides, we have about the same weights.
+
+Unfortunately, the plots are about the same for both area and average food, so I don't find them helpful to determine which predictor variable would be better to include in the model.
+
+So let's have a look at the counterfactual plots for both average food and the area.
+  
+  
+  
+  
+```{r}
+# counterfactual plot of average food, holding area and groupsize fixed
+area.avg <- mean(d$area.s)
+groupsize.avg <- mean(d$groupsize.s)
+avgfood.seq <- seq(from=-2, to=3)
+data.pred <- data.frame(area.s=area.avg,
+                        groupsize.s=groupsize.avg,
+                        avgfood.s=avgfood.seq)
+mu <- link(mod9, data=data.pred)
+mu.mean <- apply(mu, 2, mean)
+mu.HPDI <- apply(mu, 2, HPDI)
+weight.sim <- sim(mod9, data=data.pred)
+weight.HPDI <- apply(weight.sim, 2, HPDI, prob=0.95)
+plot( weight ~ avgfood.s, data=d, type="n")
+lines( avgfood.seq, mu.mean)
+shade( mu.HPDI, avgfood.seq)
+shade( weight.HPDI, avgfood.seq)
+```
+Now the same for area:
+```{r}
+# counterfactual plot for area, holding groupsize and average food fixed
+avgfood.avg <- mean(d$avgfood.s)
+groupsize.avg <- mean(d$groupsize.s)
+area.seq <- seq(from=-3, to=3)
+data.pred <- data.frame(area.s=area.seq,
+                        groupsize.s=groupsize.avg,
+                        avgfood.s=avgfood.avg)
+mu <- link(mod9, data=data.pred)
+mu.mean <- apply(mu, 2, mean)
+mu.HPDI <- apply(mu, 2, HPDI)
+weight.sim <- sim(mod9, data=data.pred)
+weight.HPDI <- apply(weight.sim, 2, HPDI, prob=0.95)
+plot( weight ~ area.s, data=d, type="n")
+lines(area.seq, mu.mean)
+shade(mu.HPDI, area.seq)
+shade(weight.HPDI, area.seq)
+```
+Both plots look very similar, so they're not very helpful in deciding which of the two variables would be better to include.
+Based on these plots, I would conclude that in terms of the model, it doesn't make much difference if you include one or the other. I would not recommend to include both though. As we can see in the following plot, both variables are strongly correlated with each other:
+```{r}
+pairs(weight ~ avgfood + groupsize + area, data=d)
+```
+
+```{r}
+cor( d[,c("weight", "avgfood", "groupsize", "area")])
+```
+
+The correlations between average food, groupsize and area are all very high (above 0.8). Especially the correlation of average food with groupsize and area are very high, about 0.9. Which makes sense, since thinking about it, they should all be correlated: More area means more food avaiable, which means a bigger group is sustainable. 
+This high correlation leads to multicollinearity, which also explains why the effect of average food and area is greatly reduced, with higher standard deviation, when both are included in the model. Knowing the area (and groupsize), adding the average amount of food doesn't add any more useful information.
+Since I assume that area causes average food which causes weight, I would only include area (the original cause) in my model, but I guess you could also argue that average food is the more direct cause for weight. As said in the chapter, one valid approach is also to just show that using either of the highly correlated predictor variables leads to the same result.
