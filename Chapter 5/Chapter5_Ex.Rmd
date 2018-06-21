@@ -17,16 +17,16 @@ These are my solutions to the exercises from chapter 5.
 ## Easy.
 __5E1.__ The following linear models are multiple linear regressions:
 
-- $\mu_i = \beta_x x_i + \beta_z z_i $
+- $\mu_i = \beta_x x_i + \beta_z z_i$
 - $\mu_i = \alpha + \beta_x x_i + \beta_z z_i$
+
 whereas the following are bivariate linear regressions:
 
 - $\mu_i = \alpha + \beta x_i$
-- $\mu_i = \alpha + \beta(x_i - z_i) $
+- $\mu_i = \alpha + \beta(x_i - z_i)$
 
 __5E2.__ Write down a multiple regression to evaluate the claim: _Animal diversity is linearly related to latitude, but only after controlling for plant diversity._
-$$
-\begin{align*}
+$$\begin{align*}
 \text{animal diversity}_i &\sim \text{Normal}( \mu_i, \sigma) \\
 \mu_i &= \alpha + \beta_{lat}\text{latitude}_i + \beta_{plant}\text{plant diversity}_i 
 \end{align*}$$
@@ -46,7 +46,7 @@ The following are inferentially equivalent ways to include the categorical varia
 - $\mu_i = \alpha + \beta_B B_i + \beta_C C_i + \beta_D D_i$
 
 ## Medium.
-__5M1.__ Invent your own examples of a spurious correlations. An outcome variable should be correlated with both predictor variables. But when both predictors are entered in the same model, the correlation wbetween the outcome and one of the predictors should mostly vanish.
+__5M1.__ Invent your own examples of a spurious correlations. An outcome variable should be correlated with both predictor variables. But when both predictors are entered in the same model, the correlation between the outcome and one of the predictors should mostly vanish.
 ```{r}
 n <- 100
 x_real <- rnorm(n)
@@ -61,9 +61,10 @@ library(rethinking)
 mod1 <- lm(y ~ ., data=df)
 plot( precis(mod1) )
 ```
+
 Note: I found an article about an interesting spurious correlation: There are various correlations between a name of a person and where they live, what they work, and whom they marry. Apparently, people with similar names tend to marry each other and similarly, choose occupations that sound similar to their own name (e.g. Dennis - dentist). These are spurious correlations: people of the same age tend to marry each other and people of the same age tend to have similar names. The [article](http://andrewgelman.com/2011/02/09/dennis_the_dent/) gives a short summary of the confounding variables 
 
-__5M2.__ Invent your own example of a masked relationship.
+__5M2.__ Invent your own example of a masked relationship. (I have to confess I wasn't very creative here)
 ```{r}
 n <- 100
 rho <- 0.7                           # correlation between x_pos and x_neg
@@ -74,15 +75,18 @@ y <- rnorm( n, x_pos - x_neg)        # y equally associated with x_pos, x_eg
 df <- data.frame(x_pos = x_pos, x_neg=x_neg, y=y)
 pairs(df)
 ```
-The variables `x_pos` and `x_neg` are correlated with each other but based on the plot, it looks as if they don't associate much with the outcome `y`.
+
+The variables `x_pos` and `x_neg` are correlated with each other but based on the plot, it looks as if they don't associate much with the outcome `y`. 
 ```{r}
 mod2 <- lm(y ~ ., data=df)
 plot( precis(mod2))
 ```
-The unmasks the association and shows that both variables have an association with `y`.
+
+This unmasks the association and shows that both variables have an association with `y`.
 
 __5M3.__
 It is sometimes observed that the best predictor of fire risk is the presence of firefighters: States and localities with many firefighters also have more fires. Now, firefighters do not _cause_ fires, but this is not a spurious correlation. Instead, it is fire tat causes firefighters.
+
 In the context of divorce and marriage data: How might a high divorce rate cause a higher marriage rate?
 A high divorce rate means that there is also a higher number of people that can marry again, thus raising the marriage rate. One way I can think of testing this relationship would be to include the remarriage rate in a multivariate regression.
 
@@ -101,13 +105,15 @@ head(d)
 ```{r}
 hist(d$LDS)
 ```
-Since the LDS variable is very skewed (most states have almost no LDS population, a few, e.g. Idaho and Utah, have a very high LDS population), so it would be better to transform it. We use first a log-transform and then standardize the variable.
+
+Since the LDS variable is very skewed (most states have almost no LDS population, a few, e.g. Idaho and Utah, have a very high LDS population), it would be better to transform it. We use first a log-transform and then standardize the variable.
 ```{r}
 d$log.LDS <- log(d$LDS)
 d$log.LDS.s <- ( d$log.LDS - mean(d$log.LDS) ) / sd(d$log.LDS)
 d$LDS.s <- (d$LDS - mean(d$LDS)) / sd(d$LDS)
 hist(d$log.LDS.s)
 ```
+
 We also need to standardize the other variables:
 ```{r}
 d$MedianAgeMarriage.s <- (d$MedianAgeMarriage - mean(d$MedianAgeMarriage)) / sd(d$MedianAgeMarriage)
@@ -129,9 +135,10 @@ precis( mod4 )
 ```{r}
 plot(precis( mod4))
 ```
+
 This means, that a higher population is negatively associated with the divorce rate.
 
-```{r, fig1, fig.width=8, fig.height=8}
+```{r, fig1, fig.width=8, fig.height=8, message=FALSE, warning=FALSE, results='hide'}
 mu <- link(mod4)
 mu.mean <- apply(mu, 2, mean)
 mu.PI <- apply(mu, 2, PI)
@@ -153,13 +160,14 @@ for (i in 1:nrow(d) ) {
           pch=3, cex=0.6, col="gray")
 }
 ```
+
 The model still overestimates the divorce rate for Idaho, but whereas before (without the LDS predictor) it had a mean prediction error of about  -4.4, it now has a mean prediction error of about
 ```{r}
 divorce.resid[d$Loc == "ID"]
 ```
 The mean prediction error for Utah improved similarly.
 
-__5M5.__ One way to reasoin through multiple causation hypotheses is to imagine detailed mechanisms through which predictor variables might influence outcomes. 
+__5M5.__ One way to reason through multiple causation hypotheses is to imagine detailed mechanisms through which predictor variables might influence outcomes. 
 Example: It is sometimes argued that the price of gasoline (predictor variable) is positively associated with lower obesity rates (outcome variable).
 There are two important mechanisms by which the price of as could reduce obesity.
 (1) high gas prices lead to less driving and thus more walking
@@ -179,8 +187,9 @@ summary(d)
 ```
 
 __5H1.__ Fit two bivariate Gaussian regressions, using `map`:
-  (1) body weight ~ territory size (area)
-  (2) body weight ~ groupsize
+
+  (1) `weight ~ area`
+  (2) `weight ~ groupsize`
 ```{r}
 d$area.s <- (d$area - mean(d$area)) / sd(d$area)
 mod5 <- map(
@@ -196,7 +205,7 @@ plot( precis( mod5))
 ```
 
 It looks like area is not an important predictor for body weight. Let's have a closer look at some more plots.
-```{r}
+```{r, results='hide'}
 area.seq <- seq(from=-2.5, to=2.5, length.out = 300)
 mu <- link(mod5, data=list(area.s = area.seq))
 mu.mean <- apply(mu, 2, mean)
@@ -208,6 +217,7 @@ lines( area.seq, mu.mean)
 shade( mu.HPDI, area.seq)
 shade( weight.HPDI, area.seq)
 ```
+
 This plot also suggests that area is not an important predictor. There seems to be no relation at all with area and sigma is relatively large.
 ```{r}
 d$groupsize.s <- (d$groupsize - mean(d$groupsize)) / sd(d$groupsize)
@@ -223,8 +233,8 @@ mod6 <- map(
 plot( precis( mod6))
 ```
 
-The groupsize seems to have some importance, at least it is slightly further away from 0 than the parameter for area.
-```{r}
+The group size seems to have some importance, at least it is slightly further away from 0 than the parameter for area.
+```{r, results='hide'}
 groupsize.seq <- seq(from=-2, to=3, length.out = 300)
 mu <- link( mod6, data=list(groupsize.s=groupsize.seq))
 mu.mean <- apply(mu, 2, mean)
@@ -239,7 +249,7 @@ shade(weight.HPDI, groupsize.seq)
 
 While there seems to be more of a slope here, it is still very minor and doesn't look like it is an important factor..
 
-__5H2.__ As before, we try to predict weight, but this time using a multivariate model that uses both the area and groupsize as predictor.
+__5H2.__ As before, we try to predict weight, but this time using a multivariate model that uses both the area and group size as predictor.
 ```{r}
 mod7 <- map(
   alist(
@@ -254,8 +264,8 @@ mod7 <- map(
 plot( precis( mod7))
 ```
 
-And surprise surprise, suddenly both area and groupsize seem to have a discernible importance for predicting body weight. Let's plot the predictions of the model for both predictors, for each holding the other predictor constant at its mean.
-```{r}
+And surprise surprise, suddenly both area and group size seem to have a discernible importance for predicting body weight. Let's plot the predictions of the model for both predictors, for each holding the other predictor constant at its mean.
+```{r, results='hide'}
 # Area, holding groupsize fixed
 groupsize.avg <- mean(d$groupsize.s)
 area.seq <- seq(from=-3, to=3, length.out = 300)
@@ -272,7 +282,7 @@ shade(weight.HPDI, area.seq)
 ```
 
 Now, we can see a quite clear association between area and weight: A fox living in a bigger territory seems to be heavier than a fox in a smaller territory.
-```{r}
+```{r, results='hide'}
 # Groupsize, area fixed
 area.avg <- mean(d$area.s)
 groupsize.seq <- seq(from=-2, to=3, length.out = 300)
@@ -295,9 +305,10 @@ So why is this? Let's look at the correlation plot of the three variables.
 pairs( weight ~ groupsize + area, data=d)
 ```
 
-Groupsize is strongly correlated with area: a larger territory is associated with a larger group of foxes (makes sense, right?). Both area and groupsize are also correlated with weight: area is positively correlated with weight, while groupsize is negatively correlated with weight. This circumstance leads to a masked association: the two predictor variables cancel each other out and thus don't seem important.
+Group size is strongly correlated with area: a larger territory is associated with a larger group of foxes (makes sense, right?). Both area and group size are also correlated with weight: area is positively correlated with weight, while group size is negatively correlated with weight. This circumstance leads to a masked association: the two predictor variables cancel each other out and thus don't seem important.
 
 __5H3.__ Let's add the average amount of food variable. We fit two more multivariate regressions:
+
   (1) `weight ~ avgfood + groupsize`
   (2) `weight ~ avgfood + groupsize + area`
 ```{r}
@@ -329,7 +340,7 @@ mod9 <- map(
 plot( precis( mod9))
 ```
 
-Adding both average amount of food and the area of the territory leads to a decrease in their paramaters for both predictor variables, compared with the regressions that contain only of the two. 
+Adding both average amount of food and the area of the territory leads to a decrease in their parameters for both predictor variables, compared with the regressions that contain only of the two. 
   (a) Is `avgfood` or `area` a better predictor to include in a model?
 ```{r}
 # Predictor residual plot
@@ -358,6 +369,7 @@ for (i in 1:length(f.resid)) {
   lines( c(x,x), c(mu[i], y), lwd=0.5, col=col.alpha("black", 0.5))
 }
 ```
+
 This residual plot shows the residual average amount of food after accounting for the linear association with area. Each line segment is a residual, that is. the distance of observed average amount of food from the expected value, when trying to predict the amount of average food with the area alone. Thus foxes above the regression line have more food than expected and the one below the line have less than expected, according to the area. The residuals are the variation in average amount of food that is left over, after taking out the purely linear relationship between area and average food. We can use these residuals to plot them against the actual outcome of interest, the weight. These are also called predictor residual plots.
 ```{r}
 plot( d$weight ~ f.resid, col=rangi2, xlab="Average food residuals", ylab="Weight")
@@ -387,6 +399,7 @@ abline(a=coef(mod9)['a'], b=coef(mod9)['bA'])
 abline(v=0, lty=2)
 
 ```
+
 These predictor residual plots can be interpreted as follows: The vertical dashed line indicates an area that exactly matches the expectation from the average amount of food. Thus points to the right of the line represent foxes having more area than expected  for their average food and the one to the left have less area than expected for their amount of average food. To both sides, we have about the same weights.
 
 Unfortunately, the plots are about the same for both area and average food, so I don't find them helpful to determine which predictor variable would be better to include in the model.
@@ -396,7 +409,7 @@ So let's have a look at the counterfactual plots for both average food and the a
   
   
   
-```{r}
+```{r, results='hide'}
 # counterfactual plot of average food, holding area and groupsize fixed
 area.avg <- mean(d$area.s)
 groupsize.avg <- mean(d$groupsize.s)
@@ -414,8 +427,9 @@ lines( avgfood.seq, mu.mean)
 shade( mu.HPDI, avgfood.seq)
 shade( weight.HPDI, avgfood.seq)
 ```
+
 Now the same for area:
-```{r}
+```{r, results='hide'}
 # counterfactual plot for area, holding groupsize and average food fixed
 avgfood.avg <- mean(d$avgfood.s)
 groupsize.avg <- mean(d$groupsize.s)
@@ -433,6 +447,7 @@ lines(area.seq, mu.mean)
 shade(mu.HPDI, area.seq)
 shade(weight.HPDI, area.seq)
 ```
+
 Both plots look very similar, so they're not very helpful in deciding which of the two variables would be better to include.
 Based on these plots, I would conclude that in terms of the model, it doesn't make much difference if you include one or the other. I would not recommend to include both though. As we can see in the following plot, both variables are strongly correlated with each other:
 ```{r}
@@ -443,6 +458,6 @@ pairs(weight ~ avgfood + groupsize + area, data=d)
 cor( d[,c("weight", "avgfood", "groupsize", "area")])
 ```
 
-The correlations between average food, groupsize and area are all very high (above 0.8). Especially the correlation of average food with groupsize and area are very high, about 0.9. Which makes sense, since thinking about it, they should all be correlated: More area means more food avaiable, which means a bigger group is sustainable. 
-This high correlation leads to multicollinearity, which also explains why the effect of average food and area is greatly reduced, with higher standard deviation, when both are included in the model. Knowing the area (and groupsize), adding the average amount of food doesn't add any more useful information.
+The correlations between average food, group size and area are all very high (above 0.8). Especially the correlation of average food with groupsize and area are very high, about 0.9. Which makes sense, since thinking about it, they should all be correlated: More area means more food available, which means a bigger group is sustainable. 
+This high correlation leads to multicollinearity, which also explains why the effect of average food and area is greatly reduced, with higher standard deviation, when both are included in the model. Knowing the area (and group size), adding the average amount of food doesn't add any more useful information.
 Since I assume that area causes average food which causes weight, I would only include area (the original cause) in my model, but I guess you could also argue that average food is the more direct cause for weight. As said in the chapter, one valid approach is also to just show that using either of the highly correlated predictor variables leads to the same result.

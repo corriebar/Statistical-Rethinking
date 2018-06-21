@@ -13,20 +13,20 @@ Easy.
 
 **5E1.** The following linear models are multiple linear regressions:
 
--   $\_i = \_x x\_i + \_z z\_i $
--   ![\\mu\_i = \\alpha + \\beta\_x x\_i + \\beta\_z z\_i](https://latex.codecogs.com/png.latex?%5Cmu_i%20%3D%20%5Calpha%20%2B%20%5Cbeta_x%20x_i%20%2B%20%5Cbeta_z%20z_i "\mu_i = \alpha + \beta_x x_i + \beta_z z_i") whereas the following are bivariate linear regressions:
+-   ![\\mu\_i = \\beta\_x x\_i + \\beta\_z z\_i](https://latex.codecogs.com/png.latex?%5Cmu_i%20%3D%20%5Cbeta_x%20x_i%20%2B%20%5Cbeta_z%20z_i "\mu_i = \beta_x x_i + \beta_z z_i")
+-   ![\\mu\_i = \\alpha + \\beta\_x x\_i + \\beta\_z z\_i](https://latex.codecogs.com/png.latex?%5Cmu_i%20%3D%20%5Calpha%20%2B%20%5Cbeta_x%20x_i%20%2B%20%5Cbeta_z%20z_i "\mu_i = \alpha + \beta_x x_i + \beta_z z_i")
+
+whereas the following are bivariate linear regressions:
 
 -   ![\\mu\_i = \\alpha + \\beta x\_i](https://latex.codecogs.com/png.latex?%5Cmu_i%20%3D%20%5Calpha%20%2B%20%5Cbeta%20x_i "\mu_i = \alpha + \beta x_i")
--   $\_i = + (x\_i - z\_i) $
+-   ![\\mu\_i = \\alpha + \\beta(x\_i - z\_i)](https://latex.codecogs.com/png.latex?%5Cmu_i%20%3D%20%5Calpha%20%2B%20%5Cbeta%28x_i%20-%20z_i%29 "\mu_i = \alpha + \beta(x_i - z_i)")
 
 **5E2.** Write down a multiple regression to evaluate the claim: *Animal diversity is linearly related to latitude, but only after controlling for plant diversity.*
 
-![
-\\begin{align\*}
+![\\begin{align\*}
 \\text{animal diversity}\_i &\\sim \\text{Normal}( \\mu\_i, \\sigma) \\\\
 \\mu\_i &= \\alpha + \\beta\_{lat}\\text{latitude}\_i + \\beta\_{plant}\\text{plant diversity}\_i 
-\\end{align\*}](https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Balign%2A%7D%0A%5Ctext%7Banimal%20diversity%7D_i%20%26%5Csim%20%5Ctext%7BNormal%7D%28%20%5Cmu_i%2C%20%5Csigma%29%20%5C%5C%0A%5Cmu_i%20%26%3D%20%5Calpha%20%2B%20%5Cbeta_%7Blat%7D%5Ctext%7Blatitude%7D_i%20%2B%20%5Cbeta_%7Bplant%7D%5Ctext%7Bplant%20diversity%7D_i%20%0A%5Cend%7Balign%2A%7D "
-\begin{align*}
+\\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%5Ctext%7Banimal%20diversity%7D_i%20%26%5Csim%20%5Ctext%7BNormal%7D%28%20%5Cmu_i%2C%20%5Csigma%29%20%5C%5C%0A%5Cmu_i%20%26%3D%20%5Calpha%20%2B%20%5Cbeta_%7Blat%7D%5Ctext%7Blatitude%7D_i%20%2B%20%5Cbeta_%7Bplant%7D%5Ctext%7Bplant%20diversity%7D_i%20%0A%5Cend%7Balign%2A%7D "\begin{align*}
 \text{animal diversity}_i &\sim \text{Normal}( \mu_i, \sigma) \\
 \mu_i &= \alpha + \beta_{lat}\text{latitude}_i + \beta_{plant}\text{plant diversity}_i 
 \end{align*}")
@@ -51,7 +51,7 @@ Easy.
 Medium.
 -------
 
-**5M1.** Invent your own examples of a spurious correlations. An outcome variable should be correlated with both predictor variables. But when both predictors are entered in the same model, the correlation wbetween the outcome and one of the predictors should mostly vanish.
+**5M1.** Invent your own examples of a spurious correlations. An outcome variable should be correlated with both predictor variables. But when both predictors are entered in the same model, the correlation between the outcome and one of the predictors should mostly vanish.
 
 ``` r
 n <- 100
@@ -71,9 +71,11 @@ mod1 <- lm(y ~ ., data=df)
 plot( precis(mod1) )
 ```
 
-![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-2-1.png) Note: I found an article about an interesting spurious correlation: There are various correlations between a name of a person and where they live, what they work, and whom they marry. Apparently, people with similar names tend to marry each other and similarly, choose occupations that sound similar to their own name (e.g. Dennis - dentist). These are spurious correlations: people of the same age tend to marry each other and people of the same age tend to have similar names. The [article](http://andrewgelman.com/2011/02/09/dennis_the_dent/) gives a short summary of the confounding variables
+![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-2-1.png)
 
-**5M2.** Invent your own example of a masked relationship.
+Note: I found an article about an interesting spurious correlation: There are various correlations between a name of a person and where they live, what they work, and whom they marry. Apparently, people with similar names tend to marry each other and similarly, choose occupations that sound similar to their own name (e.g. Dennis - dentist). These are spurious correlations: people of the same age tend to marry each other and people of the same age tend to have similar names. The [article](http://andrewgelman.com/2011/02/09/dennis_the_dent/) gives a short summary of the confounding variables
+
+**5M2.** Invent your own example of a masked relationship. (I have to confess I wasn't very creative here)
 
 ``` r
 n <- 100
@@ -86,16 +88,22 @@ df <- data.frame(x_pos = x_pos, x_neg=x_neg, y=y)
 pairs(df)
 ```
 
-![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-3-1.png) The variables `x_pos` and `x_neg` are correlated with each other but based on the plot, it looks as if they don't associate much with the outcome `y`.
+![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-3-1.png)
+
+The variables `x_pos` and `x_neg` are correlated with each other but based on the plot, it looks as if they don't associate much with the outcome `y`.
 
 ``` r
 mod2 <- lm(y ~ ., data=df)
 plot( precis(mod2))
 ```
 
-![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-4-1.png) The unmasks the association and shows that both variables have an association with `y`.
+![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-4-1.png)
 
-**5M3.** It is sometimes observed that the best predictor of fire risk is the presence of firefighters: States and localities with many firefighters also have more fires. Now, firefighters do not *cause* fires, but this is not a spurious correlation. Instead, it is fire tat causes firefighters. In the context of divorce and marriage data: How might a high divorce rate cause a higher marriage rate? A high divorce rate means that there is also a higher number of people that can marry again, thus raising the marriage rate. One way I can think of testing this relationship would be to include the remarriage rate in a multivariate regression.
+This unmasks the association and shows that both variables have an association with `y`.
+
+**5M3.** It is sometimes observed that the best predictor of fire risk is the presence of firefighters: States and localities with many firefighters also have more fires. Now, firefighters do not *cause* fires, but this is not a spurious correlation. Instead, it is fire tat causes firefighters.
+
+In the context of divorce and marriage data: How might a high divorce rate cause a higher marriage rate? A high divorce rate means that there is also a higher number of people that can marry again, thus raising the marriage rate. One way I can think of testing this relationship would be to include the remarriage rate in a multivariate regression.
 
 **5M4.** In the divorce data, States with high number of Mormons have much lower divorce rates than the regression model expected. Include percent of Latter-day Saints, LDS, in your regression model. I first downloaded the LDS population by State from [wikipedia](https://en.wikipedia.org/wiki/The_Church_of_Jesus_Christ_of_Latter-day_Saints_membership_statistics_(United_States)) (retrieved on June 6, 2018). Next step is to combine the two data frames:
 
@@ -122,7 +130,9 @@ head(d)
 hist(d$LDS)
 ```
 
-![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-6-1.png) Since the LDS variable is very skewed (most states have almost no LDS population, a few, e.g. Idaho and Utah, have a very high LDS population), so it would be better to transform it. We use first a log-transform and then standardize the variable.
+![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-6-1.png)
+
+Since the LDS variable is very skewed (most states have almost no LDS population, a few, e.g. Idaho and Utah, have a very high LDS population), it would be better to transform it. We use first a log-transform and then standardize the variable.
 
 ``` r
 d$log.LDS <- log(d$LDS)
@@ -131,7 +141,9 @@ d$LDS.s <- (d$LDS - mean(d$LDS)) / sd(d$LDS)
 hist(d$log.LDS.s)
 ```
 
-![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-7-1.png) We also need to standardize the other variables:
+![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-7-1.png)
+
+We also need to standardize the other variables:
 
 ``` r
 d$MedianAgeMarriage.s <- (d$MedianAgeMarriage - mean(d$MedianAgeMarriage)) / sd(d$MedianAgeMarriage)
@@ -164,42 +176,16 @@ precis( mod4 )
 plot(precis( mod4))
 ```
 
-![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-10-1.png) This means, that a higher population is negatively associated with the divorce rate.
+![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-10-1.png)
+
+This means, that a higher population is negatively associated with the divorce rate.
 
 ``` r
 mu <- link(mod4)
-```
-
-    ## [ 100 / 1000 ]
-    [ 200 / 1000 ]
-    [ 300 / 1000 ]
-    [ 400 / 1000 ]
-    [ 500 / 1000 ]
-    [ 600 / 1000 ]
-    [ 700 / 1000 ]
-    [ 800 / 1000 ]
-    [ 900 / 1000 ]
-    [ 1000 / 1000 ]
-
-``` r
 mu.mean <- apply(mu, 2, mean)
 mu.PI <- apply(mu, 2, PI)
 
 divorce.sim <- sim( mod4, n=1e4 )
-```
-
-    ## [ 1000 / 10000 ]
-    [ 2000 / 10000 ]
-    [ 3000 / 10000 ]
-    [ 4000 / 10000 ]
-    [ 5000 / 10000 ]
-    [ 6000 / 10000 ]
-    [ 7000 / 10000 ]
-    [ 8000 / 10000 ]
-    [ 9000 / 10000 ]
-    [ 10000 / 10000 ]
-
-``` r
 divorce.PI <- apply(divorce.sim, 2, PI)
 # residual plot showing the mean prediction error
 # compute residuals
@@ -217,17 +203,19 @@ for (i in 1:nrow(d) ) {
 }
 ```
 
-![](Chapter5_Ex_files/figure-markdown_github/fig1-1.png) The model still overestimates the divorce rate for Idaho, but whereas before (without the LDS predictor) it had a mean prediction error of about -4.4, it now has a mean prediction error of about
+![](Chapter5_Ex_files/figure-markdown_github/fig1-1.png)
+
+The model still overestimates the divorce rate for Idaho, but whereas before (without the LDS predictor) it had a mean prediction error of about -4.4, it now has a mean prediction error of about
 
 ``` r
 divorce.resid[d$Loc == "ID"]
 ```
 
-    ## [1] -3.657232
+    ## [1] -3.626627
 
 The mean prediction error for Utah improved similarly.
 
-**5M5.** One way to reasoin through multiple causation hypotheses is to imagine detailed mechanisms through which predictor variables might influence outcomes. Example: It is sometimes argued that the price of gasoline (predictor variable) is positively associated with lower obesity rates (outcome variable). There are two important mechanisms by which the price of as could reduce obesity. (1) high gas prices lead to less driving and thus more walking (2) high gas prices lead to less driving, which leads to less eating out. What multiple regression variables could we use to address these mechanisms? (assuming we can have any predictor variable we want) For the first case, we could include the predictor variable of the average walked distance. To address the second case, a good variable to include would be the average rate of eating out.
+**5M5.** One way to reason through multiple causation hypotheses is to imagine detailed mechanisms through which predictor variables might influence outcomes. Example: It is sometimes argued that the price of gasoline (predictor variable) is positively associated with lower obesity rates (outcome variable). There are two important mechanisms by which the price of as could reduce obesity. (1) high gas prices lead to less driving and thus more walking (2) high gas prices lead to less driving, which leads to less eating out. What multiple regression variables could we use to address these mechanisms? (assuming we can have any predictor variable we want) For the first case, we could include the predictor variable of the average walked distance. To address the second case, a good variable to include would be the average rate of eating out.
 
 Hard.
 -----
@@ -267,7 +255,10 @@ summary(d)
     ##  3rd Qu.:5.375  
     ##  Max.   :7.550
 
-**5H1.** Fit two bivariate Gaussian regressions, using `map`: (1) body weight ~ territory size (area) (2) body weight ~ groupsize
+**5H1.** Fit two bivariate Gaussian regressions, using `map`:
+
+1.  `weight ~ area`
+2.  `weight ~ groupsize`
 
 ``` r
 d$area.s <- (d$area - mean(d$area)) / sd(d$area)
@@ -290,37 +281,9 @@ It looks like area is not an important predictor for body weight. Let's have a c
 ``` r
 area.seq <- seq(from=-2.5, to=2.5, length.out = 300)
 mu <- link(mod5, data=list(area.s = area.seq))
-```
-
-    ## [ 100 / 1000 ]
-    [ 200 / 1000 ]
-    [ 300 / 1000 ]
-    [ 400 / 1000 ]
-    [ 500 / 1000 ]
-    [ 600 / 1000 ]
-    [ 700 / 1000 ]
-    [ 800 / 1000 ]
-    [ 900 / 1000 ]
-    [ 1000 / 1000 ]
-
-``` r
 mu.mean <- apply(mu, 2, mean)
 mu.HPDI <- apply(mu, 2, HPDI, prob=0.95)
 weight.sim <- sim(mod5, data=list(area.s = area.seq))
-```
-
-    ## [ 100 / 1000 ]
-    [ 200 / 1000 ]
-    [ 300 / 1000 ]
-    [ 400 / 1000 ]
-    [ 500 / 1000 ]
-    [ 600 / 1000 ]
-    [ 700 / 1000 ]
-    [ 800 / 1000 ]
-    [ 900 / 1000 ]
-    [ 1000 / 1000 ]
-
-``` r
 weight.HPDI <- apply( weight.sim, 2, HPDI, prob=0.95)
 plot(  weight ~ area.s, data=d)
 lines( area.seq, mu.mean)
@@ -328,7 +291,9 @@ shade( mu.HPDI, area.seq)
 shade( weight.HPDI, area.seq)
 ```
 
-![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-15-1.png) This plot also suggests that area is not an important predictor. There seems to be no relation at all with area and sigma is relatively large.
+![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-15-1.png)
+
+This plot also suggests that area is not an important predictor. There seems to be no relation at all with area and sigma is relatively large.
 
 ``` r
 d$groupsize.s <- (d$groupsize - mean(d$groupsize)) / sd(d$groupsize)
@@ -346,42 +311,14 @@ plot( precis( mod6))
 
 ![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-16-1.png)
 
-The groupsize seems to have some importance, at least it is slightly further away from 0 than the parameter for area.
+The group size seems to have some importance, at least it is slightly further away from 0 than the parameter for area.
 
 ``` r
 groupsize.seq <- seq(from=-2, to=3, length.out = 300)
 mu <- link( mod6, data=list(groupsize.s=groupsize.seq))
-```
-
-    ## [ 100 / 1000 ]
-    [ 200 / 1000 ]
-    [ 300 / 1000 ]
-    [ 400 / 1000 ]
-    [ 500 / 1000 ]
-    [ 600 / 1000 ]
-    [ 700 / 1000 ]
-    [ 800 / 1000 ]
-    [ 900 / 1000 ]
-    [ 1000 / 1000 ]
-
-``` r
 mu.mean <- apply(mu, 2, mean)
 mu.HPDI <- apply(mu, 2, HPDI, prob=0.95)
 weight.sim <- sim(mod6, data=list(groupsize.s=groupsize.seq))
-```
-
-    ## [ 100 / 1000 ]
-    [ 200 / 1000 ]
-    [ 300 / 1000 ]
-    [ 400 / 1000 ]
-    [ 500 / 1000 ]
-    [ 600 / 1000 ]
-    [ 700 / 1000 ]
-    [ 800 / 1000 ]
-    [ 900 / 1000 ]
-    [ 1000 / 1000 ]
-
-``` r
 weight.HPDI <- apply(weight.sim, 2, HPDI, prob=0.95)
 plot( weight ~ groupsize.s, data=d)
 lines(groupsize.seq, mu.mean)
@@ -393,7 +330,7 @@ shade(weight.HPDI, groupsize.seq)
 
 While there seems to be more of a slope here, it is still very minor and doesn't look like it is an important factor..
 
-**5H2.** As before, we try to predict weight, but this time using a multivariate model that uses both the area and groupsize as predictor.
+**5H2.** As before, we try to predict weight, but this time using a multivariate model that uses both the area and group size as predictor.
 
 ``` r
 mod7 <- map(
@@ -411,7 +348,7 @@ plot( precis( mod7))
 
 ![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-18-1.png)
 
-And surprise surprise, suddenly both area and groupsize seem to have a discernible importance for predicting body weight. Let's plot the predictions of the model for both predictors, for each holding the other predictor constant at its mean.
+And surprise surprise, suddenly both area and group size seem to have a discernible importance for predicting body weight. Let's plot the predictions of the model for both predictors, for each holding the other predictor constant at its mean.
 
 ``` r
 # Area, holding groupsize fixed
@@ -419,37 +356,9 @@ groupsize.avg <- mean(d$groupsize.s)
 area.seq <- seq(from=-3, to=3, length.out = 300)
 pred.data <- data.frame(groupsize.s=groupsize.avg, area.s=area.seq)
 mu <- link(mod7, data=pred.data)
-```
-
-    ## [ 100 / 1000 ]
-    [ 200 / 1000 ]
-    [ 300 / 1000 ]
-    [ 400 / 1000 ]
-    [ 500 / 1000 ]
-    [ 600 / 1000 ]
-    [ 700 / 1000 ]
-    [ 800 / 1000 ]
-    [ 900 / 1000 ]
-    [ 1000 / 1000 ]
-
-``` r
 mu.mean <- apply(mu, 2, mean)
 mu.HPDI <- apply(mu, 2, HPDI, prob=0.95)
 weight.sim <- sim(mod7, data=pred.data)
-```
-
-    ## [ 100 / 1000 ]
-    [ 200 / 1000 ]
-    [ 300 / 1000 ]
-    [ 400 / 1000 ]
-    [ 500 / 1000 ]
-    [ 600 / 1000 ]
-    [ 700 / 1000 ]
-    [ 800 / 1000 ]
-    [ 900 / 1000 ]
-    [ 1000 / 1000 ]
-
-``` r
 weight.HPDI <- apply(weight.sim, 2, HPDI, prob=0.95)
 plot( weight ~ area.s, data=d, type="n" )
 lines(area.seq, mu.mean)
@@ -467,37 +376,9 @@ area.avg <- mean(d$area.s)
 groupsize.seq <- seq(from=-2, to=3, length.out = 300)
 pred.data <- data.frame(groupsize.s=groupsize.seq, area.s=area.avg)
 mu <- link(mod7, data=pred.data)
-```
-
-    ## [ 100 / 1000 ]
-    [ 200 / 1000 ]
-    [ 300 / 1000 ]
-    [ 400 / 1000 ]
-    [ 500 / 1000 ]
-    [ 600 / 1000 ]
-    [ 700 / 1000 ]
-    [ 800 / 1000 ]
-    [ 900 / 1000 ]
-    [ 1000 / 1000 ]
-
-``` r
 mu.mean <- apply(mu, 2, mean)
 mu.HPDI <- apply(mu, 2, HPDI, prob=0.95)
 weight.sim <- sim(mod7, data=pred.data)
-```
-
-    ## [ 100 / 1000 ]
-    [ 200 / 1000 ]
-    [ 300 / 1000 ]
-    [ 400 / 1000 ]
-    [ 500 / 1000 ]
-    [ 600 / 1000 ]
-    [ 700 / 1000 ]
-    [ 800 / 1000 ]
-    [ 900 / 1000 ]
-    [ 1000 / 1000 ]
-
-``` r
 weight.HPDI <- apply(weight.sim, 2, HPDI, prob=0.95)
 plot( weight ~ groupsize.s, data=d, type="n")
 lines( groupsize.seq, mu.mean)
@@ -517,9 +398,12 @@ pairs( weight ~ groupsize + area, data=d)
 
 ![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-21-1.png)
 
-Groupsize is strongly correlated with area: a larger territory is associated with a larger group of foxes (makes sense, right?). Both area and groupsize are also correlated with weight: area is positively correlated with weight, while groupsize is negatively correlated with weight. This circumstance leads to a masked association: the two predictor variables cancel each other out and thus don't seem important.
+Group size is strongly correlated with area: a larger territory is associated with a larger group of foxes (makes sense, right?). Both area and group size are also correlated with weight: area is positively correlated with weight, while group size is negatively correlated with weight. This circumstance leads to a masked association: the two predictor variables cancel each other out and thus don't seem important.
 
-**5H3.** Let's add the average amount of food variable. We fit two more multivariate regressions: (1) `weight ~ avgfood + groupsize` (2) `weight ~ avgfood + groupsize + area`
+**5H3.** Let's add the average amount of food variable. We fit two more multivariate regressions:
+
+1.  `weight ~ avgfood + groupsize`
+2.  `weight ~ avgfood + groupsize + area`
 
 ``` r
 d$avgfood.s <- (d$avgfood - mean(d$avgfood)) / sd(d$avgfood)
@@ -553,7 +437,7 @@ plot( precis( mod9))
 
 ![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-23-1.png)
 
-Adding both average amount of food and the area of the territory leads to a decrease in their paramaters for both predictor variables, compared with the regressions that contain only of the two. (a) Is `avgfood` or `area` a better predictor to include in a model?
+Adding both average amount of food and the area of the territory leads to a decrease in their parameters for both predictor variables, compared with the regressions that contain only of the two. (a) Is `avgfood` or `area` a better predictor to include in a model?
 
 ``` r
 # Predictor residual plot
@@ -589,7 +473,9 @@ for (i in 1:length(f.resid)) {
 }
 ```
 
-![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-24-1.png) This residual plot shows the residual average amount of food after accounting for the linear association with area. Each line segment is a residual, that is. the distance of observed average amount of food from the expected value, when trying to predict the amount of average food with the area alone. Thus foxes above the regression line have more food than expected and the one below the line have less than expected, according to the area. The residuals are the variation in average amount of food that is left over, after taking out the purely linear relationship between area and average food. We can use these residuals to plot them against the actual outcome of interest, the weight. These are also called predictor residual plots.
+![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-24-1.png)
+
+This residual plot shows the residual average amount of food after accounting for the linear association with area. Each line segment is a residual, that is. the distance of observed average amount of food from the expected value, when trying to predict the amount of average food with the area alone. Thus foxes above the regression line have more food than expected and the one below the line have less than expected, according to the area. The residuals are the variation in average amount of food that is left over, after taking out the purely linear relationship between area and average food. We can use these residuals to plot them against the actual outcome of interest, the weight. These are also called predictor residual plots.
 
 ``` r
 plot( d$weight ~ f.resid, col=rangi2, xlab="Average food residuals", ylab="Weight")
@@ -622,7 +508,9 @@ abline(a=coef(mod9)['a'], b=coef(mod9)['bA'])
 abline(v=0, lty=2)
 ```
 
-![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-26-1.png) These predictor residual plots can be interpreted as follows: The vertical dashed line indicates an area that exactly matches the expectation from the average amount of food. Thus points to the right of the line represent foxes having more area than expected for their average food and the one to the left have less area than expected for their amount of average food. To both sides, we have about the same weights.
+![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-26-1.png)
+
+These predictor residual plots can be interpreted as follows: The vertical dashed line indicates an area that exactly matches the expectation from the average amount of food. Thus points to the right of the line represent foxes having more area than expected for their average food and the one to the left have less area than expected for their amount of average food. To both sides, we have about the same weights.
 
 Unfortunately, the plots are about the same for both area and average food, so I don't find them helpful to determine which predictor variable would be better to include in the model.
 
@@ -637,37 +525,9 @@ data.pred <- data.frame(area.s=area.avg,
                         groupsize.s=groupsize.avg,
                         avgfood.s=avgfood.seq)
 mu <- link(mod9, data=data.pred)
-```
-
-    ## [ 100 / 1000 ]
-    [ 200 / 1000 ]
-    [ 300 / 1000 ]
-    [ 400 / 1000 ]
-    [ 500 / 1000 ]
-    [ 600 / 1000 ]
-    [ 700 / 1000 ]
-    [ 800 / 1000 ]
-    [ 900 / 1000 ]
-    [ 1000 / 1000 ]
-
-``` r
 mu.mean <- apply(mu, 2, mean)
 mu.HPDI <- apply(mu, 2, HPDI)
 weight.sim <- sim(mod9, data=data.pred)
-```
-
-    ## [ 100 / 1000 ]
-    [ 200 / 1000 ]
-    [ 300 / 1000 ]
-    [ 400 / 1000 ]
-    [ 500 / 1000 ]
-    [ 600 / 1000 ]
-    [ 700 / 1000 ]
-    [ 800 / 1000 ]
-    [ 900 / 1000 ]
-    [ 1000 / 1000 ]
-
-``` r
 weight.HPDI <- apply(weight.sim, 2, HPDI, prob=0.95)
 plot( weight ~ avgfood.s, data=d, type="n")
 lines( avgfood.seq, mu.mean)
@@ -675,7 +535,9 @@ shade( mu.HPDI, avgfood.seq)
 shade( weight.HPDI, avgfood.seq)
 ```
 
-![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-27-1.png) Now the same for area:
+![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-27-1.png)
+
+Now the same for area:
 
 ``` r
 # counterfactual plot for area, holding groupsize and average food fixed
@@ -686,37 +548,9 @@ data.pred <- data.frame(area.s=area.seq,
                         groupsize.s=groupsize.avg,
                         avgfood.s=avgfood.avg)
 mu <- link(mod9, data=data.pred)
-```
-
-    ## [ 100 / 1000 ]
-    [ 200 / 1000 ]
-    [ 300 / 1000 ]
-    [ 400 / 1000 ]
-    [ 500 / 1000 ]
-    [ 600 / 1000 ]
-    [ 700 / 1000 ]
-    [ 800 / 1000 ]
-    [ 900 / 1000 ]
-    [ 1000 / 1000 ]
-
-``` r
 mu.mean <- apply(mu, 2, mean)
 mu.HPDI <- apply(mu, 2, HPDI)
 weight.sim <- sim(mod9, data=data.pred)
-```
-
-    ## [ 100 / 1000 ]
-    [ 200 / 1000 ]
-    [ 300 / 1000 ]
-    [ 400 / 1000 ]
-    [ 500 / 1000 ]
-    [ 600 / 1000 ]
-    [ 700 / 1000 ]
-    [ 800 / 1000 ]
-    [ 900 / 1000 ]
-    [ 1000 / 1000 ]
-
-``` r
 weight.HPDI <- apply(weight.sim, 2, HPDI, prob=0.95)
 plot( weight ~ area.s, data=d, type="n")
 lines(area.seq, mu.mean)
@@ -724,7 +558,9 @@ shade(mu.HPDI, area.seq)
 shade(weight.HPDI, area.seq)
 ```
 
-![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-28-1.png) Both plots look very similar, so they're not very helpful in deciding which of the two variables would be better to include. Based on these plots, I would conclude that in terms of the model, it doesn't make much difference if you include one or the other. I would not recommend to include both though. As we can see in the following plot, both variables are strongly correlated with each other:
+![](Chapter5_Ex_files/figure-markdown_github/unnamed-chunk-28-1.png)
+
+Both plots look very similar, so they're not very helpful in deciding which of the two variables would be better to include. Based on these plots, I would conclude that in terms of the model, it doesn't make much difference if you include one or the other. I would not recommend to include both though. As we can see in the following plot, both variables are strongly correlated with each other:
 
 ``` r
 pairs(weight ~ avgfood + groupsize + area, data=d)
@@ -742,4 +578,4 @@ cor( d[,c("weight", "avgfood", "groupsize", "area")])
     ## groupsize -0.16099376  0.90148290  1.0000000 0.82759448
     ## area       0.01947728  0.88310378  0.8275945 1.00000000
 
-The correlations between average food, groupsize and area are all very high (above 0.8). Especially the correlation of average food with groupsize and area are very high, about 0.9. Which makes sense, since thinking about it, they should all be correlated: More area means more food avaiable, which means a bigger group is sustainable. This high correlation leads to multicollinearity, which also explains why the effect of average food and area is greatly reduced, with higher standard deviation, when both are included in the model. Knowing the area (and groupsize), adding the average amount of food doesn't add any more useful information. Since I assume that area causes average food which causes weight, I would only include area (the original cause) in my model, but I guess you could also argue that average food is the more direct cause for weight. As said in the chapter, one valid approach is also to just show that using either of the highly correlated predictor variables leads to the same result.
+The correlations between average food, group size and area are all very high (above 0.8). Especially the correlation of average food with groupsize and area are very high, about 0.9. Which makes sense, since thinking about it, they should all be correlated: More area means more food available, which means a bigger group is sustainable. This high correlation leads to multicollinearity, which also explains why the effect of average food and area is greatly reduced, with higher standard deviation, when both are included in the model. Knowing the area (and group size), adding the average amount of food doesn't add any more useful information. Since I assume that area causes average food which causes weight, I would only include area (the original cause) in my model, but I guess you could also argue that average food is the more direct cause for weight. As said in the chapter, one valid approach is also to just show that using either of the highly correlated predictor variables leads to the same result.
