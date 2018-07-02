@@ -2,7 +2,7 @@
 These are my solutions to some of the exercises of the book "Statistical Rethinking" by Richard McElreath.
 
 ## Chapter 4
-- [How Normality arises](Chapter 4/chapter4.R)
+- [How Normality arises](Chapter%204/chapter4.R)
 - [Linear Models](Chapter 4/chapter4b.R)
 - [Polynomial Regression](Chapter 4/chapter4.c.R)
 - [Exercises](Chapter 4/chapter4_Ex.md)
