@@ -181,7 +181,7 @@ y &\sim \text{Normal}(\mu, \sigma=1) \\
 \mu &= 0.15x_1 - 0.4x_2
 \end{align*}")
 
-We try to fit the data using models with increasing number of parameters (up to 5), one time with ![N=20](https://latex.codecogs.com/png.latex?N%3D20 "N=20") observations:
+We try to fit the data using models with increasing number of parameters (up to 5), first with ![N=20](https://latex.codecogs.com/png.latex?N%3D20 "N=20") observations:
 
 ``` r
 N <- 20
@@ -189,23 +189,15 @@ kseq <- 1:5
 dev <- sapply( kseq, function(k) {
   print(k);
   # takes a long time ~ around an hour or so
-  r <- mcreplicate( 1e4, sim.train.test( N=N, k=k, rho=c(0.15, -0.4)), mc.cores = 4 );
+  #r <- replicate( 1e4, sim.train.test( N=N, k=k, rho=c(0.15, -0.4)), mc.cores = 4 );
+  # faster to use mcreplicate (can use multiple cpu cores)
+  r <- mcreplicate( 1e2, sim.train.test( N=N, k=k, rho=c(0.15, -0.4)), mc.cores = 4 );
   c( mean(r[1, ]), mean(r[2,] ), sd(r[1,]), sd(r[2,]) )
   # mean deviance in sample, mean deviance out sample, sd of in sample deviance, sd of out sample deviance
 })
 ```
 
-    ## [1] 1
-    ## 
-    ## [1] 2
-    ## 
-    ## [1] 3
-    ## 
-    ## [1] 4
-    ## 
-    ## [1] 5
-
-and one time with ![N=100](https://latex.codecogs.com/png.latex?N%3D100 "N=100") observations:
+and then with ![N=100](https://latex.codecogs.com/png.latex?N%3D100 "N=100") observations:
 
 ``` r
 N <- 100
@@ -213,25 +205,19 @@ kseq <- 1:5
 dev100 <- sapply( kseq, function(k) {
   print(k);
   # takes a long time
-  r <- replicate( 1e4, sim.train.test( N=N, k=k, rho=c(0.15, -0.4)) );
+  r <- mcreplicate( 1e2, sim.train.test( N=N, k=k, rho=c(0.15, -0.4)), mc.cores=4 );
   c( mean(r[1, ]), mean(r[2,] ), sd(r[1,]), sd(r[2,]) )
   # mean deviance in sample, mean deviance out sample, sd of in sample deviance, sd of out sample deviance
 })
 ```
-
-    ## [1] 1
-    ## [1] 2
-    ## [1] 3
-    ## [1] 4
-    ## [1] 5
 
 ``` r
 par(mfrow=c(1,2))
 plot( 1:5, dev[1,], ylim=c(min(dev[1:2,]) - 5, max(dev[1:2,]) + 10),
       xlim =c(1,5.1), xlab="number of parameters", ylab="deviance",
       pch=16, cex=1.3, col="steelblue" )
-text(2-0.08, dev[1,2], labels=c("in"), col="steelblue")
-text(2+0.2, dev[2,2], labels=c("out"))
+text(2-0.15, dev[1,2], labels=c("in"), col="steelblue")
+text(2+0.3, dev[2,2], labels=c("out"))
 
 mtext( concat( "N=", 20))
 points( (1:5)+0.1, dev[2,], cex=1.3)   # out of sample deviance, slightly right of in sample deviance
@@ -241,15 +227,15 @@ for ( i in kseq) {
   lines( c(i,i), pts_in, col="steelblue", lwd=2)
   lines( c(i,i)+0.1, pts_out, lwd=2 )
   if (i == 2) {
-    text(c(i,i) +0.25, pts_out, labels=c("-1SD", "+1SD"))
+    text(c(i,i) +0.35, pts_out, labels=c("-1SD", "+1SD"))
   }
 } 
 
 plot( 1:5, dev100[1,], ylim=c(min(dev100[1:2,]) - 15, max(dev100[1:2,]) + 20),
       xlim =c(1,5.1), xlab="number of parameters", ylab="deviance",
       pch=16, cex=1.3, col="steelblue" )
-text(2-0.08, dev100[1,2], labels=c("in"), col="steelblue")
-text(2+0.2, dev100[2,2], labels=c("out"))
+text(2-0.15, dev100[1,2], labels=c("in"), col="steelblue")
+text(2+0.3, dev100[2,2], labels=c("out"))
 
 mtext( concat( "N=", N))
 points( (1:5)+0.1, dev100[2,], cex=1.3)   # out of sample deviance, slightly right of in sample deviance
@@ -259,7 +245,7 @@ for ( i in kseq) {
   lines( c(i,i), pts_in, col="steelblue", lwd=2)
   lines( c(i,i)+0.1, pts_out, lwd=2 )
   if (i == 2) {
-    text(c(i,i) +0.25, pts_out, labels=c("-1SD", "+1SD"))
+    text(c(i,i) +0.35, pts_out, labels=c("-1SD", "+1SD"))
   }
 } 
 ```
@@ -297,42 +283,12 @@ for (i in 1:length(reg) ) {
   dev_r[[i]] <- sapply( kseq, function(k) {
     print(k);
     regi <- reg[i];
-    r <- mcreplicate( 1e4, sim.train.test( N=N, k=k, rho=c(0.15, -0.4), b_sigma=regi), mc.cores=4 );
+    r <- mcreplicate( 1e2, sim.train.test( N=N, k=k, rho=c(0.15, -0.4), b_sigma=regi), mc.cores=4 );
     c( mean(r[1, ]), mean(r[2,] ), sd(r[1,]), sd(r[2,]) )
     # mean deviance in sample, mean deviance out sample, sd of in sample deviance, sd of out sample deviance
   })
 }
 ```
-
-    ## [1] 1
-    ## 
-    ## [1] 2
-    ## 
-    ## [1] 3
-    ## 
-    ## [1] 4
-    ## 
-    ## [1] 5
-    ## 
-    ## [1] 1
-    ## 
-    ## [1] 2
-    ## 
-    ## [1] 3
-    ## 
-    ## [1] 4
-    ## 
-    ## [1] 5
-    ## 
-    ## [1] 1
-    ## 
-    ## [1] 2
-    ## 
-    ## [1] 3
-    ## 
-    ## [1] 4
-    ## 
-    ## [1] 5
 
 and then with 100 observations:
 
@@ -347,42 +303,12 @@ for (i in 1:length(reg)) {
     print(k);
     # takes a long time
     regi <- reg[i]
-    r <- mcreplicate( 1e4, sim.train.test( N=N, k=k, rho=c(0.15, -0.4), b_sigma=regi), mc.cores=4 );
+    r <- mcreplicate( 1e2, sim.train.test( N=N, k=k, rho=c(0.15, -0.4), b_sigma=regi), mc.cores=4 );
     c( mean(r[1, ]), mean(r[2,] ), sd(r[1,]), sd(r[2,]) )
     # mean deviance in sample, mean deviance out sample, sd of in sample deviance, sd of out sample deviance
   })
 }
 ```
-
-    ## [1] 1
-    ## 
-    ## [1] 2
-    ## 
-    ## [1] 3
-    ## 
-    ## [1] 4
-    ## 
-    ## [1] 5
-    ## 
-    ## [1] 1
-    ## 
-    ## [1] 2
-    ## 
-    ## [1] 3
-    ## 
-    ## [1] 4
-    ## 
-    ## [1] 5
-    ## 
-    ## [1] 1
-    ## 
-    ## [1] 2
-    ## 
-    ## [1] 3
-    ## 
-    ## [1] 4
-    ## 
-    ## [1] 5
 
 The plot:
 
@@ -404,7 +330,7 @@ points(1:5, dev_r[[2]][2,], lty=1, type="l")
 # N(0,0.2)
 points(1:5, dev_r[[2]][1,], col="steelblue", lty=1, type="l", lwd=2)
 points(1:5, dev_r[[2]][2,], lty=1, type="l", lwd=2)
-
+legend("bottomleft", c("N(0,1)", "N(0,0.5)", "N(0,0.2)", lty = c(5, 1, 1), lwd=c(1,1,2), bty="n"))
 mtext( concat( "N=", 20))
 
 plot( 1:5, dev100[1,], ylim=c(min(dev100[1:2,]) - 5, max(dev100[1:2,]) + 10),
@@ -428,6 +354,8 @@ mtext( concat( "N=", 100))
 ```
 
 ![](chapter6b_files/figure-markdown_github/unnamed-chunk-19-1.png)
+
+The points are the deviance in (blue) and out of sample (black), using flat priors (i.e. ![N(0,100)](https://latex.codecogs.com/png.latex?N%280%2C100%29 "N(0,100)")). The lines show training (blue) and testing (black) deviance for three regularizing priors.
 
 Motivation for AIC
 ==================
@@ -471,7 +399,10 @@ for ( i in kseq) {
 }
 ```
 
-![](chapter6b_files/figure-markdown_github/unnamed-chunk-20-1.png) \# DIC
+![](chapter6b_files/figure-markdown_github/unnamed-chunk-20-1.png)
+
+DIC
+===
 
 ![\\begin{align\*}
 \\text{DIC} &= \\bar{D} + (\\bar{D} - \\hat{D}) \\\\
@@ -526,7 +457,10 @@ dev.hat <- (-2)*sum( dnorm(     # dev (mean( post) )
 ))
 p.D <- dev.bar - dev.hat
 dic <- dev.hat + 2*p.D    # = dev.bar + ( dev.bar - dev.hat )
+dic
 ```
+
+    ## [1] 419.5201
 
 WAIC - Widely Applicable Information Critera
 ============================================
@@ -561,9 +495,9 @@ lppd <- sum( log( apply(ll, 1, mean ) ) )
 
     ## Warning in log(apply(ll, 1, mean)): NaNs produced
 
+Problem: this is not numerically stable, so we use the numercially stable function `log_sum_exp`.
+
 ``` r
-# Problem: not numerically stable
-# use numercially stable function log_sum_exp
 n_cases <- nrow(cars)
 lppd <-  sapply(1:n_cases, function(i) log_sum_exp(ll[i,]) - log(n_samples) ) 
 pWAIC <- sapply( 1:n_cases, function(i) var(ll[i,]) ) 
@@ -579,7 +513,7 @@ se <- sqrt( n_cases*var( waic_vec ) )
 se
 ```
 
-    ## [1] 14.26854
+    ## [1] 14.21707
 
 ``` r
 # almost the same, some difference remains because of simulation variance
@@ -610,7 +544,7 @@ print(ic)
 ```
 
     ## Deviance      AIC      DIC     WAIC 
-    ## 413.1577 419.1577 419.4185 420.9609
+    ## 413.1576 419.1576 419.5201 420.8239
 
 This is better seen in a plot, so as before, we compute a simulation and see how DIC and WAIC fare, in particular, how good do they estimate **out-of-sample deviance**?
 
@@ -624,7 +558,7 @@ for (i in 1:length(reg) ) {
   dev_DIC_WAIC[[i]] <- sapply( kseq, function(k) {
     print(k);
     regi <- reg[i];
-    r <- mcreplicate( 1e4, sim.train.test( N=N, k=k, rho=c(0.15, -0.4), b_sigma=regi, 
+    r <- mcreplicate( 1e2, sim.train.test( N=N, k=k, rho=c(0.15, -0.4), b_sigma=regi, 
                                             DIC=TRUE, WAIC=TRUE), mc.cores=4 );
     c( mean(r[1, ]), mean(r[2,] ), mean(r[3,]), mean(r[4,]) )
     # mean deviance in sample, mean deviance out sample, mean DIC, mean WAIC
@@ -632,25 +566,7 @@ for (i in 1:length(reg) ) {
 }
 ```
 
-    ## [1] 1
-    ## 
-    ## [1] 2
-    ## 
-    ## [1] 3
-    ## 
-    ## [1] 4
-    ## 
-    ## [1] 5
-    ## 
-    ## [1] 1
-    ## 
-    ## [1] 2
-    ## 
-    ## [1] 3
-    ## 
-    ## [1] 4
-    ## 
-    ## [1] 5
+And the plot:
 
 ``` r
 par(mfrow=c(2,1))
@@ -678,4 +594,4 @@ mtext(text="deviance", side=2, line=2.5, outer=FALSE)
 mtext(text="number of parameter",side=1,line=1,outer=TRUE)
 ```
 
-![](chapter6b_files/figure-markdown_github/unnamed-chunk-26-1.png)
+![](chapter6b_files/figure-markdown_github/unnamed-chunk-28-1.png)
