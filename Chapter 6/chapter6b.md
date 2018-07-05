@@ -193,7 +193,7 @@ dev <- sapply( kseq, function(k) {
   # faster to use mcreplicate (can use multiple cpu cores)
   r <- mcreplicate( 1e2, sim.train.test( N=N, k=k, rho=c(0.15, -0.4)), mc.cores = 4 );
   c( mean(r[1, ]), mean(r[2,] ), sd(r[1,]), sd(r[2,]) )
-  # mean deviance in sample, mean deviance out sample, sd of in sample deviance, sd of out sample deviance
+  # mean deviance in sample, mean deviance out sample, sd in sample deviance, sd out sample deviance
 })
 ```
 
@@ -207,7 +207,7 @@ dev100 <- sapply( kseq, function(k) {
   # takes a long time
   r <- mcreplicate( 1e2, sim.train.test( N=N, k=k, rho=c(0.15, -0.4)), mc.cores=4 );
   c( mean(r[1, ]), mean(r[2,] ), sd(r[1,]), sd(r[2,]) )
-  # mean deviance in sample, mean deviance out sample, sd of in sample deviance, sd of out sample deviance
+  # mean deviance in sample, mean deviance out sample, sd in sample deviance, sd out sample deviance
 })
 ```
 
@@ -285,7 +285,7 @@ for (i in 1:length(reg) ) {
     regi <- reg[i];
     r <- mcreplicate( 1e2, sim.train.test( N=N, k=k, rho=c(0.15, -0.4), b_sigma=regi), mc.cores=4 );
     c( mean(r[1, ]), mean(r[2,] ), sd(r[1,]), sd(r[2,]) )
-    # mean deviance in sample, mean deviance out sample, sd of in sample deviance, sd of out sample deviance
+    # mean deviance in sample, mean deviance out sample, sd in sample deviance, sd out sample deviance
   })
 }
 ```
@@ -305,7 +305,7 @@ for (i in 1:length(reg)) {
     regi <- reg[i]
     r <- mcreplicate( 1e2, sim.train.test( N=N, k=k, rho=c(0.15, -0.4), b_sigma=regi), mc.cores=4 );
     c( mean(r[1, ]), mean(r[2,] ), sd(r[1,]), sd(r[2,]) )
-    # mean deviance in sample, mean deviance out sample, sd of in sample deviance, sd of out sample deviance
+    # mean deviance in sample, mean deviance out sample, sd in sample deviance, sd out sample deviance
   })
 }
 ```
@@ -460,7 +460,7 @@ dic <- dev.hat + 2*p.D    # = dev.bar + ( dev.bar - dev.hat )
 dic
 ```
 
-    ## [1] 419.5201
+    ## [1] 419.2696
 
 WAIC - Widely Applicable Information Critera
 ============================================
@@ -513,7 +513,7 @@ se <- sqrt( n_cases*var( waic_vec ) )
 se
 ```
 
-    ## [1] 14.21707
+    ## [1] 14.27585
 
 ``` r
 # almost the same, some difference remains because of simulation variance
@@ -544,7 +544,7 @@ print(ic)
 ```
 
     ## Deviance      AIC      DIC     WAIC 
-    ## 413.1576 419.1576 419.5201 420.8239
+    ## 413.1575 419.1575 419.2696 420.7967
 
 This is better seen in a plot, so as before, we compute a simulation and see how DIC and WAIC fare, in particular, how good do they estimate **out-of-sample deviance**?
 
@@ -571,7 +571,8 @@ And the plot:
 ``` r
 par(mfrow=c(2,1))
 par(mar = c(0.5, 2, 1, 1), oma=c(3,2,2,2))
-plot( 1:5, dev_DIC_WAIC[[1]][2,], ylim=c(min(dev_DIC_WAIC[[1]][1:2,]) - 5, max(dev_DIC_WAIC[[1]][1:2,]) + 10),
+plot( 1:5, dev_DIC_WAIC[[1]][2,], 
+      ylim=c(min(dev_DIC_WAIC[[1]][1:2,]) - 5, max(dev_DIC_WAIC[[1]][1:2,]) + 10),
       xlim =c(1,5.1), xlab=NA, xaxt="n", cex=1.3 )
 axis(side = 1, at = 1:5, labels = FALSE, tck = -0.04)
 points( 1:5, dev_DIC_WAIC[[2]][2,], col="steelblue", cex=1.3)
@@ -583,7 +584,8 @@ legend("topleft", "DIC", bty="n")
 mtext(text="deviance", side=2, line=2.5, outer=FALSE)
 mtext(concat("N=",20))
 
-plot( 1:5, dev_DIC_WAIC[[1]][2,], ylim=c(min(dev_DIC_WAIC[[1]][1:2,]) - 5, max(dev_DIC_WAIC[[1]][1:2,]) + 10),
+plot( 1:5, dev_DIC_WAIC[[1]][2,], 
+      ylim=c(min(dev_DIC_WAIC[[1]][1:2,]) - 5, max(dev_DIC_WAIC[[1]][1:2,]) + 10),
       xlim =c(1,5.1), xlab=NA, xaxt="n", cex=1.3 )
 axis(side = 1, at = 1:5, labels = FALSE, tck = -0.04)
 points( 1:5, dev_DIC_WAIC[[2]][2,], col="steelblue", cex=1.3)
