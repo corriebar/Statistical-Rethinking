@@ -330,7 +330,7 @@ points(1:5, dev_r[[2]][2,], lty=1, type="l")
 # N(0,0.2)
 points(1:5, dev_r[[2]][1,], col="steelblue", lty=1, type="l", lwd=2)
 points(1:5, dev_r[[2]][2,], lty=1, type="l", lwd=2)
-legend("bottomleft", c("N(0,1)", "N(0,0.5)", "N(0,0.2)", lty = c(5, 1, 1), lwd=c(1,1,2), bty="n"))
+legend("bottomleft", c("N(0,1)", "N(0,0.5)", "N(0,0.2)"), lty = c(5, 1, 1), lwd=c(1,1,2), bty="n")
 mtext( concat( "N=", 20))
 
 plot( 1:5, dev100[1,], ylim=c(min(dev100[1:2,]) - 5, max(dev100[1:2,]) + 10),
@@ -460,7 +460,7 @@ dic <- dev.hat + 2*p.D    # = dev.bar + ( dev.bar - dev.hat )
 dic
 ```
 
-    ## [1] 419.2696
+    ## [1] 419.5674
 
 WAIC - Widely Applicable Information Critera
 ============================================
@@ -513,7 +513,7 @@ se <- sqrt( n_cases*var( waic_vec ) )
 se
 ```
 
-    ## [1] 14.27585
+    ## [1] 14.41841
 
 ``` r
 # almost the same, some difference remains because of simulation variance
@@ -544,7 +544,7 @@ print(ic)
 ```
 
     ## Deviance      AIC      DIC     WAIC 
-    ## 413.1575 419.1575 419.2696 420.7967
+    ## 413.1575 419.1575 419.5674 421.1511
 
 This is better seen in a plot, so as before, we compute a simulation and see how DIC and WAIC fare, in particular, how good do they estimate **out-of-sample deviance**?
 
