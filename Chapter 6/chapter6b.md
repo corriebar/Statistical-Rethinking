@@ -191,7 +191,7 @@ dev <- sapply( kseq, function(k) {
   # takes a long time ~ around an hour or so
   #r <- replicate( 1e4, sim.train.test( N=N, k=k, rho=c(0.15, -0.4)), mc.cores = 4 );
   # faster to use mcreplicate (can use multiple cpu cores)
-  r <- mcreplicate( 1e2, sim.train.test( N=N, k=k, rho=c(0.15, -0.4)), mc.cores = 4 );
+  r <- mcreplicate( 1e4, sim.train.test( N=N, k=k, rho=c(0.15, -0.4)), mc.cores = 4 );
   c( mean(r[1, ]), mean(r[2,] ), sd(r[1,]), sd(r[2,]) )
   # mean deviance in sample, mean deviance out sample, sd in sample deviance, sd out sample deviance
 })
@@ -205,7 +205,7 @@ kseq <- 1:5
 dev100 <- sapply( kseq, function(k) {
   print(k);
   # takes a long time
-  r <- mcreplicate( 1e2, sim.train.test( N=N, k=k, rho=c(0.15, -0.4)), mc.cores=4 );
+  r <- mcreplicate( 1e4, sim.train.test( N=N, k=k, rho=c(0.15, -0.4)), mc.cores=4 );
   c( mean(r[1, ]), mean(r[2,] ), sd(r[1,]), sd(r[2,]) )
   # mean deviance in sample, mean deviance out sample, sd in sample deviance, sd out sample deviance
 })
@@ -220,9 +220,9 @@ text(2-0.15, dev[1,2], labels=c("in"), col="steelblue")
 text(2+0.3, dev[2,2], labels=c("out"))
 
 mtext( concat( "N=", 20))
-points( (1:5)+0.1, dev[2,], cex=1.3)   # out of sample deviance, slightly right of in sample deviance
+points( (1:5)+0.1, dev[2,], cex=1.3)  # out of sample deviance, slightly right of in sample deviance
 for ( i in kseq) {
-  pts_in <- dev[1,i] + c(-1,1)*dev[3,i]    # standard deviation of in sample
+  pts_in <- dev[1,i] + c(-1,1)*dev[3,i]   # standard deviation of in sample
   pts_out <- dev[2,i] + c(-1,1)*dev[4,i]
   lines( c(i,i), pts_in, col="steelblue", lwd=2)
   lines( c(i,i)+0.1, pts_out, lwd=2 )
@@ -238,9 +238,9 @@ text(2-0.15, dev100[1,2], labels=c("in"), col="steelblue")
 text(2+0.3, dev100[2,2], labels=c("out"))
 
 mtext( concat( "N=", N))
-points( (1:5)+0.1, dev100[2,], cex=1.3)   # out of sample deviance, slightly right of in sample deviance
+points( (1:5)+0.1, dev100[2,], cex=1.3) # out of sample deviance, slightly right of in sample deviance
 for ( i in kseq) {
-  pts_in <- dev100[1,i] + c(-1,1)*dev100[3,i]    # standard deviation of in sample
+  pts_in <- dev100[1,i] + c(-1,1)*dev100[3,i]  # standard deviation of in sample
   pts_out <- dev100[2,i] + c(-1,1)*dev100[4,i]
   lines( c(i,i), pts_in, col="steelblue", lwd=2)
   lines( c(i,i)+0.1, pts_out, lwd=2 )
@@ -283,7 +283,7 @@ for (i in 1:length(reg) ) {
   dev_r[[i]] <- sapply( kseq, function(k) {
     print(k);
     regi <- reg[i];
-    r <- mcreplicate( 1e2, sim.train.test( N=N, k=k, rho=c(0.15, -0.4), b_sigma=regi), mc.cores=4 );
+    r <- mcreplicate( 1e4, sim.train.test( N=N, k=k, rho=c(0.15, -0.4), b_sigma=regi), mc.cores=4 );
     c( mean(r[1, ]), mean(r[2,] ), sd(r[1,]), sd(r[2,]) )
     # mean deviance in sample, mean deviance out sample, sd in sample deviance, sd out sample deviance
   })
@@ -303,7 +303,7 @@ for (i in 1:length(reg)) {
     print(k);
     # takes a long time
     regi <- reg[i]
-    r <- mcreplicate( 1e2, sim.train.test( N=N, k=k, rho=c(0.15, -0.4), b_sigma=regi), mc.cores=4 );
+    r <- mcreplicate( 1e4, sim.train.test( N=N, k=k, rho=c(0.15, -0.4), b_sigma=regi), mc.cores=4 );
     c( mean(r[1, ]), mean(r[2,] ), sd(r[1,]), sd(r[2,]) )
     # mean deviance in sample, mean deviance out sample, sd in sample deviance, sd out sample deviance
   })
@@ -328,8 +328,8 @@ points(1:5, dev_r[[2]][1,], col="steelblue", lty=1, type="l")
 points(1:5, dev_r[[2]][2,], lty=1, type="l")
 
 # N(0,0.2)
-points(1:5, dev_r[[2]][1,], col="steelblue", lty=1, type="l", lwd=2)
-points(1:5, dev_r[[2]][2,], lty=1, type="l", lwd=2)
+points(1:5, dev_r[[3]][1,], col="steelblue", lty=1, type="l", lwd=2)
+points(1:5, dev_r[[3]][2,], lty=1, type="l", lwd=2)
 legend("bottomleft", c("N(0,1)", "N(0,0.5)", "N(0,0.2)"), lty = c(5, 1, 1), lwd=c(1,1,2), bty="n")
 mtext( concat( "N=", 20))
 
@@ -347,8 +347,8 @@ points(1:5, dev_r100[[2]][1,], col="steelblue", lty=1, type="l")
 points(1:5, dev_r100[[2]][2,], lty=1, type="l")
 
 # N(0,0.2)
-points(1:5, dev_r100[[2]][1,], col="steelblue", lty=1, type="l", lwd=2)
-points(1:5, dev_r100[[2]][2,], lty=1, type="l", lwd=2)
+points(1:5, dev_r100[[3]][1,], col="steelblue", lty=1, type="l", lwd=2)
+points(1:5, dev_r100[[3]][2,], lty=1, type="l", lwd=2)
 
 mtext( concat( "N=", 100))
 ```
@@ -372,7 +372,7 @@ aic100 <- dev100[1,] + 2*kseq
 
 par(mfrow=c(1,2))
 plot( 1:5, dev[1,], ylim=c(min(dev[1:2,]) - 5, max(dev[1:2,]) + 10),
-      xlim =c(1,5.1), xlab="number of parameters", ylab="deviance",
+      xlim =c(1,5.5), xlab="number of parameters", ylab="deviance",
       pch=16, col="steelblue", cex=1.3 )
 lines(aic, lty=2, lwd=1.5)
 
@@ -381,12 +381,12 @@ points( (1:5), dev[2,], cex=1.3)   # out of sample deviance, slightly right of i
 for ( i in kseq) {
   dif <- dev[2,i] - dev[1,i]
   arrows(i+0.07, dev[1,i], i+0.07, dev[2,i], length=0.05, angle=90, code=3)
-  text(i+0.18, dev[1,i]+0.5*dif, labels = round(dif, digits=1))
+  text(i+0.2, dev[1,i]+0.5*dif, labels = round(dif, digits=1))
   }
 
 # for N=100
 plot( 1:5, dev100[1,], ylim=c(min(dev100[1:2,]) - 5, max(dev100[1:2,]) + 10),
-      xlim =c(1,5.1), xlab="number of parameters", ylab="deviance",
+      xlim =c(1,5.5), xlab="number of parameters", ylab="deviance",
       pch=16, col="steelblue", cex=1.3 )
 lines(aic, lty=2, lwd=1.5)
 
@@ -395,7 +395,7 @@ points( (1:5), dev100[2,], cex=1.3)   # out of sample deviance, slightly right o
 for ( i in kseq) {
   dif <- dev100[2,i] - dev100[1,i]
   arrows(i+0.07, dev100[1,i], i+0.07, dev100[2,i], length=0.05, angle=90, code=3)
-  text(i+0.18, dev100[1,i]+0.5*dif, labels = round(dif, digits=1))
+  text(i+0.2, dev100[1,i]+0.5*dif, labels = round(dif, digits=1))
 }
 ```
 
@@ -460,7 +460,7 @@ dic <- dev.hat + 2*p.D    # = dev.bar + ( dev.bar - dev.hat )
 dic
 ```
 
-    ## [1] 419.5674
+    ## [1] 419.3113
 
 WAIC - Widely Applicable Information Critera
 ============================================
@@ -513,7 +513,7 @@ se <- sqrt( n_cases*var( waic_vec ) )
 se
 ```
 
-    ## [1] 14.41841
+    ## [1] 14.22904
 
 ``` r
 # almost the same, some difference remains because of simulation variance
@@ -544,7 +544,7 @@ print(ic)
 ```
 
     ## Deviance      AIC      DIC     WAIC 
-    ## 413.1575 419.1575 419.5674 421.1511
+    ## 413.1576 419.1576 419.3113 420.6840
 
 This is better seen in a plot, so as before, we compute a simulation and see how DIC and WAIC fare, in particular, how good do they estimate **out-of-sample deviance**?
 
@@ -558,7 +558,7 @@ for (i in 1:length(reg) ) {
   dev_DIC_WAIC[[i]] <- sapply( kseq, function(k) {
     print(k);
     regi <- reg[i];
-    r <- mcreplicate( 1e2, sim.train.test( N=N, k=k, rho=c(0.15, -0.4), b_sigma=regi, 
+    r <- mcreplicate( 1e4, sim.train.test( N=N, k=k, rho=c(0.15, -0.4), b_sigma=regi, 
                                             DIC=TRUE, WAIC=TRUE), mc.cores=4 );
     c( mean(r[1, ]), mean(r[2,] ), mean(r[3,]), mean(r[4,]) )
     # mean deviance in sample, mean deviance out sample, mean DIC, mean WAIC
@@ -578,7 +578,7 @@ axis(side = 1, at = 1:5, labels = FALSE, tck = -0.04)
 points( 1:5, dev_DIC_WAIC[[2]][2,], col="steelblue", cex=1.3)
 lines( dev_DIC_WAIC[[1]][3,] )
 lines( dev_DIC_WAIC[[2]][3,], col="steelblue")
-text(2, dev_DIC_WAIC[[2]][1,2]-5, "N(0,0.5)", col="steelblue")
+text(2, dev_DIC_WAIC[[2]][2,2]-5, "N(0,0.5)", col="steelblue")
 text(4, dev_DIC_WAIC[[1]][2,4]+5, "N(0,100)")
 legend("topleft", "DIC", bty="n")
 mtext(text="deviance", side=2, line=2.5, outer=FALSE)
@@ -597,3 +597,5 @@ mtext(text="number of parameter",side=1,line=1,outer=TRUE)
 ```
 
 ![](chapter6b_files/figure-markdown_github/unnamed-chunk-28-1.png)
+
+The points in the plot are the out of sample deviance, once for the flat prior ![N(0,100)](https://latex.codecogs.com/png.latex?N%280%2C100%29 "N(0,100)") in black, and once for the regularizing prior ![N(0,0.5)](https://latex.codecogs.com/png.latex?N%280%2C0.5%29 "N(0,0.5)") in blue. The lines are the DIC respective WAIC, also both with flat and regularizing prior. While the DIC and WAIC alone can already give a good estimate of the out-of-sampe deviance, using regularizing priors still helps.
