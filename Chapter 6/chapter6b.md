@@ -375,27 +375,28 @@ plot( 1:5, dev[1,], ylim=c(min(dev[1:2,]) - 5, max(dev[1:2,]) + 10),
       xlim =c(1,5.5), xlab="number of parameters", ylab="deviance",
       pch=16, col="steelblue", cex=1.3 )
 lines(aic, lty=2, lwd=1.5)
+legend("bottomleft", c("AIC"), lty = c(2), lwd=c(1), bty="n")
 
 mtext( concat( "N=", 20))
 points( (1:5), dev[2,], cex=1.3)   # out of sample deviance, slightly right of in sample deviance
 for ( i in kseq) {
   dif <- dev[2,i] - dev[1,i]
   arrows(i+0.07, dev[1,i], i+0.07, dev[2,i], length=0.05, angle=90, code=3)
-  text(i+0.2, dev[1,i]+0.5*dif, labels = round(dif, digits=1))
+  text(i+0.25, dev[1,i]+0.5*dif, labels = round(dif, digits=1))
   }
 
 # for N=100
 plot( 1:5, dev100[1,], ylim=c(min(dev100[1:2,]) - 5, max(dev100[1:2,]) + 10),
       xlim =c(1,5.5), xlab="number of parameters", ylab="deviance",
       pch=16, col="steelblue", cex=1.3 )
-lines(aic, lty=2, lwd=1.5)
+lines(aic100, lty=2, lwd=1.5)
 
 mtext( concat( "N=", 100))
 points( (1:5), dev100[2,], cex=1.3)   # out of sample deviance, slightly right of in sample deviance
 for ( i in kseq) {
   dif <- dev100[2,i] - dev100[1,i]
   arrows(i+0.07, dev100[1,i], i+0.07, dev100[2,i], length=0.05, angle=90, code=3)
-  text(i+0.2, dev100[1,i]+0.5*dif, labels = round(dif, digits=1))
+  text(i+0.25, dev100[1,i]+0.5*dif, labels = round(dif, digits=1))
 }
 ```
 
@@ -460,7 +461,7 @@ dic <- dev.hat + 2*p.D    # = dev.bar + ( dev.bar - dev.hat )
 dic
 ```
 
-    ## [1] 419.3113
+    ## [1] 419.2076
 
 WAIC - Widely Applicable Information Critera
 ============================================
@@ -513,7 +514,7 @@ se <- sqrt( n_cases*var( waic_vec ) )
 se
 ```
 
-    ## [1] 14.22904
+    ## [1] 14.36859
 
 ``` r
 # almost the same, some difference remains because of simulation variance
@@ -544,7 +545,7 @@ print(ic)
 ```
 
     ## Deviance      AIC      DIC     WAIC 
-    ## 413.1576 419.1576 419.3113 420.6840
+    ## 413.1576 419.1576 419.2076 420.6937
 
 This is better seen in a plot, so as before, we compute a simulation and see how DIC and WAIC fare, in particular, how good do they estimate **out-of-sample deviance**?
 
@@ -572,7 +573,7 @@ And the plot:
 par(mfrow=c(2,1))
 par(mar = c(0.5, 2, 1, 1), oma=c(3,2,2,2))
 plot( 1:5, dev_DIC_WAIC[[1]][2,], 
-      ylim=c(min(dev_DIC_WAIC[[1]][1:2,]) - 5, max(dev_DIC_WAIC[[1]][1:2,]) + 10),
+      #ylim=c(min(dev_DIC_WAIC[[1]][1:2,]) - 5, max(dev_DIC_WAIC[[1]][1:2,]) + 10),
       xlim =c(1,5.1), xlab=NA, xaxt="n", cex=1.3 )
 axis(side = 1, at = 1:5, labels = FALSE, tck = -0.04)
 points( 1:5, dev_DIC_WAIC[[2]][2,], col="steelblue", cex=1.3)
@@ -585,7 +586,7 @@ mtext(text="deviance", side=2, line=2.5, outer=FALSE)
 mtext(concat("N=",20))
 
 plot( 1:5, dev_DIC_WAIC[[1]][2,], 
-      ylim=c(min(dev_DIC_WAIC[[1]][1:2,]) - 5, max(dev_DIC_WAIC[[1]][1:2,]) + 10),
+      #ylim=c(min(dev_DIC_WAIC[[1]][1:2,]) - 5, max(dev_DIC_WAIC[[1]][1:2,]) + 10),
       xlim =c(1,5.1), xlab=NA, xaxt="n", cex=1.3 )
 axis(side = 1, at = 1:5, labels = FALSE, tck = -0.04)
 points( 1:5, dev_DIC_WAIC[[2]][2,], col="steelblue", cex=1.3)

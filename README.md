@@ -17,7 +17,7 @@ These are code snippets, plots and my solutions to some of the exercises of the 
 
 ## Chapter 6
 - [Overfitting](Chapter%206/chapter6a.R)
-- [Information Theory and Model Performance](Chapter%206/chapter6b.R)
+- [Information Theory and Model Performance](Chapter%206/chapter6b.md)
 - [Using Information Criteria](Chapter%206/chapter6c.md)
 
 
