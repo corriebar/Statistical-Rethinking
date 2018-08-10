@@ -458,7 +458,8 @@ mtext(text="deviance", side=2, line=2.5, outer=FALSE)
 mtext(concat("N=",20))
 
 plot( 1:5, dev_DIC_WAIC[[1]][2,], 
-      #ylim=c(min(dev_DIC_WAIC[[1]][1:2,]) - 5, max(dev_DIC_WAIC[[1]][1:2,]) + 10),
+      ylim=c(min(dev_DIC_WAIC[[1]][c(2,4),], dev_DIC_WAIC[[2]][c(2,4),]) - 5, 
+             max(dev_DIC_WAIC[[1]][c(2,4),], dev_DIC_WAIC[[2]][c(2,4),]) + 10),
       xlim =c(1,5.1), xlab=NA, xaxt="n", cex=1.3 )
 axis(side = 1, at = 1:5, labels = FALSE, tck = -0.04)
 points( 1:5, dev_DIC_WAIC[[2]][2,], col="steelblue", cex=1.3)
