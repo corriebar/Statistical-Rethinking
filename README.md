@@ -21,4 +21,7 @@ These are code snippets, plots and my solutions to some of the exercises of the 
 - [Using Information Criteria](Chapter%206/chapter6c.md)
 - [Exercises](Chapter%206/chapter6_Ex.md)
 
+## Chapter 7
+- [Interactions](Chapter%207/chapter7.md)
+
 

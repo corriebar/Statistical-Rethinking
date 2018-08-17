@@ -295,7 +295,7 @@ The blue line is an imaginary nation with maximum observed ruggedness (6.2).
 
 That is, if we have a nation with low ruggedness and we "move" it to Africa, it's GDP goes down, whereas a nation with high ruggedness would see its GDP increase.
 
-## 7.3 - Continuous interactions
+## 7.3  Continuous interactions
 ```{r}
 data(tulips)
 d <- tulips
@@ -386,8 +386,8 @@ compare( m7.6, m7.7 )
 
 Pretty much all weight is on the second model with interaction term, so it seems to be a better model than without interaction term.
 
-## Center and re-estimate
-Now,let's center the variables instead.
+### Center and re-estimate
+Now, let's center the variables instead.
 ```{r}
 d$shade.c <- d$shade - mean(d$shade)
 d$water.c <- d$water - mean(d$water)
@@ -437,6 +437,7 @@ Just the estimates of the interaction model:
 precis( m7.9 )
 ```
 
+### Plot continuous interactions
 Let's plot the predictions. We make a plot showing the predictions for different values of water to get a feeling of the interaction effect.
 ```{r, fig.height=7, fig.width=10}
 par(mfrow=c(2,3))
@@ -510,3 +511,33 @@ for ( s in -1:1 ){
 }
 ```
 
+## 7.4 Interactions in design formulas
+```{r, eval=F}
+m7.x <- lm( y ~ x + z + x*z, data=d)
+```
+Same model:
+```{r, eval=F}
+m7.x <- lm( y ~ x*z, data=d)
+```
+
+Fit a model with interaction term but without direct effect:
+```{r, eval=F}
+m7.x <- lm( y ~ x + x*z - z, data=d)
+```
+
+Run a model with interaction term and all lower-order interactions:
+```{r, eval=F}
+m7.x <- lm( y ~ x*z*w, data=d)
+```
+corresponds to
+$$\begin{align*}
+y_i &\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &= \alpha + \beta_x x_i + \beta_z z_i + \beta_w w_i + \beta_{xz} x_i z_i + \beta_{xw} x_i w_i + \beta_{zw} z_i w_w + \beta_{xzw} x_i z_i w_i
+\end{align*}$$
+
+You can also get direct acces to the function used by `lm` to expand these formulas:
+```{r}
+x <- z <- w <- 1
+colnames( model.matrix(~ x*z*w ))
+```
+where `:` stands for multiplication.

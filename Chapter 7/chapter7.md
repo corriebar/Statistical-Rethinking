@@ -143,8 +143,8 @@ compare( m7.3, m7.4)
 ```
 
     ##       WAIC pWAIC dWAIC weight    SE   dSE
-    ## m7.4 476.3   4.4   0.0      1 15.33    NA
-    ## m7.3 539.8   2.8  63.5      0 13.35 15.14
+    ## m7.4 476.3   4.4   0.0      1 15.36    NA
+    ## m7.3 539.8   2.8  63.5      0 13.35 15.22
 
 ``` r
 plot( compare( m7.3, m7.4 ))
@@ -231,9 +231,9 @@ compare( m7.3, m7.4, m7.5 )
 ```
 
     ##       WAIC pWAIC dWAIC weight    SE   dSE
-    ## m7.5 469.7   5.4   0.0   0.96 15.13    NA
-    ## m7.4 476.3   4.3   6.6   0.04 15.16  6.01
-    ## m7.3 539.5   2.7  69.7   0.00 13.24 15.17
+    ## m7.5 470.0   5.4   0.0   0.96 15.12    NA
+    ## m7.4 476.4   4.4   6.5   0.04 15.34  6.17
+    ## m7.3 539.6   2.7  69.7   0.00 13.28 15.18
 
 ``` r
 plot( compare( m7.3, m7.4, m7.5))
@@ -335,13 +335,13 @@ gamma.notAfrica <- post$bR + post$bAR*0
 mean( gamma.Africa )
 ```
 
-    ## [1] 0.1649532
+    ## [1] 0.1638634
 
 ``` r
 mean( gamma.notAfrica )
 ```
 
-    ## [1] -0.1834894
+    ## [1] -0.1846303
 
 How do the distributions compare?
 
@@ -437,8 +437,8 @@ Blue points are nations with above-median ruggedness. Black points are below the
 
 That is, if we have a nation with low ruggedness and we "move" it to Africa, it's GDP goes down, whereas a nation with high ruggedness would see its GDP increase.
 
-7.3 - Continuous interactions
------------------------------
+7.3 Continuous interactions
+---------------------------
 
 ``` r
 data(tulips)
@@ -474,10 +474,10 @@ m7.6 <- map(
     ## Try better priors or use explicit start values.
     ## If you sampled random start values, just trying again may work.
     ## Start values used in this attempt:
-    ## a = -184.697726709014
-    ## bW = -12.2144447867829
-    ## bS = 76.1455578538212
-    ## sigma = 53.4467799589038
+    ## a = -18.4528108537189
+    ## bW = 23.3511606075218
+    ## bS = -79.548237662344
+    ## sigma = 49.8270272975788
 
 ``` r
 m7.7 <- map(
@@ -498,11 +498,11 @@ m7.7 <- map(
     ## Try better priors or use explicit start values.
     ## If you sampled random start values, just trying again may work.
     ## Start values used in this attempt:
-    ## a = 211.447148747894
-    ## bW = -31.3640957040931
-    ## bS = 89.0480456363069
-    ## bWS = -40.2375889554794
-    ## sigma = 25.4025964299217
+    ## a = -57.769162340326
+    ## bW = -166.085229081986
+    ## bS = 112.788170757945
+    ## bWS = 125.276761952353
+    ## sigma = 52.3037425940856
 
 Fitting this code very likely produces errors: The flat priors make it hard for the optimizer to find good startvalues that converge. We can fix this problem different ways:
 
@@ -550,11 +550,11 @@ coeftab(m7.6, m7.7)
 ```
 
     ##       m7.6    m7.7   
-    ## a       53.49  -84.30
-    ## bW      76.36  151.01
-    ## bS     -38.93   34.98
-    ## sigma   57.38   46.25
-    ## bWS        NA   -39.5
+    ## a       53.44  -84.38
+    ## bW      76.38  151.17
+    ## bS     -38.92   34.99
+    ## sigma   57.39   46.31
+    ## bWS        NA  -39.58
     ## nobs       27      27
 
 ``` r
@@ -570,15 +570,14 @@ compare( m7.6, m7.7 )
 ```
 
     ##       WAIC pWAIC dWAIC weight    SE  dSE
-    ## m7.7 297.2   6.6   0.0   0.99 10.40   NA
-    ## m7.6 305.9   5.4   8.8   0.01  9.03 6.45
+    ## m7.7 296.9   6.6   0.0   0.99 10.13   NA
+    ## m7.6 306.2   5.5   9.3   0.01  9.13 6.21
 
 Pretty much all weight is on the second model with interaction term, so it seems to be a better model than without interaction term.
 
-Center and re-estimate
-----------------------
+### Center and re-estimate
 
-Now,let's center the variables instead.
+Now, let's center the variables instead.
 
 ``` r
 d$shade.c <- d$shade - mean(d$shade)
@@ -651,6 +650,8 @@ precis( m7.9 )
     ## bS    -41.13  10.60 -58.08 -24.19
     ## bWS   -51.83  12.95 -72.53 -31.14
     ## sigma  45.23   6.15  35.39  55.07
+
+### Plot continuous interactions
 
 Let's plot the predictions. We make a plot showing the predictions for different values of water to get a feeling of the interaction effect.
 
@@ -863,3 +864,50 @@ for ( s in -1:1 ){
     [ 800 / 1000 ]
     [ 900 / 1000 ]
     [ 1000 / 1000 ]
+
+7.4 Interactions in design formulas
+-----------------------------------
+
+``` r
+m7.x <- lm( y ~ x + z + x*z, data=d)
+```
+
+Same model:
+
+``` r
+m7.x <- lm( y ~ x*z, data=d)
+```
+
+Fit a model with interaction term but without direct effect:
+
+``` r
+m7.x <- lm( y ~ x + x*z - z, data=d)
+```
+
+Run a model with interaction term and all lower-order interactions:
+
+``` r
+m7.x <- lm( y ~ x*z*w, data=d)
+```
+
+corresponds to
+
+![\\begin{align\*}
+y\_i &\\sim \\text{Normal}(\\mu\_i, \\sigma) \\\\
+\\mu\_i &= \\alpha + \\beta\_x x\_i + \\beta\_z z\_i + \\beta\_w w\_i + \\beta\_{xz} x\_i z\_i + \\beta\_{xw} x\_i w\_i + \\beta\_{zw} z\_i w\_w + \\beta\_{xzw} x\_i z\_i w\_i
+\\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0Ay_i%20%26%5Csim%20%5Ctext%7BNormal%7D%28%5Cmu_i%2C%20%5Csigma%29%20%5C%5C%0A%5Cmu_i%20%26%3D%20%5Calpha%20%2B%20%5Cbeta_x%20x_i%20%2B%20%5Cbeta_z%20z_i%20%2B%20%5Cbeta_w%20w_i%20%2B%20%5Cbeta_%7Bxz%7D%20x_i%20z_i%20%2B%20%5Cbeta_%7Bxw%7D%20x_i%20w_i%20%2B%20%5Cbeta_%7Bzw%7D%20z_i%20w_w%20%2B%20%5Cbeta_%7Bxzw%7D%20x_i%20z_i%20w_i%0A%5Cend%7Balign%2A%7D "\begin{align*}
+y_i &\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &= \alpha + \beta_x x_i + \beta_z z_i + \beta_w w_i + \beta_{xz} x_i z_i + \beta_{xw} x_i w_i + \beta_{zw} z_i w_w + \beta_{xzw} x_i z_i w_i
+\end{align*}")
+
+You can also get direct acces to the function used by `lm` to expand these formulas:
+
+``` r
+x <- z <- w <- 1
+colnames( model.matrix(~ x*z*w ))
+```
+
+    ## [1] "(Intercept)" "x"           "z"           "w"           "x:z"        
+    ## [6] "x:w"         "z:w"         "x:z:w"
+
+where `:` stands for multiplication.
