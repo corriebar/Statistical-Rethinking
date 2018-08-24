@@ -3,8 +3,8 @@ Chapter 7
 Corrie
 August 14, 2018
 
-7.1 - Building an interaction
------------------------------
+7.1 Building an interaction
+---------------------------
 
 ``` r
 library(rethinking)
@@ -143,8 +143,8 @@ compare( m7.3, m7.4)
 ```
 
     ##       WAIC pWAIC dWAIC weight    SE   dSE
-    ## m7.4 476.3   4.4   0.0      1 15.36    NA
-    ## m7.3 539.8   2.8  63.5      0 13.35 15.22
+    ## m7.4 476.4   4.4   0.0      1 15.31    NA
+    ## m7.3 539.7   2.7  63.3      0 13.31 15.16
 
 ``` r
 plot( compare( m7.3, m7.4 ))
@@ -231,9 +231,9 @@ compare( m7.3, m7.4, m7.5 )
 ```
 
     ##       WAIC pWAIC dWAIC weight    SE   dSE
-    ## m7.5 470.0   5.4   0.0   0.96 15.12    NA
-    ## m7.4 476.4   4.4   6.5   0.04 15.34  6.17
-    ## m7.3 539.6   2.7  69.7   0.00 13.28 15.18
+    ## m7.5 469.7   5.3   0.0   0.97 15.14    NA
+    ## m7.4 476.6   4.5   7.0   0.03 15.32  6.06
+    ## m7.3 539.8   2.8  70.1   0.00 13.27 15.24
 
 ``` r
 plot( compare( m7.3, m7.4, m7.5))
@@ -335,13 +335,13 @@ gamma.notAfrica <- post$bR + post$bAR*0
 mean( gamma.Africa )
 ```
 
-    ## [1] 0.1638634
+    ## [1] 0.1629094
 
 ``` r
 mean( gamma.notAfrica )
 ```
 
-    ## [1] -0.1846303
+    ## [1] -0.1851133
 
 How do the distributions compare?
 
@@ -349,7 +349,8 @@ How do the distributions compare?
 dens( gamma.Africa, xlim=c(-0.5, 0.6), ylim=c(0, 5.5),
       xlab="gamma", col="steelblue" )
 dens( gamma.notAfrica, add=TRUE )
-legend("topright", col=c("black", "steelblue"), bty="n", legend=c("not Africa", "Africa"))
+legend("topright", col=c("black", "steelblue"), bty="n", 
+       legend=c("not Africa", "Africa"), lty=c(1,1))
 ```
 
 ![](chapter7_files/figure-markdown_github/unnamed-chunk-17-1.png)
@@ -359,14 +360,14 @@ diff <- gamma.Africa - gamma.notAfrica
 sum( diff < 0 ) / length( diff )
 ```
 
-    ## [1] 0.0034
+    ## [1] 0.0028
 
 So there is a very low probability that the African slope is less than the Non-African slope.
 
 7.2 Symmetry of the linear interaction
 --------------------------------------
 
-The above interaction can be interpreted in two ways: (1) How much does the influece of ruggedness (on GDP) depend upon whether the nation is in Africa? (2) How much does the influence of being in Africa (on GDP) depend upon ruggedness?
+The above interaction can be interpreted in two ways: (1) How much does the influence of ruggedness (on GDP) depend upon whether the nation is in Africa? (2) How much does the influence of being in Africa (on GDP) depend upon ruggedness?
 
 Above, we plotted the first interpretation, which probably seems more natural for most. Let's plot the other one:
 
@@ -452,7 +453,7 @@ str(d)
     ##  $ shade : int  1 2 3 1 2 3 1 2 3 1 ...
     ##  $ blooms: num  0 0 111 183.5 59.2 ...
 
-Both wather and light help plants grow and produce blooms, so we can model this as an interaction. The difficulty for continuous interactions is how to interpret them.
+Both water and light help plants grow and produce blooms, so we can model this as an interaction. The difficulty for continuous interactions is how to interpret them.
 
 Let's first implement two models, one with and one without interaction. This time, we use very flat priors.
 
@@ -467,19 +468,7 @@ m7.6 <- map(
     sigma ~ dunif( 0, 100)
   ), data=d
 )
-```
 
-    ## Error in map(alist(blooms ~ dnorm(mu, sigma), mu <- a + bW * water + bS * : non-finite finite-difference value [4]
-    ## Start values for parameters may be too far from MAP.
-    ## Try better priors or use explicit start values.
-    ## If you sampled random start values, just trying again may work.
-    ## Start values used in this attempt:
-    ## a = -18.4528108537189
-    ## bW = 23.3511606075218
-    ## bS = -79.548237662344
-    ## sigma = 49.8270272975788
-
-``` r
 m7.7 <- map(
   alist(
     blooms ~ dnorm( mu, sigma),
@@ -498,16 +487,16 @@ m7.7 <- map(
     ## Try better priors or use explicit start values.
     ## If you sampled random start values, just trying again may work.
     ## Start values used in this attempt:
-    ## a = -57.769162340326
-    ## bW = -166.085229081986
-    ## bS = 112.788170757945
-    ## bWS = 125.276761952353
-    ## sigma = 52.3037425940856
+    ## a = 152.042915133632
+    ## bW = 67.1306128834465
+    ## bS = 118.779603044328
+    ## bWS = -145.910509534873
+    ## sigma = 54.5933612855151
 
-Fitting this code very likely produces errors: The flat priors make it hard for the optimizer to find good startvalues that converge. We can fix this problem different ways:
+Fitting this code very likely produces errors: The flat priors make it hard for the optimizer to find good start values that converge. We can fix this problem different ways:
 
 -   use another optimizer
--   search longer, that is raise the maximumg iterations
+-   search longer, that is raise the maximum iterations
 -   rescale the data to make it easier to find the right values
 
 We first try the first two options:
@@ -550,11 +539,11 @@ coeftab(m7.6, m7.7)
 ```
 
     ##       m7.6    m7.7   
-    ## a       53.44  -84.38
-    ## bW      76.38  151.17
-    ## bS     -38.92   34.99
-    ## sigma   57.39   46.31
-    ## bWS        NA  -39.58
+    ## a       53.48  -85.27
+    ## bW      76.38  151.59
+    ## bS     -38.94   35.53
+    ## sigma   57.38   46.17
+    ## bWS        NA  -39.82
     ## nobs       27      27
 
 ``` r
@@ -570,8 +559,8 @@ compare( m7.6, m7.7 )
 ```
 
     ##       WAIC pWAIC dWAIC weight    SE  dSE
-    ## m7.7 296.9   6.6   0.0   0.99 10.13   NA
-    ## m7.6 306.2   5.5   9.3   0.01  9.13 6.21
+    ## m7.7 297.6   6.9   0.0   0.99 10.52   NA
+    ## m7.6 306.1   5.4   8.5   0.01  9.05 6.38
 
 Pretty much all weight is on the second model with interaction term, so it seems to be a better model than without interaction term.
 
@@ -758,7 +747,7 @@ for ( w in -1:1 ){
     [ 900 / 1000 ]
     [ 1000 / 1000 ]
 
-In the top row, the model without the interaction, the slope for shade does not change, only the intercept. In the bottom row, the influece of shade changes, depending on how much water there is. If there is little water, the plant can't grow well, so no shade or a lot of shade doesn't change the bloom much. Whereas, if we have a more water, shade has a big difference, noticable in the steep slope. In all plots, the blue points are the data points that had the corresponding water value.
+In the top row, the model without the interaction, the slope for shade does not change, only the intercept. In the bottom row, the influence of shade changes, depending on how much water there is. If there is little water, the plant can't grow well, so no shade or a lot of shade doesn't change the bloom much. Whereas, if we have a more water, shade has a big difference, noticeably in the steep slope. In all plots, the blue points are the data points that had the corresponding water value.
 
 We can also visualize this the other way round:
 
@@ -900,7 +889,7 @@ y_i &\sim \text{Normal}(\mu_i, \sigma) \\
 \mu_i &= \alpha + \beta_x x_i + \beta_z z_i + \beta_w w_i + \beta_{xz} x_i z_i + \beta_{xw} x_i w_i + \beta_{zw} z_i w_w + \beta_{xzw} x_i z_i w_i
 \end{align*}")
 
-You can also get direct acces to the function used by `lm` to expand these formulas:
+You can also get direct access to the function used by `lm` to expand these formulas:
 
 ``` r
 x <- z <- w <- 1

@@ -23,5 +23,6 @@ These are code snippets, plots and my solutions to some of the exercises of the 
 
 ## Chapter 7
 - [Interactions](Chapter%207/chapter7.md)
+- [Exercises]8Chapter%207/chapter7_Ex.md)
 
 

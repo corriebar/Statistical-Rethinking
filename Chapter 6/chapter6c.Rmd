@@ -131,7 +131,7 @@ shade( kcal.per.g.PI, nc.seq )    # yay even more uncertainty!
 ```
 
 If we want to compute the ensemble average ourselves, we can do as follow:
-```{r results='hide'}
+```{r}
 # code mostly coppied from the ensemble function
 n <- 1e3
 ctab <- compare( m6.11, m6.12, m6.13, m6.14, sort = F)
