@@ -1,0 +1,40 @@
+---
+title: "Markov Chain Monte Carlo"
+author: "Corrie"
+date: "September 4, 2018"
+output: github_document:
+    pandoc_args: --webtex 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 8.1 King Markov and His island kingdom
+
+A simple example of the Markov Chain Monte Carlo algorithm:
+```{r}
+num_weeks <- 1e5
+positions <- rep(0, num_weeks)
+current <- 10
+for (i in 1:num_weeks) {
+  # record current position
+  positions[i] <- current
+  
+  # flip coin to generate proposal
+  proposal <- current + sample( c(-1, 1), size=1)
+  if ( proposal < 1 ) proposal <- 10
+  if ( proposal > 10 ) proposal <- 1
+  
+  # move?
+  prob_move <- proposal / current
+  current <- ifelse( runif(1) < prob_move , proposal, current)
+}
+```
+
+```{r,fig.height=5, fig.width=5}
+par(mfrow=c(1,2))
+plot( (1:100), positions[1:100], xlab="week", ylab="island", col="midnightblue")
+stem(1:10, table(positions))
+```
+
