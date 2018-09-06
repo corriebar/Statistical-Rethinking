@@ -1,4 +1,4 @@
-Chapter 7
+Interactions
 ================
 Corrie
 August 14, 2018
@@ -143,8 +143,8 @@ compare( m7.3, m7.4)
 ```
 
     ##       WAIC pWAIC dWAIC weight    SE   dSE
-    ## m7.4 476.4   4.4   0.0      1 15.31    NA
-    ## m7.3 539.7   2.7  63.3      0 13.31 15.16
+    ## m7.4 476.9   4.7   0.0      1 15.35    NA
+    ## m7.3 539.8   2.8  62.9      0 13.35 15.12
 
 ``` r
 plot( compare( m7.3, m7.4 ))
@@ -231,9 +231,9 @@ compare( m7.3, m7.4, m7.5 )
 ```
 
     ##       WAIC pWAIC dWAIC weight    SE   dSE
-    ## m7.5 469.7   5.3   0.0   0.97 15.14    NA
-    ## m7.4 476.6   4.5   7.0   0.03 15.32  6.06
-    ## m7.3 539.8   2.8  70.1   0.00 13.27 15.24
+    ## m7.5 469.5   5.3   0.0   0.97 15.02    NA
+    ## m7.4 476.4   4.4   6.9   0.03 15.34  6.22
+    ## m7.3 539.6   2.7  70.1   0.00 13.29 15.10
 
 ``` r
 plot( compare( m7.3, m7.4, m7.5))
@@ -335,13 +335,13 @@ gamma.notAfrica <- post$bR + post$bAR*0
 mean( gamma.Africa )
 ```
 
-    ## [1] 0.1629094
+    ## [1] 0.1631535
 
 ``` r
 mean( gamma.notAfrica )
 ```
 
-    ## [1] -0.1851133
+    ## [1] -0.1843177
 
 How do the distributions compare?
 
@@ -360,7 +360,7 @@ diff <- gamma.Africa - gamma.notAfrica
 sum( diff < 0 ) / length( diff )
 ```
 
-    ## [1] 0.0028
+    ## [1] 0.0031
 
 So there is a very low probability that the African slope is less than the Non-African slope.
 
@@ -468,7 +468,19 @@ m7.6 <- map(
     sigma ~ dunif( 0, 100)
   ), data=d
 )
+```
 
+    ## Error in map(alist(blooms ~ dnorm(mu, sigma), mu <- a + bW * water + bS * : non-finite finite-difference value [4]
+    ## Start values for parameters may be too far from MAP.
+    ## Try better priors or use explicit start values.
+    ## If you sampled random start values, just trying again may work.
+    ## Start values used in this attempt:
+    ## a = -37.485530747013
+    ## bW = -214.785695572581
+    ## bS = 77.407180048364
+    ## sigma = 19.8480702470988
+
+``` r
 m7.7 <- map(
   alist(
     blooms ~ dnorm( mu, sigma),
@@ -482,16 +494,9 @@ m7.7 <- map(
 )
 ```
 
-    ## Error in map(alist(blooms ~ dnorm(mu, sigma), mu <- a + bW * water + bS * : non-finite finite-difference value [5]
-    ## Start values for parameters may be too far from MAP.
-    ## Try better priors or use explicit start values.
-    ## If you sampled random start values, just trying again may work.
-    ## Start values used in this attempt:
-    ## a = 152.042915133632
-    ## bW = 67.1306128834465
-    ## bS = 118.779603044328
-    ## bWS = -145.910509534873
-    ## sigma = 54.5933612855151
+    ## Caution, model may not have converged.
+
+    ## Code 1: Maximum iterations reached.
 
 Fitting this code very likely produces errors: The flat priors make it hard for the optimizer to find good start values that converge. We can fix this problem different ways:
 
@@ -539,11 +544,11 @@ coeftab(m7.6, m7.7)
 ```
 
     ##       m7.6    m7.7   
-    ## a       53.48  -85.27
-    ## bW      76.38  151.59
-    ## bS     -38.94   35.53
-    ## sigma   57.38   46.17
-    ## bWS        NA  -39.82
+    ## a       53.48   10.79
+    ## bW      76.36  109.93
+    ## bS     -38.93   -4.52
+    ## sigma   57.39   51.70
+    ## bWS        NA  -22.33
     ## nobs       27      27
 
 ``` r
@@ -558,9 +563,9 @@ The estimates are all over the place... The intercept changes from positive to n
 compare( m7.6, m7.7 )
 ```
 
-    ##       WAIC pWAIC dWAIC weight    SE  dSE
-    ## m7.7 297.6   6.9   0.0   0.99 10.52   NA
-    ## m7.6 306.1   5.4   8.5   0.01  9.05 6.38
+    ##       WAIC pWAIC dWAIC weight   SE  dSE
+    ## m7.7 301.4   6.4   0.0   0.93 9.31   NA
+    ## m7.6 306.6   5.7   5.2   0.07 9.24 3.71
 
 Pretty much all weight is on the second model with interaction term, so it seems to be a better model than without interaction term.
 
