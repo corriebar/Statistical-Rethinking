@@ -1,0 +1,662 @@
+---
+title: "Chapter 8 - Exercises"
+author: "Corrie"
+date: "September 11, 2018"
+output: 
+  github_document:
+    pandoc_args: --webtex 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment=NA)
+options(mc.cores = parallel::detectCores())
+```
+
+# Chapter 8 - Exercises
+
+## Easy.
+__8E1.__ Which of the following is a requirement of the simple Metropolis algorithm?
+
+  - The proposal distribution must be symmetric
+  
+__8E2.__ Gibbs sampling is more efficient than the Metropolis algorithm. How does it achieve this extra efficiency? Are there any limitations?
+
+Gibbs sampling uses conjugate priors which allows it to make smarter proposals and is thus more efficient. The downside to this, is that it uses conjugate priors which might not be a good or valid prior from a scientific perspective.
+Also, it becomes quite inefficient with complex models of hundreds or more parameter.
+
+__8E3.__ Which sort of parameters can Hamiltonian Monte Carlo not handle? Can you explain why?
+
+HMC cannot deal with discrete parameters. The HMC kind of glides through the parameter space, where the speed depends on how quickly the density is changing. This means, it computes gradients in the parameter space. This is not possible with discrete parameters.
+
+__8E4.__ Explain the difference between the effective number of samples, `n_eff` as calculated by Stan, and the actual number of samples.
+
+The effective number of samples gives an estimate of the number of samples that are independent. Since Markov chains are autocorrelated, sequential samples are not independent of each other.
+
+__8E5.__ Which value should `Rhat` approach, when a chain is sampling the posterior distribution correctly?
+
+If a chain is sampling correctly, the `Rhat` value should approach 1. Already values slightly above 1.00, such as 1.01 can be indicative of a problem. Values of `Rhat` much higher than 1 signal a big problem. Note that even invalid chains can reach 1.00.
+
+__8E6.__ Show examples of a Markov Chain that is effectively sampling from the posterior and one that is not. What about their shape indicates good or bad sampling?
+
+_Good example:_
+```{r, message=F, fig.height=5, results='hide'}
+library(rethinking)
+y <- rnorm(100, mean=1, sd=2)
+m8.1 <- map2stan(
+  alist(
+    y ~ dnorm(mu, sigma),
+    mu <- alpha,
+    alpha ~ dnorm(0, 10),
+    sigma ~ dcauchy(0,1)
+  ), 
+  data=list(y=y), start=list(alpha=0, sigma=1),
+  chains=2
+)
+
+plot(m8.1, col=c("black", "royalblue4"), n_cols=1)
+```
+
+These chains are doing good: they are stationary, that is, the mean of the chain does not go up or down but the chain stays the whole time between the values 0.5 and 1.5 for `alpha` and between 1.8 and 2.6 for `sigma`.
+
+_Bad example:_
+```{r, results='hide', warning=F}
+y <- rnorm(100, mean=1, sd=2)
+m8.2 <- map2stan(
+  alist(
+    y ~ dnorm(mu, sigma),
+    mu <- a1 + a2,
+    sigma ~ dcauchy(0,1)
+  ), 
+  data=list(y=y), start=list(a1=0, a2=0, sigma=1),
+  chains=2
+)
+
+plot(m8.2, col=c("black", "royalblue4"), n_cols=1)
+```
+
+These chains are not doing well: The chains for `a1` and `a2` go up and down and don't settle on a mean. While the chains for sigma are somehow closer to each other, they still didn't settle on a mean.
+
+## Medium.
+__8M1.__ Re-estimate the terrain ruggedness model from the chapter, but now using a uniform prior and an exponential prior for the standard deviation, `sigma`.
+The uniform prior should be `dunif(0, 10)` and the exponential should be `dexpo(1)`. Do the different priors have any detectable influence on the posterior distribution?
+
+I also add the Half-Cauchy prior we used before for comparison.
+```{r, message=F, results='hide', warning=F}
+data(rugged)
+d <- rugged
+d$log_gdp <- log(d$rgdppc_2000)
+dd <- d[ complete.cases(d$rgdppc_2000), ]
+dd.trim <- dd[ , c("log_gdp", "rugged", "cont_africa")]
+
+ptm3 <- proc.time()
+m8.unif <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu, sigma ),
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm( 0, 100),
+    bR ~ dnorm(0, 10),
+    bA ~ dnorm(0 , 10),
+    bAR ~ dnorm(0, 10),
+    sigma ~ dunif(0, 10)
+  ),
+  data = dd.trim, chains=2,
+  start=list(a=5, bR=0, bA=0, bAR=0, sigma=1)
+)
+proc.time() - ptm3
+
+ptm4 <- proc.time()
+m8.exp <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu, sigma ),
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm( 0, 100),
+    bR ~ dnorm(0, 10),
+    bA ~ dnorm(0 , 10),
+    bAR ~ dnorm(0, 10),
+    sigma ~ dexp(1)
+  ),
+  data = dd.trim, chains=2,
+  start=list(a=5, bR=0, bA=0, bAR=0, sigma=1)
+)
+proc.time() - ptm4
+
+ptm5 <- proc.time()
+m8.cauchy <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu, sigma ),
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm( 0, 100),
+    bR ~ dnorm(0, 10),
+    bA ~ dnorm(0 , 10),
+    bAR ~ dnorm(0, 10),
+    sigma ~ dcauchy(0, 2)
+  ),
+  data = dd.trim, chains=2,
+  start=list(a=5, bR=0, bA=0, bAR=0, sigma=1)
+)
+proc.time() - ptm5
+```
+Comparing the outputs of the three models, the estimates of all three models are the same.
+```{r}
+precis(m8.unif)
+```
+
+
+```{r}
+precis(m8.exp)
+```
+
+```{r}
+precis(m8.cauchy)
+```
+
+Also comparing the trace plots doesn't show any discernible difference, nor do the `Rhat` values or number of effective samples differ.
+Comparing the `pairs` plots for each model also doesn't show any differences. The time needed to sample from each model is also very similar.
+```{r}
+sigma.exp <- extract.samples(m8.exp)$sigma
+sigma.unif <- extract.samples(m8.unif)$sigma
+sigma.cauchy <- extract.samples(m8.cauchy)$sigma
+
+plot( density( sigma.exp, from=0.8, to=1.1, adj=1),
+      lwd=1, col="royalblue4", xlab="sigma", 
+      main="", ylim=c(0, 8.2))
+points(density( sigma.cauchy, from=0, to=10, adj=1),
+       lty=1, type="l")
+points(density( sigma.unif, from=0, to=10, adj=1),
+       lty=1, col=col.desat("red"), type="l")
+legend("topright", col=c("royalblue4", "black", col.desat("red")), 
+       lty=c(1,1,1),legend=c("Exp", "Cauchy", "Unif"), bty="n")
+```
+
+Comparing the three posterior distributions for `sigma` at close scale, we can see some slight differences: the exponential prior and the Cauchy prior leads to a posterior distribution that seem to be very slightly right skewed compared to posterior by the uniform prior. However, the differences are rather small, so it is hard to say if they're not just by chance.
+
+__8M2.__ The Cauchy and exponential prior from the model above are very weak. They can be made more informative by reducing their scale. Compare the two priors for progressively smaller values of the scaling parameter.
+```{r, message=F, results='hide', warning=F}
+m8.exp1 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu, sigma ),
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm( 0, 100),
+    bR ~ dnorm(0, 10),
+    bA ~ dnorm(0 , 10),
+    bAR ~ dnorm(0, 10),
+    sigma ~ dexp(1)
+  ),
+  data = dd.trim, chains=2,
+  start=list(a=5, bR=0, bA=0, bAR=0, sigma=1)
+)
+m8.exp2 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu, sigma ),
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm( 0, 100),
+    bR ~ dnorm(0, 10),
+    bA ~ dnorm(0 , 10),
+    bAR ~ dnorm(0, 10),
+    sigma ~ dexp(10)
+  ),
+  data = dd.trim, chains=2,
+  start=list(a=5, bR=0, bA=0, bAR=0, sigma=1)
+)
+m8.exp3 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu, sigma ),
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm( 0, 100),
+    bR ~ dnorm(0, 10),
+    bA ~ dnorm(0 , 10),
+    bAR ~ dnorm(0, 10),
+    sigma ~ dexp(100)
+  ),
+  data = dd.trim, chains=2,
+  start=list(a=5, bR=0, bA=0, bAR=0, sigma=1)
+)
+```
+
+```{r, results='hide'}
+m8.cauchy1 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu, sigma ),
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm( 0, 100),
+    bR ~ dnorm(0, 10),
+    bA ~ dnorm(0 , 10),
+    bAR ~ dnorm(0, 10),
+    sigma ~ dcauchy(0, 1)
+  ),
+  data = dd.trim, chains=2,
+  start=list(a=5, bR=0, bA=0, bAR=0, sigma=1)  
+)
+m8.cauchy2 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu, sigma ),
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm( 0, 100),
+    bR ~ dnorm(0, 10),
+    bA ~ dnorm(0 , 10),
+    bAR ~ dnorm(0, 10),
+    sigma ~ dcauchy(0, 0.1)
+  ),
+  data = dd.trim, chains=2,
+  start=list(a=5, bR=0, bA=0, bAR=0, sigma=1)  
+)
+
+m8.cauchy3 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu, sigma ),
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm( 0, 100),
+    bR ~ dnorm(0, 10),
+    bA ~ dnorm(0 , 10),
+    bAR ~ dnorm(0, 10),
+    sigma ~ dcauchy(0, 0.01)
+  ),
+  data = dd.trim, chains=2,
+  start=list(a=5, bR=0, bA=0, bAR=0, sigma=1)  
+)
+```
+For both the exponential and the Cauchy prior, the models are sorted from least restrictive to most restrictive. That is, `m8.exp3` and `m8.cauchy3` are the models with the most restrictive `sigma` prior.
+```{r}
+coeftab(m8.exp1, m8.exp2, m8.exp3)
+```
+The more restrictive exponential prior have a visible effect on the posterior: The estimate for sigma decreased by quite a bit and even the other parameter estimates decreased by a small amount.
+
+```{r}
+coeftab(m8.cauchy1, m8.cauchy2, m8.cauchy3)
+```
+Even the most restrictive Cauchy prior has not much effect on the parameter estimates. It decreases only by 0.01 which could easily also be due to chance in the sampling.
+
+We can see why this is, if we compare the prior distributions:
+```{r, fig.height=5, fig.width=10}
+par(mfrow=c(1,2))
+curve(dexp(x,1), from=0, to=5, ylab="Density", xlab="sigma",
+      col="royalblue4")
+curve(dexp(x,10), from=0, to=5, add=T)
+curve(dexp(x,100), from=0, to=5,add=T, col=col.desat("red"))
+mtext("Exponential Prior")
+legend("topright", col=c("royalblue4", "black", col.desat("red")), 
+       lty=c(1,1,1),legend=c("Exp(1)", "Exp(10)", "Exp(100)"), bty="n")
+
+curve(2*dcauchy(x, 0, 1), from=0, to=5, ylab="Density", xlab="sigma",
+      col="royalblue4")
+curve(2*dcauchy(x, 0, 0.1), from=0, to=5, add=T, col="black")
+curve(2*dcauchy(x, 0, 0.01), from=0, to=5, add=T, col=col.desat("red"))
+mtext("Cauchy Prior")
+legend("topright", col=c("royalblue4", "black", col.desat("red")), 
+       lty=c(1,1,1),legend=c("Cauchy(0, 1)", "Cauchy(0, 0.1)", "Cauchy(0, 0.01)"), bty="n")
+```
+
+The Cauchy prior distributions have much thicker tails. While the exponential distribution very quickly concentrates and becomes very flat every else, the Cauchy distribution still places quite a bit of weight on the tails. This explains why even a rather concentrated Cauchy prior still allows for sufficient flexibility for the posterior distribution.
+
+Plotting the posterior distribution for sigma supports this further:
+
+```{r, fig.height=5, fig.width=10}
+sigma.exp1 <- extract.samples(m8.exp1)$sigma
+sigma.exp2 <- extract.samples(m8.exp2)$sigma
+sigma.exp3 <- extract.samples(m8.exp3)$sigma
+
+sigma.cauchy1 <- extract.samples(m8.cauchy1)$sigma
+sigma.cauchy2 <- extract.samples(m8.cauchy2)$sigma
+sigma.cauchy3 <- extract.samples(m8.cauchy3)$sigma
+
+par(mfrow=c(1,2))
+plot( density( sigma.exp1, from=0.8, to=1.1, adj=1),
+      lwd=1, col="royalblue4", xlab="sigma", 
+      main="", ylim=c(0,8.5))
+points(density( sigma.exp2, from=0, to=10, adj=1),
+       lty=1, type="l")
+points(density( sigma.exp3, from=0, to=10, adj=1),
+       lty=1, col=col.desat("red"), type="l")
+legend("topright", col=c("royalblue4", "black", col.desat("red")), 
+       lty=c(1,1,1),legend=c("Exp(1)", "Exp(10)", "Exp(100)"), bty="n")
+mtext("Exponential Prior (Posterior)")
+
+plot( density( sigma.cauchy1, from=0.8, to=1.1, adj=1),
+      lwd=1, col="royalblue4", xlab="sigma", 
+      main="", ylim=c(0, 8.5))
+points(density( sigma.cauchy2, from=0, to=10, adj=1),
+       lty=1, type="l")
+points(density( sigma.cauchy3, from=0, to=10, adj=1),
+       lty=1, col=col.desat("red"), type="l")
+legend("topright", col=c("royalblue4", "black", col.desat("red")), 
+       lty=c(1,1,1),legend=c("Cauchy(0, 1)", "Cauchy(0, 0.1)", "Cauchy(0, 0.01)"), bty="n")
+mtext("Cauchy Prior (Posterior)")
+```
+
+While the posterior of the Cauchy prior remains very robust, the exponential prior quickly lead to posterior distributions that derail towards zero. In the worst case of the prior `dexp(100)`, the posterior even goes completely off.
+In contrast, even further reducing the scale of the Cauchy prior to e.g. `dcauchy(0, 0.001)` does not lead to a different posterior distribution.
+
+
+__8M3.__ Re-estimate one of the Stan models from the chapter, but at different numbers of warmup iterations. Be sure to use the same number of sampling iterations in each case. Compare the `n_eff` values. How much warmup is enough?
+
+We use again the terrain ruggedness model.
+```{r, message=F, results='hide', warning=F}
+m8.5 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu, sigma) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa,
+    a ~ dnorm(0, 100),
+    bR ~ dnorm(0, 10),
+    bA ~ dnorm(0, 10),
+    bAR ~ dnorm(0, 10),
+    sigma ~ dcauchy(0, 2)
+  ), 
+  data=dd.trim,
+  start=list(a=5, bR=0, bA=0, bAR=0, sigma=1)
+)
+
+m8.5_1 <- map2stan(m8.5, chains = 2, warmup=1, iter = 2000+1)
+m8.5_5 <- map2stan(m8.5, chains = 2, warmup=5, iter = 2000+5)
+m8.5_10 <- map2stan(m8.5, chains = 2, warmup=10, iter = 2000+10)
+m8.5_20 <- map2stan(m8.5, chains = 2, warmup=20, iter = 2000+20)
+m8.5_30 <- map2stan(m8.5, chains = 2, warmup=30, iter = 2000+30)
+m8.5_40 <- map2stan(m8.5, chains = 2, warmup=40, iter = 2000+40)
+m8.5_50 <- map2stan(m8.5, chains = 2, warmup=50, iter = 2000+50)
+m8.5_100 <- map2stan(m8.5, chains = 2, warmup=100, iter = 2000+100)
+m8.5_500 <- map2stan(m8.5, chains = 2, warmup=500, iter = 2000+500)
+m8.5_1000 <- map2stan(m8.5, chains = 2, warmup=1000, iter = 2000+1000)
+```
+
+
+
+
+```{r, message=F, fig.height=5, fig.width=10, results='hide', warning=F}
+l <- list(m8.5_1, m8.5_5, m8.5_10,m8.5_20, m8.5_30, m8.5_40,
+          m8.5_50, m8.5_100, m8.5_500, m8.5_1000)
+par(mfrow=c(1,2))
+v.mean <- sapply(l, function(x) mean( attr(precis(x), "output")$n_eff ) )
+plot(c(1, 5, 10, 20, 30, 40, 50, 100, 500, 1000), 
+     v.mean, type="l", log="x", 
+     xlab="warmup", ylab="n_eff", col="royalblue4")
+mtext("Average efficient number of samples")
+
+r.mean <- sapply(l, function(x) mean( attr(precis(x), "output")$Rhat ) )
+plot(c(1, 5, 10, 20, 30, 40, 50, 100, 500, 1000), 
+     r.mean, type="l", log="xy", 
+     xlab="warmup", ylab="Rhat", col="royalblue4")
+mtext("Average Rhat")
+```
+
+After around only 50 warmup iterations, the efficient number of samples is already close to the maximal possible. Checking the Rhat value, this one is already at 1.01 for only 10 warmup iterations.
+
+## Hard.
+__8H1.__ Run the model below and then inspect the posterior distribution and explain what it is accomplishing.
+```{r, message=F, results='hide', warning=F}
+mp <- map2stan(
+  alist(
+    a ~ dnorm(0, 1),
+    b ~ dcauchy(0, 1)
+  ),
+  data=list(y=1),
+  start=list(a=0, b=0),
+  iter=1e4, warmup=100, WAIC=FALSE
+)
+```
+
+
+The model simply samples from the two distributions: the normal and the Cauchy distribution.
+```{r}
+stancode(mp)
+```
+
+The trace plots thus show samples from the two distributions:
+```{r, fig.height=4, fig.width=10}
+plot(mp, n_cols=1, col="royalblue4")
+```
+
+Since the Cauchy distribution has very heavy tails, every once in a while, it samples a large value which gives it this trace plot with a few spikes.
+Note also that the Cauchy distribution has a much smaller number of effective samples.
+
+We can compare the two samples with their exact density function:
+```{r, fig.height=5, fig.width=10}
+post <- extract.samples(mp)
+
+par(mfrow=c(1,2))
+dens(post$a)
+curve(dnorm(x,0,1), from=-4, to=4, add=T, lty=2)
+legend("topright", lty=c(1,2), legend=c("Sample", "Exact density"), bty="n")
+mtext("Normal")
+dens(post$b,  col="royalblue4", xlim=c(-10, 10))
+curve(dcauchy(x, 0, 1), from = -10, to=10, add=T, lty=2,
+      col="royalblue4")
+mtext("Cauchy")
+```
+
+While the normal distribution has been approximated very well, the Cauchy distribution has been approximated less well. After all, the number of effective samples for the Cauchy distribution has been relatively small.
+
+__8H2.__ Recall the divorce rate example from Chapter 5. Repeat the analysis, using map2stan this time, fitting models `m5.1`, `m5.2` and `m5.3`.
+Compare the models on the basis of WAIC.
+```{r, results='hide', warning=F}
+data("WaffleDivorce")
+d <- WaffleDivorce
+d$MedianAgeMarriage_s <- (d$MedianAgeMarriage - mean(d$MedianAgeMarriage)) /
+  sd(d$MedianAgeMarriage)
+
+d$Marriage_s <- (d$Marriage - mean(d$Marriage))
+d.trim <- d[, c("Divorce", "MedianAgeMarriage_s", "Marriage_s")]
+
+m5.1s <- map2stan(
+  alist(
+    Divorce ~ dnorm( mu, sigma),
+    mu <- a + bA*MedianAgeMarriage_s,
+    a ~ dnorm(10, 10),
+    bA ~ dnorm(0, 1),
+    sigma ~ dunif( 0, 10)
+  ),
+  data=d.trim
+)
+
+m5.2s <- map2stan(
+  alist(
+    Divorce ~ dnorm(mu, sigma),
+    mu <- a + bR*Marriage_s,
+    a ~ dnorm(10, 10),
+    bR ~ dnorm(0, 1),
+    sigma ~ dunif(0, 10)
+  ),
+  data=d.trim
+)
+
+m5.3s <- map2stan(
+  alist(
+    Divorce ~ dnorm(mu, sigma),
+    mu <- a + bR*Marriage_s + bA*MedianAgeMarriage_s,
+    a <- dnorm( 10, 10),
+    bR ~ dnorm(0, 1),
+    bA ~ dnorm(0, 1),
+    sigma ~ dunif(0, 10)
+  ),
+  data=d.trim
+)
+```
+
+```{r}
+compare(m5.1s, m5.2s, m5.3s)
+```
+
+The first model, only using the predictor `MedianAgeMarriage_s`, has the lowest WAIC and most of the weight. It is closely followed by the last model, which includes both `MedianAgeMarriage_s` and `Marriage_s`, and also has about a third of the weight. The second model that only uses the predictor `Marriae_s` has a rather high WAIC and no weight, indicating that it is not a good model compared to the other two. 
+Since the third model includes one more predictor variable, as also indicated by `pWAIC`, it performs slightly worse than the first model. After all, it adds a predictor variable that is then set to almost 0 by the model:
+```{r}
+plot(coeftab(m5.1s, m5.2s, m5.3s))
+```
+
+__8H3.__ Sometimes changing a prior for one parameter has unanticipated effects on other parameters. This is because when a parameter is highly correlated with another parameter in the posterior, the prior influences both parameters.
+Take for example the leg length example from Chapter 5.
+```{r}
+N <- 100
+height <- rnorm(N, 10, 2)
+leg_prop <- runif(N, 0.4, 0.5)
+leg_left <- leg_prop*height + rnorm(N, 0, 0.02)
+leg_right <- leg_prop*height + rnorm(N, 0, 0.02)
+
+d <- data.frame(height, leg_left, leg_right)
+```
+
+This time, we fit the model using Stan:
+```{r, message=F, results='hide', warning=F}
+m5.8s <- map2stan(
+  alist(
+    height ~ dnorm( mu, sigma),
+    mu <- a + bl*leg_left + br*leg_right,
+    a ~ dnorm(10, 100),
+    bl ~ dnorm(2, 10),
+    br ~ dnorm(2, 10),
+    sigma ~ dcauchy(0, 1)
+  ),
+  data=d, chains=4,
+  start=list(a=10, bl=0, br=0, sigma=1)
+)
+```
+
+Compare the posterior distribution of the model above to the posterior distribution produced when changing the prior for `br` so that it is strictly positive.
+The `T[0,]` truncates the normal distribution so that it has positive probability only above zero.
+```{r, message=F, results='hide', warning=F}
+m5.8s2 <- map2stan(
+  alist(
+    height ~ dnorm( mu, sigma),
+    mu <- a + bl*leg_left + br*leg_right,
+    a ~ dnorm(10, 100),
+    bl ~ dnorm(2, 10),
+    br ~ dnorm(2, 10) & T[0,],
+    sigma ~ dcauchy(0, 1)
+  ), 
+  data=d, chains=4,
+  start=list(a=10, bl=0, br=0, sigma=1)
+)
+```
+
+Let's first have a look at the trace plots:
+```{r, fig.width=6, fig.height=7}
+plot(m5.8s, n_cols=1, window=c(50, 2000))
+```
+
+The trace plot for the first model looks all good. The estimates and both `Rhat` and `n_eff` don't look too bad. The only thing suspicious here, is that both `bl` and `br` have the same standard deviation.
+```{r}
+precis(m5.8s)
+```
+
+The pairs plot reveals the problematic correlation between the two parameter:
+```{r, fig.height=6, fig.width=7}
+pairs(m5.8s)
+```
+
+Now to the second model where the parameter `br` has a truncated prior. It had more than 1000 divergent warnings by Stan, which already does not sound good. Let's have a look at the trace plots:
+```{r, fig.width=6, fig.height=7}
+plot(m5.8s2, n_col=1, window=c(50,2000))
+```
+
+The parameter `br` has been truncated, so it only has positive values. Now this did not only change `br` but also `bl` which now only has values below 2. While the chains otherwise still look well mixed, the number of efficient samples went down by quite a bit for the two slope parameter.
+```{r}
+precis(m5.8s2)
+```
+
+```{r, fig.height=6, fig.width=7}
+pairs(m5.8s2)
+```
+
+Whereas before, the two parameter had both a posterior distribution close to normal, now one of them is left-skewed and the other one right-skewed. 
+What happens is that, since both parameter correlate so strongly, we can only reliably estimate their sum. Since we force `br` to be positive, the other part of the sum, `bl`, now more often has to be negative.
+
+__8H4.__ For the two models fit above, use DIC or WAIC to compare the effective number of parameters for each model. Which model has more effective parameters and why?
+```{r}
+compare(m5.8s, m5.8s2)
+```
+
+```{r}
+DIC(m5.8s)
+```
+
+```{r}
+DIC(m5.8s2)
+```
+
+DIC and WAIC estimate around 3 parameters for the truncated model and around 4 for the non-truncated model. 
+Since the truncated model restricts the two parameters to either be positive or the remaining summand, it has less free parameter.
+
+__8H5.__ Modify the Metropolis algorithm code from the chapter to handle the case that the island populations have a different distribution than the island labels. That is, the island's number will not be the same as the population.
+
+We first generate random populations. I just used the same populations as before, only randomly permutated.
+```{r}
+island.pop <- sample(1:10, size=10, replace=FALSE)   # island population
+names(island.pop) <- 1:10                            # number of the island
+island.pop
+```
+
+```{r}
+num_weeks <- 1e5
+positions <- rep(0, num_weeks)
+current <- 10              # current is still the number of the island
+for (i in 1:num_weeks) {
+  # record current position
+  positions[i] <- current
+  
+  # flip coin to generate proposal
+  proposal <- current + sample( c(-1, 1), size=1)       # proposal is now the number 
+  if ( proposal < 1 ) proposal <- 10                    # of the proposal island
+  if ( proposal > 10 ) proposal <- 1
+  
+  # move?
+  # instead of taking the ratio between the island numbers
+  # we now take the ratio of the island populations
+  prob_move <- island.pop[proposal] / island.pop[current]
+  current <- ifelse( runif(1) < prob_move , proposal, current)
+}
+```
+
+```{r,fig.height=5, fig.width=10}
+par(mfrow=c(1,2))
+plot( (1:100), positions[1:100], xlab="week", ylab="island", col="royalblue4")
+plot(table(positions), col="royalblue4", xlab="island", ylab="number of weeks")
+```
+
+__8H6.__ Modify the Metropolis algorithm code from the chapter to write your own simple MCMC estimator for globe tossing data and model from Chapter 2.
+The model we want to fit can be specified as follow:
+$$\begin{align*}
+w &\sim \text{Binom}( \theta, n )\\
+\theta &\sim \text{Unif}(0,1)
+\end{align*}$$
+```{r}
+# the globe tossing data
+w <- 6
+n <- 9
+# prior on p
+p_prior <- function(p) dunif(p, min=0, max=1)
+# initializing MCMC
+iter <- 1e4
+p_sample <- rep(0, iter)
+p_current <- 0.5       # start value
+for (i in 1:iter) {
+  # record current p
+  p_sample[i] <- p_current
+  
+  # generate proposal
+  p_proposal <- runif(1, min=0, max=1)
+  
+  # compute likelihood for current and proposal
+  lkhd_current <- dbinom(w, n, p_current)
+  lkhd_proposal <- dbinom(w, n, p_proposal)
+  
+  # assuming a uniform prior of 1 over [0,1]
+  # otherwise, multiply times prior at p
+  
+  
+  # accept proposal?
+  prob_accept <- (lkhd_proposal *p_prior(p_proposal) ) / ( lkhd_current * p_prior(p_current) )
+  p_current <- ifelse( runif(1) < prob_accept, p_proposal, p_current)
+}
+```
+
+We can visualize the trace plot:
+```{r}
+plot(p_sample, type="l", col="royalblue4")
+```
+
+A well mixed chain.
+
+We can also plot the posterior distribution:
+```{r}
+dens(p_sample, col="royalblue4", adj=1)
+curve(dbeta(x, w+1, n-w+1 ), from=0, to=1, add=T, lty=2)
+```
+
+The dashed line is the exact analytic solution. Our simple MCMC estimator doesn't perform too bad.
