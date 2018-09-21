@@ -2,9 +2,7 @@
 title: "Chapter 4 - Exercise"
 author: "Corrie"
 date: "May 21, 2018"
-output: 
-  github_document:
-    pandoc_args: --webtex
+output: html_document
 
 ---
 
