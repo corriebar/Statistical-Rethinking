@@ -29,3 +29,7 @@ These are code snippets, plots and my solutions to some of the exercises of the 
 - [MCMC](Chapter%208/chapter8.md)
 - [Exercises](Chapter%208/chapter8_Ex.md)
 
+## Chapter 10
+- [Binomial Regression](Chapter%2010/chapter10a.md)
+- [Poisson Regression](Chapter%2010/chapter10b.md)
+
