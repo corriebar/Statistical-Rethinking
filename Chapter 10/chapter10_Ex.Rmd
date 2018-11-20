@@ -1,0 +1,31 @@
+---
+title: "Chapter 10 - Exercise"
+author: "Corrie"
+date: "November 17, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Easy.
+__10E1.__ If an event has probability 0.35, what are the log-odds of this event?
+```{r}
+log( 0.35 / (1 - 0.35))
+```
+
+__10E2.__ If an event  has log-odds 3.2, what is the probabiity of this event?
+```{r}
+1 / (1 + exp(-3.2))
+```
+
+__10E3.__ A coefficient in a logistic regression has value 1.7. What does this imply about the proportional change in odds of the outcome?
+```{r}
+exp(1.7)
+```
+
+For a change from 0 to 1 in variable for this coefficient would mean that there would be a proportional increase of 5.47 in the odds of the outcome. That is, the odds would increase by 447%.
+
+__10E4.__ Why do Poisson regressions sometimes require the use of an _offset_?
+If the measurements are over different time intervals then an offset is necessary to align all observations with each other.
