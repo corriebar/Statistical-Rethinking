@@ -30,6 +30,6 @@ These are code snippets, plots and my solutions to some of the exercises of the 
 - [Exercises](Chapter%208/chapter8_Ex.md)
 
 ## Chapter 10
-- [Binomial Regression](Chapter%2010/chapter10a.md)
+- [Binomial Regression](Chapter%2010/chapter10a.html)
 - [Poisson Regression](Chapter%2010/chapter10b.md)
 
