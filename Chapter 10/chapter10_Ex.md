@@ -783,14 +783,16 @@ For almost all cases, the predicted success counts are now even equal to the obs
 ``` r
 data("salamanders")
 d <- salamanders
+d$PCTCOVER_c <- d$PCTCOVER - mean(d$PCTCOVER)
 str(d)
 ```
 
-    'data.frame':   47 obs. of  4 variables:
-     $ SITE     : int  1 2 3 4 5 6 7 8 9 10 ...
-     $ SALAMAN  : int  13 11 11 9 8 7 6 6 5 5 ...
-     $ PCTCOVER : int  85 86 90 88 89 83 83 91 88 90 ...
-     $ FORESTAGE: int  316 88 548 64 43 368 200 71 42 551 ...
+    'data.frame':   47 obs. of  5 variables:
+     $ SITE      : int  1 2 3 4 5 6 7 8 9 10 ...
+     $ SALAMAN   : int  13 11 11 9 8 7 6 6 5 5 ...
+     $ PCTCOVER  : int  85 86 90 88 89 83 83 91 88 90 ...
+     $ FORESTAGE : int  316 88 548 64 43 368 200 71 42 551 ...
+     $ PCTCOVER_c: num  26 27 31 29 30 ...
 
 As priors, we'll use as prior a normal distribution with mean zero and standard deviation of 50 for the intercept. That is, if there is no ground covered, we expect up 100 salamander in one plot. As I don't know much about salamander, this is a rather conservative prior, and a glimpse on the salamander count in the first rows suggests it is likely much lower.
 
@@ -800,14 +802,14 @@ The ground cover is given in percentage points between 0 and 100, so we'll use a
 m.salam1 <- map(
   alist(
     SALAMAN ~ dpois( lambda ),
-    log(lambda) <- a + bc*PCTCOVER,
+    log(lambda) <- a + bc*PCTCOVER_c,
     a ~ dnorm(0, 50),
     bc ~ dnorm(0, 1)
   ),
   data=d
 )
 
-m.salam1stan <- map2stan(m.salam1)
+m.salam1stan <- map2stan(m.salam1, chains=2)
 ```
 
 ``` r
@@ -815,9 +817,15 @@ m.salam1stan <- map2stan(m.salam1)
 ```
 
          m.salam1 m.salam1stan
-    a      -1.46    -1.59     
+    a       0.43     0.39     
     bc      0.03     0.03     
     nobs      47       47     
+
+``` r
+plot( coeftab( m.salam1, m.salam1stan))
+```
+
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-60-1.png)
 
 The estimates seem to be quite similar, only the intercept differs a bit. Let's check the pair plots:
 
@@ -825,15 +833,15 @@ The estimates seem to be quite similar, only the intercept differs a bit. Let's 
 pairs( m.salam1 )
 ```
 
-![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-60-1.png)
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-61-1.png)
 
-There is a strong negative correlation between the intercept and the parameter for the covering.
+Even after centering the predictor, there is still a strong negative correlation between the intercept and the parameter for the covering.
 
 ``` r
 pairs(m.salam1stan)
 ```
 
-![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-61-1.png)
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-62-1.png)
 
 The posterior distributions are both skewed in opposite directions. The quadratic approximation thus is not a good approximation for the posterior and we'll use the Stan model from now on.
 
@@ -842,7 +850,8 @@ The posterior distributions are both skewed in opposite directions. The quadrati
 cover.seq <- seq(from=0, to=100, length.out=100)
 
 d.pred <- data.frame(
-  PCTCOVER = cover.seq 
+  PCTCOVER = cover.seq,
+  PCTCOVER_c = cover.seq - mean(d$PCTCOVER)
 )
 
 lambda.pred <- link(m.salam1stan, data=d.pred)
@@ -862,8 +871,204 @@ lines( cover.seq, lambda.med, col="steelblue")
 shade( lambda.PI, cover.seq, col=col.alpha("steelblue", 0.2))
 ```
 
-![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-63-1.png)
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-64-1.png)
 
-If there is little or no covered ground, then there are only a handful of salamanders. Once the covered ground is more than 80%, the salamander count rises. For high covered ground plots, there is a wide range of possible salamander counts, indicating that some important factor is still missing in the model.
+If there is little or no covered ground, then there are only a handful of salamanders. Once the covered ground is more than 80%, the salamander count rises. This behaviour is well captured by the model. For high covered ground plots though, there is a much wider range of possible salamander counts than is estimated by our model. This indicates that some important factor is still missing in the model.
 
 1.  Can you improve the model by using the other predictor `FORESTAGE`? Can you explain why it helps or does not help with prediction?
+
+Forest age ranges from very young forests of just a few years to some very old forests. The distribution is skewed in that most forests are younger than 100 years but a few forests are older than 500 years. It thus makes sense to use the log of forest age.
+
+``` r
+hist(d$FORESTAGE, breaks = 10,
+     main="Histogram of Forest age", xlab="Forest age")
+```
+
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-65-1.png)
+
+``` r
+plot(d$PCTCOVER, d$FORESTAGE)
+```
+
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-66-1.png)
+
+``` r
+library(tidyverse)
+```
+
+    ── Attaching packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──
+
+    ✔ tibble  2.0.1       ✔ purrr   0.3.0  
+    ✔ tidyr   0.8.2       ✔ dplyr   0.8.0.1
+    ✔ readr   1.3.1       ✔ stringr 1.4.0  
+    ✔ tibble  2.0.1       ✔ forcats 0.4.0  
+
+    ── Conflicts ─────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+    ✖ tidyr::extract() masks rstan::extract()
+    ✖ dplyr::filter()  masks stats::filter()
+    ✖ dplyr::lag()     masks stats::lag()
+    ✖ purrr::map()     masks rethinking::map()
+    ✖ dplyr::select()  masks MASS::select()
+
+``` r
+d %>%
+  filter(PCTCOVER > 75) %>%
+  ggplot(aes(y=SALAMAN, x=FORESTAGE, col=PCTCOVER)) + geom_point()
+```
+
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-66-2.png)
+
+``` r
+d$logFORESTAGE <- log(d$FORESTAGE + 1 )
+d$logFORESTAGE_c <- d$logFORESTAGE - mean(d$logFORESTAGE)
+m.salam2 <- map2stan(
+  alist(
+    SALAMAN ~ dpois( lambda ),
+    log(lambda) <- a + bc*PCTCOVER_c +bf*logFORESTAGE_c,
+    a ~ dnorm(0, 50),
+    bc ~ dnorm(0, 1),
+    bf ~ dnorm(0, 1)
+  ),
+  data=d, chains=2
+)
+```
+
+``` r
+precis(m.salam2, digits = 5)
+```
+
+           Mean  StdDev lower 0.89 upper 0.89 n_eff    Rhat
+    a   0.39249 0.16772    0.12055    0.65583   779 1.00209
+    bc  0.03557 0.00692    0.02480    0.04684   784 1.00201
+    bf -0.05811 0.10142   -0.20926    0.11064   964 0.99978
+
+``` r
+plot(precis(m.salam2, digits=5))
+```
+
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-69-1.png)
+
+`FORESTAGE` has a very small negative coefficient but with a relatively high standard deviation: the 89% percent interval for the parameter includes 0. This supports the hypothesis that the forest age doesn't add meaningful information to the model.
+
+Checking the parameters, we see that the parameter `a` and `bc` again have a relatively high correlation, though a bit less than in the model before.
+
+``` r
+pairs(m.salam2)
+```
+
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-70-1.png)
+
+One reason why forest age doesn't improve the model can be that forest age and the coverage are strongly correlated:
+
+``` r
+plot(PCTCOVER ~ FORESTAGE, data=d, log="x",
+     main="Correlation between Forest age and Coverage")
+```
+
+    Warning in xy.coords(x, y, xlabel, ylabel, log): 1 x value <= 0 omitted
+    from logarithmic plot
+
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-71-1.png)
+
+The model before failed in particular for plots where the ground coverage was above 75%. If we have a look at the salamander count depending on forest age for plots that have a coverage greater than 75%, we further see, that forest age does not add any information:
+
+``` r
+plot(SALAMAN ~ FORESTAGE, data=d[d$PCTCOVER > 75,],
+     main="Salamander count depending on Forest age",
+     sub="For plots of a coverage greater than 75%")
+```
+
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-72-1.png)
+
+In summary, the older a forest is, the more likely it has a high ground coverage. If the ground coverage is high, then the age of the forest doesn't add any additional information that help predict the salamder count.
+
+We can also check the WAIC of the two models:
+
+``` r
+set.seed(2405)
+(cmp <- compare(m.salam1stan, m.salam2 ) )
+```
+
+                  WAIC pWAIC dWAIC weight    SE  dSE
+    m.salam1stan 213.3   4.7   0.0   0.89 26.48   NA
+    m.salam2     217.6   7.7   4.2   0.11 27.79 2.53
+
+``` r
+plot(cmp)
+```
+
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-74-1.png)
+
+Almost all Akaike weight is on the first, simpler model. We can compute the proability that the second model would have a lower WAIC:
+
+``` r
+diff <- rnorm(1e5, 4.5, 2.45)
+mean(diff < 0)
+```
+
+    [1] 0.03261
+
+The probability that the second model has a lower WAIC is only 3%. It is thus recommended to use the first model without the predictor forest age.
+
+Since forest age and ground cover are strongly correlated, how would a model perform where we use only forest age as a predictor? Could this model perform as good or better than the model using the ground coverage?
+
+``` r
+m.salam3 <- map2stan(
+  alist(
+    SALAMAN ~ dpois( lambda ),
+    log(lambda) <- a + bf*logFORESTAGE_c,
+    a ~ dnorm(0, 50),
+    bf ~ dnorm(0, 1)
+  ),
+  data=d, chains=2
+)
+```
+
+Let's check how the parameter compare:
+
+``` r
+coeftab(m.salam1stan, m.salam2, m.salam3)
+```
+
+         m.salam1stan m.salam2 m.salam3
+    a       0.39         0.39     0.71 
+    bc      0.03         0.04       NA 
+    bf        NA        -0.06     0.38 
+    nobs      47           47       47 
+
+The intercept is higher in the third model and `bf` is now positive and quite large, whereas before in model 2 it was close to 0.
+
+``` r
+plot(coeftab(m.salam1stan, m.salam2, m.salam3))
+```
+
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-78-1.png)
+
+let's check correlations between the parameters:
+
+``` r
+pairs(m.salam3)
+```
+
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-79-1.png)
+
+The model has less correlation between its two parameters.
+
+We can compare all three models using WAIC:
+
+``` r
+(cmp <- compare(m.salam1stan, m.salam2, m.salam3) )
+```
+
+                  WAIC pWAIC dWAIC weight    SE   dSE
+    m.salam1stan 213.3   4.7   0.0   0.89 26.48    NA
+    m.salam2     217.6   7.7   4.2   0.11 27.79  2.53
+    m.salam3     248.1   6.1  34.8   0.00 32.23 18.87
+
+The first model still performs best, whereas the model using only forest age performs much worse than the other two models.
+
+``` r
+plot(cmp)
+```
+
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-81-1.png)

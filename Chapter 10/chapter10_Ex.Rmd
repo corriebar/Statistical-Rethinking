@@ -104,7 +104,8 @@ The likelihood (and thus also the log likelihood) differ though. To better see, 
 ```{r}
 theta.disagg <- coef(m10.disaggregated)
 p.disagg <- logistic(theta.disagg[1] + 
-                       (theta.disagg[2] + theta.disagg[3]*d$condition)*d$prosoc_left )
+                       (theta.disagg[2] + 
+                          theta.disagg[3]*d$condition)*d$prosoc_left )
 loglkhd.disagg <- sum(
   dbinom(d$pulled_left,
          size=1,
@@ -118,7 +119,8 @@ And for the aggregated version:
 ```{r}
 theta.agg <- coef(m10.aggregated)
 p.aggregated <- logistic(theta.agg[1] + 
-                           (theta.agg[2] + theta.agg[3]*d.aggregated$condition)*d.aggregated$prosoc_left)
+                           (theta.agg[2] + 
+                            theta.agg[3]*d.aggregated$condition)*d.aggregated$prosoc_left)
 loglkhd.aggregated <- sum(
   dbinom(d.aggregated$x,
          size=18,
@@ -133,7 +135,8 @@ If we compute the likelihood for a single experiment (that is, 18 observations i
 exp1.disagg <- dplyr::filter(d, condition==0 & actor==1 & prosoc_left==0)
 exp1.disagg$x <- exp1.disagg$pulled_left      # align notation
 p.disagg <- logistic(theta.disagg[1] + 
-                       (theta.disagg[2] + theta.disagg[3]*exp1.disagg$condition)*exp1.disagg$prosoc_left)
+                       (theta.disagg[2] + 
+                          theta.disagg[3]*exp1.disagg$condition)*exp1.disagg$prosoc_left)
 p.disagg
 ```
 ```{r}
@@ -232,7 +235,6 @@ m10.4 <- map(
   ),
   data=d2
 )
-precis(m10.4, depth = 2)
 ```
 
 
@@ -249,7 +251,7 @@ m10.4stan <- map2stan(
 )
 ```
 ```{r, message=F, warning=F}
-precis(m10.4stan, depth=2)
+coeftab(m10.4, m10.4stan, depth=2)
 ```
 While the estimates for `bp` and `bpC` are pretty much the same for both the `map` and the MCMC model, the estimates for actor 2 are very different:
 ```{r, fig.height=7}
@@ -271,7 +273,7 @@ The quadratic approximation gives some weight to negative values which doesn't m
 Since all other parameters have a Gaussian distribution, their estimates are the same in both posterior approximations. Since the distribution for actor 2 is highly non-Gaussian but `map()` assumes Gaussian distributions for all parameters, the estimate differs.
 
 __10H2.__ Use WAIC to compare the chimpanzee model that includes a unique intercept for each actor to the simpler models fit in the same section.
-```{r, results='hide', warnings=F, message=F}
+```{r, results='hide', warning=F, message=F}
 # only an intercept
 m10.1 <- map2stan(
   alist(
@@ -365,11 +367,12 @@ plot( coeftab(m.eagle1, m.eagle1stan) )
 ```
 
 The estimates do differ slightly, in particular for the parameter `bv` and `bp`, but they look close enough. Let's check the pair plots for both models as well.
-```{r, fig.height=6, fig.width=6}
+```{r, fig.height=7, fig.width=7}
 pairs(m.eagle1, main="Model fit with map()")
 ```
+
 The parameters for the pirate and the victim variable are negatively correlated: A high parameter value for the pirate variable implies a lower parameter value for the victim variable.
-```{r, fig.height=6, fig.width=6}
+```{r, fig.height=7, fig.width=7}
 pairs(m.eagle1stan, main="Model fit with map2stan()")
 ```
 
@@ -454,7 +457,7 @@ for (i in 1:nrow(d)){
 }
 ```
 
-Blue points show the observed proportions whereas the estimates probability and 89% percent interval are shown in black.
+Blue filled points show the observed proportions whereas the estimates probability and 89% percent interval are shown in black and open points.
 Except for the case 0/0/0 (small, immature pirate and small victim), all observed proportions of success are within the 89% interval for the predicted probabilities.
   
   
@@ -510,7 +513,7 @@ mean(diff < 0)
 ```
 There is a probability of 14% that the model without the interaction has the better WAIC.
 ```{r}
-plot(comp)
+plot(comp, xlim=c(79,  114))
 ```
 
 
@@ -575,6 +578,7 @@ __10H4.__ The data contained in `data(salamanders)` are counts of salamanders fr
 ```{r}
 data("salamanders")
 d <- salamanders
+d$PCTCOVER_c <- d$PCTCOVER - mean(d$PCTCOVER)
 str(d)
 ```
 As priors, we'll use as prior a normal distribution with mean zero and standard deviation of 50 for the intercept. That is, if there is no ground covered, we expect up 100 salamander in one plot. As I don't know much about salamander, this is a rather conservative prior, and a glimpse on the salamander count in the first rows suggests it is likely much lower. 
@@ -584,18 +588,22 @@ The ground cover is given in percentage points between 0 and 100, so we'll use a
 m.salam1 <- map(
   alist(
     SALAMAN ~ dpois( lambda ),
-    log(lambda) <- a + bc*PCTCOVER,
+    log(lambda) <- a + bc*PCTCOVER_c,
     a ~ dnorm(0, 50),
     bc ~ dnorm(0, 1)
   ),
   data=d
 )
 
-m.salam1stan <- map2stan(m.salam1)
+m.salam1stan <- map2stan(m.salam1, chains=2)
 ```
 
 ```{r}
  coeftab( m.salam1, m.salam1stan ) 
+```
+
+```{r}
+plot( coeftab( m.salam1, m.salam1stan))
 ```
 
 The estimates seem to be quite similar, only the intercept differs a bit. Let's check the pair plots:
@@ -603,7 +611,7 @@ The estimates seem to be quite similar, only the intercept differs a bit. Let's 
 pairs( m.salam1 )
 ```
 
-There is a strong negative correlation between the intercept and the parameter for the covering.
+Even after centering the predictor, there is still a strong negative correlation between the intercept and the parameter for the covering.
 
 ```{r, fig.height=5, fig.width=5}
 pairs(m.salam1stan)
@@ -611,12 +619,14 @@ pairs(m.salam1stan)
 
 The posterior distributions are both skewed in opposite directions. The quadratic approximation thus is not a good approximation for the posterior and we'll use the Stan model from now on.
 
+
 ```{r, results='hide'}
 # sequence of percent ground cover
 cover.seq <- seq(from=0, to=100, length.out=100)
 
 d.pred <- data.frame(
-  PCTCOVER = cover.seq 
+  PCTCOVER = cover.seq,
+  PCTCOVER_c = cover.seq - mean(d$PCTCOVER)
 )
 
 lambda.pred <- link(m.salam1stan, data=d.pred)
@@ -636,16 +646,121 @@ lines( cover.seq, lambda.med, col="steelblue")
 shade( lambda.PI, cover.seq, col=col.alpha("steelblue", 0.2))
 ```
 
-If there is little or no covered ground, then there are only a handful of salamanders. Once the covered ground is more than 80%, the salamander count rises. For high covered ground plots, there is a wide range of possible salamander counts, indicating that some important factor is still missing in the model. 
-
-  
-  
-  
-  
-  
-  
-  
-  
+If there is little or no covered ground, then there are only a handful of salamanders. Once the covered ground is more than 80%, the salamander count rises. This behaviour is well captured by the model. For high covered ground plots though, there is a much wider range of possible salamander counts than is estimated by our model. This indicates that some important factor is still missing in the model. 
   
   
   (b) Can you improve the model by using the other predictor `FORESTAGE`? Can you explain why it helps or does not help with prediction?
+  
+  Forest age ranges from very young forests of just a few years to some very old forests. 
+```{r}
+hist(d$FORESTAGE, breaks = 10,
+     main="Histogram of Forest age", xlab="Forest age")
+```
+  
+The distribution is skewed in that most forests are younger than 100 years but a few forests are older than 500 years. It thus makes sense to use the log of forest age.
+  
+```{r,  results='hide', warning=F, message=F}
+d$logFORESTAGE <- log(d$FORESTAGE + 1 )
+d$logFORESTAGE_c <- d$logFORESTAGE - mean(d$logFORESTAGE)
+m.salam2 <- map2stan(
+  alist(
+    SALAMAN ~ dpois( lambda ),
+    log(lambda) <- a + bc*PCTCOVER_c +bf*logFORESTAGE_c,
+    a ~ dnorm(0, 50),
+    bc ~ dnorm(0, 1),
+    bf ~ dnorm(0, 1)
+  ),
+  data=d, chains=2
+)
+```
+
+```{r}
+precis(m.salam2, digits = 5)
+```
+
+```{r}
+plot(precis(m.salam2, digits=5))
+```
+
+
+`FORESTAGE` has a very small negative coefficient but with a large standard deviation: the 89% percent interval for the parameter includes 0. This supports the hypothesis that the forest age doesn't add meaningful information to the model.
+
+Checking the parameters, we see that the parameter `a` and `bc` again have a relatively high correlation, though a bit less than in the model before.
+```{r, fig.height=6, fig.width=6}
+pairs(m.salam2)
+```
+
+One reason why forest age doesn't improve the model can be that forest age and the coverage are strongly correlated:
+```{r, warning=F, message=F}
+plot(PCTCOVER ~ FORESTAGE, data=d, log="x",
+     main="Correlation between Forest age and Coverage")
+```
+
+The model before failed in particular for plots where the ground coverage was above 75%. If we have a look at the salamander count depending on forest age for plots that have a coverage greater than 75%, we further see, that forest age does not add any information:
+```{r}
+plot(SALAMAN ~ FORESTAGE, data=d[d$PCTCOVER > 75,],
+     main="Salamander count depending on Forest age",
+     sub="For plots of a coverage greater than 75%")
+```
+
+In summary, the older a forest is, the more likely it has a high ground coverage. If the ground coverage is high, then the age of the forest doesn't add any additional information that help predict the salamder count.
+
+We can also check the WAIC of the two models:
+```{r}
+set.seed(2405)
+(cmp <- compare(m.salam1stan, m.salam2 ) )
+```
+
+```{r}
+plot(cmp, xlim=c(185, 247))
+```
+
+Almost all Akaike weight is on the first, simpler model. We can compute the proability that the second model would have a lower WAIC:
+```{r}
+diff <- rnorm(1e5, 4.5, 2.45)
+mean(diff < 0)
+```
+
+The probability that the second model has a lower WAIC is only 3%. It is thus recommended to use the first model without the predictor forest age.
+
+Since forest age and ground cover are strongly correlated, how would a model perform where we use only forest age as a predictor? Could this model perform as good or better than the model using the ground coverage?
+```{r,  results='hide', warning=F, message=F}
+m.salam3 <- map2stan(
+  alist(
+    SALAMAN ~ dpois( lambda ),
+    log(lambda) <- a + bf*logFORESTAGE_c,
+    a ~ dnorm(0, 50),
+    bf ~ dnorm(0, 1)
+  ),
+  data=d, chains=2
+)
+```
+
+Let's check how the parameter compare:
+```{r}
+coeftab(m.salam1stan, m.salam2, m.salam3)
+```
+
+The intercept is higher in the third model and `bf` is now positive and quite large, whereas before in model 2 it was close to 0.
+
+```{r}
+plot(coeftab(m.salam1stan, m.salam2, m.salam3))
+```
+
+Let's check correlations between the parameters:
+```{r}
+pairs(m.salam3)
+```
+
+The model has less correlation between its two parameters.
+
+We can compare all three models using WAIC:
+```{r}
+(cmp <- compare(m.salam1stan, m.salam2, m.salam3) )
+```
+
+The first model still performs best, whereas the model using only forest age performs much worse than the other two models.
+```{r}
+plot(cmp, xlim=c(185, 282))
+```
+
