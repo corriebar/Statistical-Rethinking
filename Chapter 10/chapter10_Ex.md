@@ -123,7 +123,8 @@ The likelihood (and thus also the log likelihood) differ though. To better see, 
 ``` r
 theta.disagg <- coef(m10.disaggregated)
 p.disagg <- logistic(theta.disagg[1] + 
-                       (theta.disagg[2] + theta.disagg[3]*d$condition)*d$prosoc_left )
+                       (theta.disagg[2] + 
+                          theta.disagg[3]*d$condition)*d$prosoc_left )
 loglkhd.disagg <- sum(
   dbinom(d$pulled_left,
          size=1,
@@ -140,7 +141,8 @@ And for the aggregated version:
 ``` r
 theta.agg <- coef(m10.aggregated)
 p.aggregated <- logistic(theta.agg[1] + 
-                           (theta.agg[2] + theta.agg[3]*d.aggregated$condition)*d.aggregated$prosoc_left)
+                           (theta.agg[2] + 
+                            theta.agg[3]*d.aggregated$condition)*d.aggregated$prosoc_left)
 loglkhd.aggregated <- sum(
   dbinom(d.aggregated$x,
          size=18,
@@ -158,7 +160,8 @@ If we compute the likelihood for a single experiment (that is, 18 observations i
 exp1.disagg <- dplyr::filter(d, condition==0 & actor==1 & prosoc_left==0)
 exp1.disagg$x <- exp1.disagg$pulled_left      # align notation
 p.disagg <- logistic(theta.disagg[1] + 
-                       (theta.disagg[2] + theta.disagg[3]*exp1.disagg$condition)*exp1.disagg$prosoc_left)
+                       (theta.disagg[2] + 
+                          theta.disagg[3]*exp1.disagg$condition)*exp1.disagg$prosoc_left)
 p.disagg
 ```
 
@@ -294,7 +297,7 @@ m10.4 <- map(
   ),
   data=d2
 )
-precis(m10.4, depth = 2)
+precis(m10.4, depth=2)
 ```
 
           Mean StdDev  5.5% 94.5%
@@ -322,7 +325,7 @@ m10.4stan <- map2stan(
 ```
 
 ``` r
-precis(m10.4stan, depth=2)
+precis( m10.4stan, depth=2)
 ```
 
           Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
@@ -372,14 +375,7 @@ m10.1 <- map2stan(
     a ~ dnorm(0, 10)
   ), data=d2, iter=2500, warmup=500, chains=4
 )
-```
 
-    Warning: There were 1 divergent transitions after warmup. Increasing adapt_delta above 0.8 may help. See
-    http://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
-
-    Warning: Examine the pairs() plot to diagnose sampling problems
-
-``` r
 m10.2 <- map2stan(
   alist(
     pulled_left ~ dbinom(1, p),
@@ -397,14 +393,7 @@ m10.3 <- map2stan(
     c(bp, bpC) ~ dnorm(0, 10)
   ), data=d2, iter=2500, warmup=500, chains=4
 )
-```
 
-    Warning: There were 1 divergent transitions after warmup. Increasing adapt_delta above 0.8 may help. See
-    http://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
-
-    Warning: Examine the pairs() plot to diagnose sampling problems
-
-``` r
 m10.4 <- map2stan(
   alist(
     pulled_left ~ dbinom(1, p),
@@ -414,14 +403,6 @@ m10.4 <- map2stan(
   ), data=d2, iter=2500, warmup=500, chains=4
 )
 ```
-
-    Warning: There were 8 divergent transitions after warmup. Increasing adapt_delta above 0.8 may help. See
-    http://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
-
-    Warning: Examine the pairs() plot to diagnose sampling problems
-
-    Warning in map2stan(alist(pulled_left ~ dbinom(1, p), logit(p) <- a[actor] + : There were 8 divergent iterations during sampling.
-    Check the chains (trace plots, n_eff, Rhat) carefully to ensure they are valid.
 
 ``` r
 ( comp <- compare( m10.1, m10.2, m10.3, m10.4) )
@@ -516,7 +497,9 @@ The estimates do differ slightly, in particular for the parameter `bv` and `bp`,
 pairs(m.eagle1, main="Model fit with map()")
 ```
 
-![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-31-1.png) The parameters for the pirate and the victim variable are negatively correlated: A high parameter value for the pirate variable implies a lower parameter value for the victim variable.
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-31-1.png)
+
+The parameters for the pirate and the victim variable are negatively correlated: A high parameter value for the pirate variable implies a lower parameter value for the victim variable.
 
 ``` r
 pairs(m.eagle1stan, main="Model fit with map2stan()")
@@ -639,7 +622,7 @@ for (i in 1:nrow(d)){
 
 ![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-44-1.png)
 
-Blue points show the observed proportions whereas the estimates probability and 89% percent interval are shown in black. Except for the case 0/0/0 (small, immature pirate and small victim), all observed proportions of success are within the 89% interval for the predicted probabilities.
+Blue filled points show the observed proportions whereas the estimates probability and 89% percent interval are shown in black and open points. Except for the case 0/0/0 (small, immature pirate and small victim), all observed proportions of success are within the 89% interval for the predicted probabilities.
 
 1.  Predicted **success count**
 
@@ -710,7 +693,7 @@ mean(diff < 0)
 There is a probability of 14% that the model without the interaction has the better WAIC.
 
 ``` r
-plot(comp)
+plot(comp, xlim=c(79,  114))
 ```
 
 ![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-51-1.png)
@@ -877,7 +860,7 @@ If there is little or no covered ground, then there are only a handful of salama
 
 1.  Can you improve the model by using the other predictor `FORESTAGE`? Can you explain why it helps or does not help with prediction?
 
-Forest age ranges from very young forests of just a few years to some very old forests. The distribution is skewed in that most forests are younger than 100 years but a few forests are older than 500 years. It thus makes sense to use the log of forest age.
+Forest age ranges from very young forests of just a few years to some very old forests.
 
 ``` r
 hist(d$FORESTAGE, breaks = 10,
@@ -886,37 +869,7 @@ hist(d$FORESTAGE, breaks = 10,
 
 ![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-65-1.png)
 
-``` r
-plot(d$PCTCOVER, d$FORESTAGE)
-```
-
-![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-66-1.png)
-
-``` r
-library(tidyverse)
-```
-
-    ── Attaching packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──
-
-    ✔ tibble  2.0.1       ✔ purrr   0.3.0  
-    ✔ tidyr   0.8.2       ✔ dplyr   0.8.0.1
-    ✔ readr   1.3.1       ✔ stringr 1.4.0  
-    ✔ tibble  2.0.1       ✔ forcats 0.4.0  
-
-    ── Conflicts ─────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
-    ✖ tidyr::extract() masks rstan::extract()
-    ✖ dplyr::filter()  masks stats::filter()
-    ✖ dplyr::lag()     masks stats::lag()
-    ✖ purrr::map()     masks rethinking::map()
-    ✖ dplyr::select()  masks MASS::select()
-
-``` r
-d %>%
-  filter(PCTCOVER > 75) %>%
-  ggplot(aes(y=SALAMAN, x=FORESTAGE, col=PCTCOVER)) + geom_point()
-```
-
-![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-66-2.png)
+The distribution is skewed in that most forests are younger than 100 years but a few forests are older than 500 years. It thus makes sense to use the log of forest age.
 
 ``` r
 d$logFORESTAGE <- log(d$FORESTAGE + 1 )
@@ -946,9 +899,9 @@ precis(m.salam2, digits = 5)
 plot(precis(m.salam2, digits=5))
 ```
 
-![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-69-1.png)
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-68-1.png)
 
-`FORESTAGE` has a very small negative coefficient but with a relatively high standard deviation: the 89% percent interval for the parameter includes 0. This supports the hypothesis that the forest age doesn't add meaningful information to the model.
+`FORESTAGE` has a very small negative coefficient but with a large standard deviation: the 89% percent interval for the parameter includes 0. This supports the hypothesis that the forest age doesn't add meaningful information to the model.
 
 Checking the parameters, we see that the parameter `a` and `bc` again have a relatively high correlation, though a bit less than in the model before.
 
@@ -956,7 +909,7 @@ Checking the parameters, we see that the parameter `a` and `bc` again have a rel
 pairs(m.salam2)
 ```
 
-![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-70-1.png)
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-69-1.png)
 
 One reason why forest age doesn't improve the model can be that forest age and the coverage are strongly correlated:
 
@@ -965,10 +918,7 @@ plot(PCTCOVER ~ FORESTAGE, data=d, log="x",
      main="Correlation between Forest age and Coverage")
 ```
 
-    Warning in xy.coords(x, y, xlabel, ylabel, log): 1 x value <= 0 omitted
-    from logarithmic plot
-
-![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-71-1.png)
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-70-1.png)
 
 The model before failed in particular for plots where the ground coverage was above 75%. If we have a look at the salamander count depending on forest age for plots that have a coverage greater than 75%, we further see, that forest age does not add any information:
 
@@ -978,7 +928,7 @@ plot(SALAMAN ~ FORESTAGE, data=d[d$PCTCOVER > 75,],
      sub="For plots of a coverage greater than 75%")
 ```
 
-![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-72-1.png)
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-71-1.png)
 
 In summary, the older a forest is, the more likely it has a high ground coverage. If the ground coverage is high, then the age of the forest doesn't add any additional information that help predict the salamder count.
 
@@ -994,10 +944,10 @@ set.seed(2405)
     m.salam2     217.6   7.7   4.2   0.11 27.79 2.53
 
 ``` r
-plot(cmp)
+plot(cmp, xlim=c(185, 247))
 ```
 
-![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-74-1.png)
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-73-1.png)
 
 Almost all Akaike weight is on the first, simpler model. We can compute the proability that the second model would have a lower WAIC:
 
@@ -1042,15 +992,15 @@ The intercept is higher in the third model and `bf` is now positive and quite la
 plot(coeftab(m.salam1stan, m.salam2, m.salam3))
 ```
 
-![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-78-1.png)
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-77-1.png)
 
-let's check correlations between the parameters:
+Let's check correlations between the parameters:
 
 ``` r
 pairs(m.salam3)
 ```
 
-![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-79-1.png)
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-78-1.png)
 
 The model has less correlation between its two parameters.
 
@@ -1068,7 +1018,7 @@ We can compare all three models using WAIC:
 The first model still performs best, whereas the model using only forest age performs much worse than the other two models.
 
 ``` r
-plot(cmp)
+plot(cmp, xlim=c(185, 282))
 ```
 
-![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-81-1.png)
+![](chapter10_Ex_files/figure-markdown_github/unnamed-chunk-80-1.png)

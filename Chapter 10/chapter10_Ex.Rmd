@@ -235,6 +235,7 @@ m10.4 <- map(
   ),
   data=d2
 )
+precis(m10.4, depth=2)
 ```
 
 
@@ -251,7 +252,7 @@ m10.4stan <- map2stan(
 )
 ```
 ```{r, message=F, warning=F}
-coeftab(m10.4, m10.4stan, depth=2)
+precis( m10.4stan, depth=2)
 ```
 While the estimates for `bp` and `bpC` are pretty much the same for both the `map` and the MCMC model, the estimates for actor 2 are very different:
 ```{r, fig.height=7}
