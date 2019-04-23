@@ -297,8 +297,8 @@ d <- data.frame(career,
 m10.16_poisson <- map2stan(
   alist(
     career1 ~ dpois(lambda1),
-    career2 <- dpois(lambda2),
-    career3 <- dpois(lambda3),
+    career2 ~ dpois(lambda2),
+    career3 ~ dpois(lambda3),
     log(lambda1) <- b1,         # linear model for event type 1
     log(lambda2) <- b2,         # linear model for event type 2
     log(lambda3) <- b3,         # linear model for event type 3
