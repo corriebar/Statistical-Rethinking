@@ -1,0 +1,202 @@
+---
+title: "Chapter 12 - Of Monsters and Mixtures"
+author: "Corrie"
+date: "April 14, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Over-dispersed outcomes
+For the beta-binomial model, we'll make use of the beta distribution. The beta distribution is a probability distribution over probabilities (over the interval $[0, 1]$).
+```{r, warning=FALSE, message=FALSE}
+library(rethinking)
+pbar <- 0.5
+theta <- 5
+curve( dbeta2( x, pbar, theta), from=0, to=1, xlab="probability", ylab="Density")
+```
+
+There are different ways to parametrize the beta distribution:
+```{r, eval=F}
+dbeta2 <- function( x , prob , theta , log=FALSE ) {
+    a <- prob * theta
+    b <- (1-prob) * theta
+    dbeta( x , shape1=a , shape2=b , log=log )
+}
+```
+
+We use the beta-binomial for the `UCBadmit` data, which is over-dispersed if we ignore department (since the admission rate varied quite a lot for different departments).
+Our model looks as follows:
+$$\begin{align*}
+A_i &\sim \text{BetaBinomial}(N_i, \bar{p}_i, \theta) \\
+\text{logit}(\bar{p}_i) &= \alpha_{\text{GID}[i]}) \\
+\alpha_j &\sim \text{Normal}(0, 1.5) \\
+\theta &\sim \text{Exponential}(1)
+\end{align*}$$
+where $A$ is `admit`, $N$ is the number of applications  `applications`, and GID$[i]$ is gender id, 1 for male and 2 for female.
+```{r, results='hide', warning=F, message=F}
+data("UCBadmit")
+d <- UCBadmit
+d$gid <- ifelse(d$applicant.gender == "male", 1L, 2L)
+dat <- list(A = d$admit, N = d$applications, gid=d$gid)
+
+m12.1 <- ulam(
+  alist(
+    A ~ dbetabinom( N, pbar, theta),
+    logit(pbar) <- a[gid],
+    a[gid] ~ dnorm(0, 1.5),
+    theta ~ dexp(1)
+  ), data=dat, chains=4
+)
+```
+
+```{r}
+post <- extract.samples(m12.1 )
+post$da <- post$a[,1] - post$a[,2]
+precis( post, depth=2)
+```
+
+`a[1]` is the log-odds of admission for male applicants which is lower than `a[2]`, the log-odds for female applicants. This might suggest there is a diffenrece in admission rates by gender, but the posterior difference `da` is highly uncertain with probability mass both above and below zero.
+
+We can visualize the posterior Beta-distribution:
+```{r}
+gid <- 2
+# draw posterior mean beta distribution
+curve( dbeta2(x, mean( logistic(post$a[, gid])), mean(post$theta)), from=0, to=1,
+       ylab="Density", xlab="probability admit", ylim=c(0,3), lwd=2)
+
+# draw 50 beta distributions sampled from posterior
+for ( i in 1:50 ) {
+  p <- logistic( post$a[i, gid ] )
+  theta <- post$theta[i]
+  curve( dbeta2(x, p, theta), add=T,col=col.alpha("black", 0.2))
+}
+mtext("distribution of female admission rates")
+```
+
+There is a tendency for admission rates below 40% but the most plausible (the mean Beta-distribution) also allows for very high admission rates above 80%. This way, the model incorporated the high variation among departments.
+```{r}
+postcheck(m12.1)
+```
+
+The prediction intervals are very wide.
+
+## Negative-Binomial
+Similar as with the Beta-Binomial, we can fit a Poisson model, where each observation has its own rate. The rate comes from a common gamma distribution.
+```{r}
+phi <- 2
+lambda <- 1
+curve( dgamma( x, shape=phi, rate=lambda), from=0, to=20, xlab="probability", ylab="Density")
+```
+
+
+```{r, results='hide', warning=F, message=F}
+data(Kline)
+d <- Kline
+d$P <- standardize( log( d$population ) )
+d$contact_id <- ifelse( d$contact == "high", 2L, 1L)
+
+dat2 <- list(
+  TT = d$total_tools,
+  P = d$population,
+  cid = d$contact_id
+)
+
+m12.3 <- ulam(
+  alist(
+    TT ~ dgampois( lambda, phi ),
+    lambda <- exp( a[cid])*P^b[cid] / g,
+    a[cid] ~ dnorm(1, 1),
+    b[cid] ~ dexp(1),
+    g ~ dexp(1),
+    phi ~ dexp(1)
+  ), data=dat2, chains=4, log_lik = TRUE
+)
+```
+
+For comparison, our model from before:
+```{r, results='hide', warning=F, message=F}
+m11.11 <- ulam(
+  alist(
+    TT ~ dpois(lambda),
+    lambda <- exp( a[cid] )*P^b[cid] / g,
+    a[cid] ~ dnorm(1,1),
+    b[cid] ~ dexp(1),
+    g ~ dexp(1)
+  ), data=dat2, chains=4, log_lik = T
+)
+```
+
+
+
+
+
+```{r, fig.height=6, fig.width=11, warning=F, message=F}
+k <- LOOPk(m11.11)
+par(bty="l", mfrow=c(1,2))
+plot( d$population, d$total_tools, xlab="population", ylab="total tools",
+      col=rangi2, pch=ifelse(dat2$cid == 1, 1, 16), lwd=2,
+      ylim=c(0,74), cex=1+normalize(k) )
+
+ns <- 100
+P_seq <- seq(from=0, to=12.55, length.out = ns)
+pop_seq <- exp( P_seq )
+
+lambda <- link(m12.3, data=data.frame(P = pop_seq, cid=1))
+lmu <- apply(lambda, 2, mean)
+lci <- apply(lambda, 2, PI )
+lci2 <- ifelse(lci >= 74, 74, lci)
+lines( pop_seq, ifelse(lmu>=74, NA, lmu), lty=2, lwd=1.5)
+shade(lci2, pop_seq, xpd=TRUE)
+
+lambda <- link(m12.3, data=data.frame(P = pop_seq, cid=2))
+lmu <- apply(lambda, 2, mean)
+lci <- apply(lambda, 2, PI )
+lci2 <- ifelse(lci >= 74, 74, lci)
+lines( pop_seq, ifelse(lmu>=74, NA, lmu), lty=1, lwd=1.5)
+shade(lci2, pop_seq, xpd=TRUE)
+text(c(9e4, 1e5), c(68, 50), labels=c("high contact", "low contact"))
+mtext("gamma-Poisson model")
+
+
+plot( d$population, d$total_tools, xlab="population", ylab="total tools",
+      col=rangi2, pch=ifelse(dat2$cid == 1, 1, 16), lwd=2,
+      ylim=c(0,74), cex=1+normalize(k) )
+
+lambda <- link(m11.11, data=data.frame(P = pop_seq, cid=1))
+lmu <- apply(lambda, 2, mean)
+lci <- apply(lambda, 2, PI )
+lci2 <- ifelse(lci >= 74, 74, lci)
+lines( pop_seq, ifelse(lmu>=74, NA, lmu), lty=2, lwd=1.5)
+shade(lci2, pop_seq, xpd=TRUE)
+
+lambda <- link(m11.11, data=data.frame(P = pop_seq, cid=2))
+lmu <- apply(lambda, 2, mean)
+lci <- apply(lambda, 2, PI )
+lci2 <- ifelse(lci >= 74, 74, lci)
+lines( pop_seq, ifelse(lmu>=74, NA, lmu), lty=1, lwd=1.5)
+shade(lci2, pop_seq, xpd=TRUE)
+mtext("pure Poisson model")
+```
+
+
+## Zero-inflated outcomes
+```{r}
+prob_drink <- 0.2
+rate_work <- 1
+
+N <- 365
+
+set.seed(365)
+drink <- rbinom( N, 1, prob_drink)
+
+y <- (1-drink)*rpois(N, rate_work)
+
+simplehist( y, xlab="manuscripts completed", lwd=4)
+zeros_drink <- sum(drink)
+zeros_work <- sum(y==0 & drink == 0)
+zeros_total <- sum(y==0)
+lines(c(0,0), c(zeros_work, zeros_total), lwd=4, col=rangi2 )
+```
