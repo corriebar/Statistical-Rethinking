@@ -1,0 +1,355 @@
+---
+title: "Ordered Categories"
+author: "Corrie Bartelheimer"
+date: "7/28/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = NA, message = FALSE, warning = FALSE)
+options(mc.cores = parallel::detectCores())
+library(kableExtra)
+library(dplyr)
+```
+
+# Ordered Categorical Outcomes
+```{r, message=F, warning=F}
+library(rethinking)
+data(Trolley)
+d <- Trolley
+```
+
+The data contains answers of 331 individuals for different stories, about how morally permissible the action in the story is. The answer is an integer from 1 to 7. The outcome is thus categorical and ordered.
+```{r, fig.height=5, fig.width=4}
+simplehist( d$response, xlim=c(1,7), xlab="response")
+```
+
+## Describing an ordered distribution with intercepts
+
+We want to redescribe this histogram on the log-cumulative-odds scale.
+We first compute the cumulative probabilities:
+```{r, fig.height=5, fig.width=4}
+pr_k <- table( d$response ) / nrow(d)
+
+cum_pr_k <- cumsum( pr_k )
+
+plot( 1:7, cum_pr_k, type="b", xlab="response", 
+      ylab="cumulative proportions", ylim=c(0, 1))
+```
+
+Next, to get the log-cumulative odds, we use the following link function to get an intercept parameter for each reponse:
+$$\begin{align*}
+\log \frac{Pr(y_i \leq k)}{1 - Pr(y_i \leq k)} = \alpha_k
+\end{align*}$$
+where $\alpha_k$ is the intercept parameter unique to each possible outcome value $k$.
+```{r}
+logit <- function(x) log(x/(1-x))
+( lco <- logit( cum_pr_k ) )
+```
+
+The cumulative probability for the last response will always be 1, so its log-cumulative odds is always infinity and thus we only need 6 parameters.
+
+From the log-cumulative odds, we can then get back again to our cumulative proportions by using the inverse of the link, and then obtain the likelihood for each (ordered) category by substraction.
+$$p_k = Pr(y_i = k)  =  Pr(y_i \leq k) - Pr(y_i \leq k-1)$$
+These likelihoods are the blue line segments in the following plot:
+```{r, fig.height=5, fig.width=4}
+plot( 1:7, cum_pr_k, type="b", xlab="response", 
+      ylab="cumulative proportions", ylim=c(0, 1), xlim=c(1, 7.4))
+for (i in 1:7) {
+  lines(c(i, i), c(0, cum_pr_k[i]) , lwd=2.5, col="grey")
+  lines(c(i,i) + 0.1, c(cum_pr_k[i] - pr_k[i], cum_pr_k[i]),
+        lwd=2.5, col="steelblue")
+  text( i + 0.3, cum_pr_k[i] -  pr_k[i]/2, labels=i,
+        col="steelblue")
+}
+
+```
+
+Putting these together, we get this model:
+$$\begin{align*}
+R_i &\sim \text{Ordered-logit}(\phi_i, \kappa)  &\text{[probability of data]}\\
+\phi_i &= 0 &\text{[linear model]} \\
+\kappa_k &\sim \text{Normal}(0, 1.5) &\text{[common prior for each intercept]} 
+\end{align*}$$
+
+
+More verbose, this model is the same as
+$$\begin{align*}
+R_i &\sim \text{Categorical}(\boldsymbol p)  &\text{[probability of data]}\\
+p_i &= q_i &\text{[probabilities for each value }k] \\
+p_k &= q_k - q_{k-1} \quad \text{ for } K > k > 1 & \\
+p_K &= 1 - q_{k-1} & \\
+\text{logit}(q_k) &= \kappa_k - \phi_i &\text{[cumulative logit link]} \\
+\phi_i &= \text{terms of linear model} &\text{[linear model]} \\
+\kappa_k &\sim \text{Normal}(0, 1.5) &\text{[common prior for each intercept]}
+\end{align*}$$
+
+In `ulam`:
+```{r, results='hide'}
+m12.5 <- ulam(
+  alist(
+    R ~ dordlogit( 0, cutpoints ),
+    cutpoints ~ dnorm( 0, 1.5 )
+  ), 
+  data=list( R = d$response ), chains=4, cores=3, refresh=0
+)
+```
+
+or in quap, where we need to specify `start` values. The exact values aren't important, but their ordering is:
+```{r, results='hide'}
+m12.5q <- quap(
+  alist(
+    response ~ dordlogit( 0, c(a1, a2, a3, a4, a5, a6)),
+    c(a1,a2,a3,a4,a5,a6) ~ dnorm(0, 1.5)
+  ), data=d, 
+  start=list(a1=-2, a2=-1, a3=0, a4=1, a5=2, a6=2.5)
+)
+```
+
+The posterior distribution:
+```{r}
+precis( m12.5 , depth=2) 
+```
+
+Note that these values are on the log-cumulative-odds scale. We transform them to the cumulative probabilities by using the inverse logit:
+```{r}
+inv_logit( coef(m12.5))
+```
+
+Compare this with the cumulative probabilities we computed earlier:
+```{r}
+cum_pr_k
+```
+
+Okay great, we now have a Bayesian representation of the histogram from before. Lots of caclucation for rather little. But we can now include predictor variables in our model.
+
+## Adding predictor variables
+
+To include predictor variables, we add a linear model $\phi_i=\beta x_i$. Then each cumulative logit becomes:
+$$\begin{align*}
+\text{log}\frac{Pr(y_i \leq k)}{1 - Pr(y_i \leq k)} &= \alpha_k - \phi_i \\
+\phi_i &= \beta x_i
+\end{align*}$$
+Why is the linear model $\phi$ subtracted from each intercept? Because if we decrease the log-cumulative-odds of every outcome value $k$ below the maximum, this necessarily shifts probability mass upwards towards higher outcome values.
+For example, suppose we take the posterior means from `m12.5` and subtract 0.5 from each:
+```{r}
+( pk <- dordlogit( 1:7, 0, coef(m12.5) ) )
+```
+
+These probabilities imply an average outcome value of:
+```{r}
+sum( pk * (1:7) )
+```
+
+And now subtracting 0.5 from each:
+```{r}
+( pk <- dordlogit( 1:7, 0, coef(m12.5) - 0.5 ) )
+```
+Now values on the left have decreased while values on the right have increased. The expected value is now:
+```{r}
+sum( pk * (1:7) )
+```
+
+That's why we subtract $\phi$, the linear model, from each intercept. This way, a positive $\beta$ value indicates that an increase in the predictor variable $x$ results in an increase in the average response.
+
+Going back to the trolley data, we will use `action`, `intention`, and `contact` as predictor variables.
+Since the influence of intention may depend upon the simultaneous presence of action or contact, we include an interaction. This gives us the following log-cumulative-odds:
+$$\begin{align*}
+\text{log}\frac{Pr(y_i \leq k)}{1 - Pr(y_i \leq k)} &= \alpha_k - \phi_i \\
+\phi_i &= \beta_A A_i + \beta_C C_i + \text{B}_{I,i}I_i \\
+\text {B}_{I,i} &= \beta_I + \beta_{IA}A_i + \beta_{IC}C_i
+\end{align*}$$
+
+For the interaction, we use an accessory linear model, $\text{B}_I$. This helps to make the notation clearer.
+```{r, results='hide', warning=F, message=F}
+dat <- list(
+  R = d$response,
+  A = d$action,
+  I = d$intention,
+  C = d$contact
+)
+
+m12.6 <- ulam(
+  alist(
+    R ~ dordlogit( phi, cutpoints ),
+    phi <- bA*A + bC*C + BI*I,
+    BI <- bI + bIA*A + bIC*C,
+    c(bA, bI, bC, bIA, bIC) ~ dnorm(0, 0.5),
+    cutpoints ~ dnorm( 0, 1.5)
+  ), data=dat, chains=4, cores=4, refresh=0 )
+```
+
+```{r, message=F, warning=F}
+precis(m12.6)
+```
+
+```{r, warning=F, fig.height=4, message=F}
+plot( precis(m12.6), xlim=c(-1.4, 0))
+```
+
+The combination of contact and intention is the worst. Interestingly, neither contanct nor intention by itself have a large impact on ratings.
+
+Visualizing log-cumulative-odds models is not quite straight-forward.  That is because each prediction is actually a vector of probabilities, one probability for each possible response value.
+```{r, fig.height=4, fig.width=9}
+post <- extract.samples(m12.6)
+
+par(mfrow=c(1,3))
+modi <- c("00", "10", "01")
+for (modus in modi) {
+  plot (NULL, type="n", xlab="intention", ylab="probability",
+      xlim=c(0,1), ylim=c(0,1), xaxp=c(0,1,1), yaxp=c(0,1,2), bty="l" )
+
+  kA <- as.numeric( substring(modus, 1,1) )
+  kC <- as.numeric( substring(modus, 2,2) )
+  
+  kI <- 0:1
+  pdat <- data.frame(A=kA, C=kC, I=kI)
+  phi <- link( m12.6, data=pdat )$phi
+  
+  for (k in 1:3){
+    
+    for (s in 1:50) {
+      pk <- pordlogit( 1:6, phi[s, ], post$cutpoints[s,])
+      for (i in 1:6) {
+        lines( kI, pk[, i], col=col.alpha("black", 0.1), lwd=0.4)
+      }
+      
+    }
+    mtext(paste("action=",kA, ", contact=", kC ))
+
+    temp <- d %>% 
+      filter(action == kA & contact == kC) %>%
+      select(response, intention) %>%
+      group_by(response, intention) %>%
+      summarize(n=n()) %>%
+      group_by(intention) %>%
+      arrange(response) %>%
+      mutate(prop = n / sum(n), cumprop = cumsum(prop)) %>%
+      filter(response != 7)
+    points(temp$intention, temp$cumprop, col="steelblue", pch=19, cex=1.7)
+  }
+}
+```
+
+This plot shows how the distribution of predicted responses varies by `intention`. We can see that if `contact = 1` then intention has the highest impact so that this story combination is deemed by people the least morally permissible (most people have given low-valued responses).
+
+We can also visualize the histogram of outcomes:
+```{r,  fig.height=4, fig.width=9}
+par(mfrow=c(1,3))
+for (modus in modi) {
+  kA <- as.numeric( substring(modus, 1,1) )
+  kC <- as.numeric( substring(modus, 2,2) )
+  
+  kI <- 0:1
+  kI <- 0:1
+  pdat <- data.frame(A=kA, C=kC, I=kI)
+  s <- sim( m12.6, data=pdat)
+  simplehist( s, xlab="response", col=c("black", "steelblue"), bty="l")
+  mtext(paste("action=",kA, ", contact=", kC ))
+}
+```
+
+The blue segments are the frequences when `intention` is 1. In this visualization it is easy to see that some answers are more salient than others: the middle response 4 is much more frequent. This is one reason why it is better to treat these kind of responses as ordered categorical outcomes instead of just as an ordinary metric variable.
+
+# Ordered Categorical Predictors
+Just as we can have ordered categorical outcomes, we can also have ordered predictor variables.
+In this data set for example, there is the variable of completed education:
+```{r}
+levels(d$edu)
+```
+The right order is as follows:
+```{r}
+edu_levels <- c(2, 6, 8, 4, 7, 1, 5, 3)
+d$edu_new <- edu_levels[ d$edu]
+levels(d$edu)[edu_levels]
+```
+
+The idea is, that for such a categorical predictor, each step up in value comes with its own incremental effect on the outcome. So completing middle school can have a different impact than completing your bachelor.
+We will absorb the first level into the intercept, which means with 8 education levels we will need 7 parameters.
+We get a linear model as follows:
+$$\phi_i = \beta_E \sum_{j=0}^{E_i -1} \delta_j + \text{other stuff}$$
+where the parameter $\delta_j$ is the effect of completing the $j$th level of education and $E_i$ the completed education level of individual $i$. The parameters $\delta_j$ are fractions so that $\sum_{j=0}^{7}\delta_j = 1$. This means that $\beta_E$ is the maximum effect of education.
+This parameterization also helps with setting priors. If for example the prior expectation is that all of the levels have the same incremental effect, then we want all the $\delta_j$'s to have the same prior. We can set a separate prior for $\beta_E$.
+
+So now our full model:
+$$\begin{align*}
+R_i &\sim \text{Ordered-logit}(\phi_i, \kappa) \\
+\phi_i &= \beta_E \sum_{j=0}^{E_i -1} \delta_j + \beta_A A_i + \beta_I I_i + \beta_C C_i \\
+\kappa_k &\sim \text{Normal}(0, 1.5) \\
+\beta_A, \beta_I, \beta_C, \beta_E &\sim \text{Normal}(0, 1) \\
+\delta &\sim \text{Dirichlet}(\alpha)
+\end{align*}$$
+
+The prior for $\delta$ is a Dirichlet distribution which is the multivariate extension of the beta distribution.
+The Dirichlet distribution is parametrized by a vector $\alpha$ of pseudo-counts for each possibility. We'll use a rather weak prior with each value inside $\alpha$ being 2. 
+Let's simulate from this prior:
+```{r}
+library(gtools)
+set.seed(1805)
+delta <- rdirichlet( 10, alpha = rep(2,7))
+str(delta)
+```
+
+```{r}
+h <- 3
+plot(NULL, xlim=c(1,7), ylim=c(0,0.4), xlab="index", ylab="probability")
+for (i in 1:nrow(delta) ) {
+  lines( 1:7, delta[i,], type="b",
+         pch=ifelse(i==h, 16, 1),
+         lwd=ifelse(i==h, 4, 1.5),
+         col=ifelse(i==h, "black", col.alpha("black", 0.7)))
+}
+```
+
+The highlighted vector isn't special but simply shows how much variation  can exist in a single vector.
+
+Now, let's code the model:
+```{r}
+dat <- list(
+  R = d$response,
+  action = d$action,
+  intention = d$intention,
+  contact = d$contact,
+  E = as.integer(d$edu_new ),   # edu_new as an index
+  alpha = rep(2, 7)             # delta prior
+)
+
+m12.7 <- ulam(
+  alist(
+    R ~ ordered_logistic( phi, kappa ),
+    phi <- bE*sum( delta_j[1:E] ) + bA*action + bI*intention + bC*contact,
+    kappa ~ normal( 0, 1.5 ),
+    c(bA, bI, bC, bE) ~ normal( 0, 1 ),
+    vector[8]: delta_j <<- append_row( 0, delta ),
+    simplex[7]: delta ~ dirichlet(alpha)
+  ), data=dat, chains=3, cores=3, refresh=0
+)
+```
+ 
+```{r}
+precis(m12.7, depth=2, omit="kappa")
+```
+ 
+ The overall associaton of education is negative, more educated individuals disapproved more of everything.
+```{r, fig.height=8, fig.width=8}
+delta_labels <- c("Elem", "MidSch", "SHS", "HSG", "SCol", "Bach", "Mast", "Grad")
+pairs( m12.7, pars="delta", labels=delta_labels )
+```
+
+All but one level of education (Some Colege, SCol) produce some modest increment on average.
+ 
+Let's compare this posterior with one we would get from a more conventional model where education is entered as an ordinary continuous variable.
+```{r}
+dat$edu_norm <- normalize( d$edu_new )
+m12.8 <- ulam(
+  alist(
+    R ~ ordered_logistic( mu, cutpoints ),
+    mu <- bE*edu_norm + bA*action + bI*intention + bC*contact,
+    c(bA, bI, bC, bE) ~ normal( 0, 1) ,
+    cutpoints ~ normal( 0, 1.5)
+  ), data=dat, chains=3, cores=3, refresh=0
+)
+precis( m12.8 )
+```
+ 
+ This model finds a slightly weaker association between education and the rating response. This is possibly because the effect isn't actually linear; different levels have different incremental associations.

@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, comment = NA)
 ```
 
 ## Over-dispersed outcomes
@@ -81,17 +81,17 @@ There is a tendency for admission rates below 40% but the most plausible (the me
 postcheck(m12.1)
 ```
 
-The prediction intervals are very wide.
+The prediction intervals are very wide, the model incorporated such a wide variance since even though it doesn't see the different departments, it does see heterogeneity across rows.
 
 ## Negative-Binomial
 Similar as with the Beta-Binomial, we can fit a Poisson model, where each observation has its own rate. The rate comes from a common gamma distribution.
 ```{r}
 phi <- 2
 lambda <- 1
-curve( dgamma( x, shape=phi, rate=lambda), from=0, to=20, xlab="probability", ylab="Density")
+curve( dgamma( x, shape=phi, rate=lambda), from=0, to=20, xlab="rate", ylab="probability density")
 ```
 
-
+We check again the Kline data of the tool counts for different islands, this time using the negative-binomial model.
 ```{r, results='hide', warning=F, message=F}
 data(Kline)
 d <- Kline
@@ -116,7 +116,7 @@ m12.3 <- ulam(
 )
 ```
 
-For comparison, our model from before:
+For comparison, we also fit our model from before, using a pure Poisson model.
 ```{r, results='hide', warning=F, message=F}
 m11.11 <- ulam(
   alist(
@@ -181,22 +181,120 @@ shade(lci2, pop_seq, xpd=TRUE)
 mtext("pure Poisson model")
 ```
 
+Again, we can see that the mixture model incorporates much more uncertainty compared to the pure, non-mixed model.
 
 ## Zero-inflated outcomes
+Often, the things we measure are not from any pure process but rather mixtures of different processes. One such example is count data. Very often a count of zero can happen in more than one way: either the rate of processes is low or the process that generates events failed to start in the first place.
+
+If we go back to our example of monks writing manuscripts. Many monks work on manuscripts and on some days, they'll finish a few. The rate is thus very low and there will be days where no manuscript is finished. However, imagine that on some days, the monks take a break and instead of writing, they open the wine cellar. On these days, no manuscript will be produced. So we have two ways how we end up with a count of no manuscripts.
+
+Let's simulate this process.
+We assume that the probability on any day that the monks are drinking instead of working is 20%. The rate at which they produce manuscripts is one manuscript per day.
 ```{r}
 prob_drink <- 0.2
 rate_work <- 1
-
+```
+We simulate counts for one whole year. First, for each day we simulate using a binomial process, if the monks were drinking or working.
+```{r}
 N <- 365
-
 set.seed(365)
 drink <- rbinom( N, 1, prob_drink)
-
+```
+Next, for each day we simulate how many manuscripts the monks would have finished and multiply with 0 if on a day the monks were drinking.
+```{r}
 y <- (1-drink)*rpois(N, rate_work)
+```
 
+Let's visualize the simulated data:
+```{r}
 simplehist( y, xlab="manuscripts completed", lwd=4)
 zeros_drink <- sum(drink)
 zeros_work <- sum(y==0 & drink == 0)
 zeros_total <- sum(y==0)
 lines(c(0,0), c(zeros_work, zeros_total), lwd=4, col=rangi2 )
 ```
+
+The blue part signifies the days were no manuscripts were completed because the monks were drinking. The total number of zeros is inflated, relative to a typical Poisson distribution.
+
+To fit this Zero-Inflated Poisson model, we can use the function `dzipois()` provided in the Rethinking-package.
+The prior for the probability of drinking is nudged so that there is more mass below 0.5, the monks probably don't drink more often than not:
+```{r}
+ap <- rnorm(1000, -1.5, 1)
+p <- inv_logit(ap)
+dens(p)
+```
+
+The model then looks as follows:
+```{r, results='hide', warning=F, message=F}
+m12.4 <- ulam(
+  alist(
+    y ~ dzipois( p, lambda ),
+    # p = probability monks are drinking
+    logit(p) <- ap,
+    # lambda = rate for completing manuscripts
+    log(lambda) <- al,
+    ap ~ dnorm( -1.5, 1 ),
+    al ~ dnorm( 1, 0.5 )
+  ), data=list(y=as.integer(y)), chains=4)
+```
+
+```{r}
+precis(m12.4)
+```
+
+On the natural scale, those estimates are:
+```{r}
+inv_logit(-1.28)
+exp(0.01)
+```
+
+Note that we get a very good estimate of the proportion of days the monks drink, even though we can't say for any particular day whether or not they drank.
+
+The function `dzipois()` already does most of the work for us, but let's check how such a model is implemented:
+```{r, results='hide', warning=F, message=F}
+m12.4_alt <- ulam(
+  alist(
+    # log-lkhd for non-zero values: (1-p)=prob of not drinking
+    # poisson_lpmf = probability of finishing y manuscripts
+    y|y>0 ~ custom( log( 1-p ) + poisson_lpmf(y|lambda ) ),
+    # log-lkhd for zero values: p=prob of drinking
+    # (1-p)*exp(lambda) = prob of finishing zero manuscripts when not drinking
+    y|y==0 ~ custom( log( p + (1-p)*exp(lambda ) )),
+    logit(p) <- ap,
+    log(lambda) <- al,
+    ap ~ dnorm(-1.5, 1),
+    al ~ dnorm(1, 0.5)
+  ), data=list(y=as.integer(y)), chains=4
+)
+```
+
+However, for numerical stability, it is better to use the functions `log1m(p)` for `log(1-p)` and `log_mix(p, 0, poisson_lpmf(0|lambda))` instead of `log(p + (1-p)*exp(lambda))`.
+```{r, results='hide', warning=F, message=F}
+m12.4_alt <- ulam(
+  alist(
+    # log-lkhd for non-zero values: (1-p)=prob of not drinking
+    # poisson_lpmf = probability of finishing y manuscripts
+    y|y>0 ~ custom( log1m( p ) + poisson_lpmf(y|lambda ) ),
+    # log-lkhd for zero values: p=prob of drinking
+    # (1-p)*exp(lambda) = prob of finishing zero manuscripts when not drinking
+    y|y==0 ~ custom( log_mix( p, 0, poisson_lpmf(0|lambda) ) ),
+    logit(p) <- ap,
+    log(lambda) <- al,
+    ap ~ dnorm(-1.5, 1),
+    al ~ dnorm(1, 0.5)
+  ), data=list(y=as.integer(y)), chains=4
+)
+```
+This gives us the same estimates as `m12.4`:
+```{r}
+precis(m12.4_alt)
+```
+
+It's also helps to look at the stan code of the model:
+```{r}
+stancode(m12.4_alt)
+```
+
+The most important of the model is in the `for` loop, iterating over each observation. It adds the log-likelihood to the variable `target` which is the log posterior mass. The suffix `_lpmf` means it's the log probability mass function. (For continuous variables the suffix would be `_lpdf`, log probability density function).
+
+
