@@ -13,7 +13,7 @@ These are code snippets, plots and my solutions to some of the exercises of the 
 - [When adding variables hurt](Chapter%205/chapter5c.R)
 - [Categorical Variables](Chapter%205/chapter5d.R)
 - [Ordinary Least Squares](Chapter%205/chapter5e.R)
-- [Exercises](Chapter%205/chapter5_Ex.md)
+- [Exercises](Chapter%205/Chapter5_Ex.md)
 
 ## Chapter 6
 - [Overfitting](Chapter%206/chapter6a.R)
