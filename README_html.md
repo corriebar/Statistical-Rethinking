@@ -1,4 +1,13 @@
-# Statistical Rethinking
+---
+title: "Statistical Rethinking"
+output: html_document
+layout: "single-talks"
+image: "images/tea_with_books.jpg"
+comments: false
+share: false
+slug: rethinking-readme
+author: ""
+---
 These are code snippets, plots and my solutions to some of the exercises of the book "Statistical Rethinking" by Richard McElreath.
 
 ## Chapter 3

@@ -17,10 +17,6 @@ likelihood <- dbinom(w, size=n, prob=p_grid)
 
 
 
-
-plot(p_grid, posterior, type="b", xlab="probability of water", ylab="posterior probability")
-mtext("20 points")
-
 compute_posterior <- function(w, n, prior) {
   num_pts = length(prior)
   p_grid = seq(from=0, to=1, length.out=num_pts)
@@ -33,7 +29,7 @@ compute_posterior <- function(w, n, prior) {
   posterior <- unstd.posterior / sum(unstd.posterior)
   
   plot(p_grid, posterior, type="b", xlab="probability of water", ylab="posterior probability")
-  mtext("20 points")
+  mtext(paste(num_pts, "points"))
 }
 
 uniform_prior <- rep(1, num_pts)
@@ -84,7 +80,7 @@ compute_posterior2 <- function(w, n, prior) {
   posterior <- num_pts * unstd.posterior / sum(unstd.posterior)
   
   plot(p_grid, posterior, type="b", xlab="probability of water", ylab="posterior probability")
-  mtext("20 points")
+  mtext(paste(num_pts, "points"))
 }
 
 par(mfrow=c(1,3))
