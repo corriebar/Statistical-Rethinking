@@ -1,6 +1,9 @@
 # Statistical Rethinking
 These are code snippets, plots and my solutions to some of the exercises of the book "Statistical Rethinking" by Richard McElreath.
 
+## Chapter 3
+- [Exercises](Chapter%203/chapter3_Ex.md)
+
 ## Chapter 4
 - [How Normality arises](Chapter%204/chapter4.R)
 - [Linear Models](Chapter%204/chapter4b.R)
