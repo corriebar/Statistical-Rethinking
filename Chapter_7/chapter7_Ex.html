@@ -1,0 +1,627 @@
+---
+title: "Chapter 7 - Exercises"
+author: "Corrie"
+date: "August 17, 2018"
+output: 
+  github_document:
+    pandoc_args: --webtex 
+---
+
+
+
+<div id="chapter-7---exercises" class="section level1">
+<h1>Chapter 7 - Exercises</h1>
+<div id="easy." class="section level2">
+<h2>Easy.</h2>
+<p><strong>7E1.</strong> For the causal relationships below, name a hypothetical third variable that would lead to an interaction effect.</p>
+<ol style="list-style-type: decimal">
+<li>Bread dough rises because of yeast.</li>
+</ol>
+<ul>
+<li>sugar, since the yeast needs some food to grow</li>
+<li>temperature, if it’s too hot, the yeast dies, maybe a too cold temperature would slow down the dough rising</li>
+<li>salt inhibits yeast growth</li>
+</ul>
+<ol start="2" style="list-style-type: decimal">
+<li>Education leads to higher income.</li>
+</ol>
+<ul>
+<li>class and race could potentially strengthen or weaken the impact of education in income</li>
+<li>same for gender</li>
+</ul>
+<ol start="3" style="list-style-type: decimal">
+<li>Gasoline makes a car go.</li>
+</ol>
+<ul>
+<li>Number of cylinders, age of motor, weight of the car all have an effect of how far a car can go with one liter of gasoline</li>
+<li>Presence of wheels is a trivial interaction: you can pour as much gasoline as you want, the car won’t drive without wheels</li>
+</ul>
+<p><strong>7E2.</strong> Which of the following explanations invokes an interaction?</p>
+<ol style="list-style-type: decimal">
+<li>Caramelizing onions requires cooking over low heat and making sure the onions do not dry out</li>
+</ol>
+<ul>
+<li>caramelizing invokes an interaction between heat and humidity</li>
+</ul>
+<ol start="2" style="list-style-type: decimal">
+<li>A car will go faster when it has more cylinders or when it has a better fuel injector</li>
+</ol>
+<ul>
+<li>no interaction; the or indicates the two are independently making a car faster</li>
+</ul>
+<ol start="3" style="list-style-type: decimal">
+<li>Most people acquire their political beliefs from their parents, unless they get them instead from their friends.</li>
+</ol>
+<ul>
+<li>This explanation does invoke an interaction insofar that if someone get their political beliefs from their friends, they don’t get it from their parents (and vice versa)</li>
+</ul>
+<ol start="4" style="list-style-type: decimal">
+<li>Intelligent animal species tend to be either highly social or have manipulative appendages</li>
+</ol>
+<ul>
+<li>The or again indicates no interaction (unless you interpret the or as an exclusive or). Though I could also imagine there to be an interaction: if a species has manipulative appendages, then the degree of socialness might have an higher impact on intelligence</li>
+</ul>
+<p><strong>7E3.</strong> Write a linear model for the explanations above.</p>
+<ol style="list-style-type: decimal">
+<li><p>Caramelizing onions requires cooking over low heat and making sure the onions do not dry out. We assume caramelizing can be quantified as some degree, to how much the onions are caramelized.
+<span class="math display">\[\begin{align*}
+\text{Caramelized}_i &amp;\sim \text{Normal}( \mu_i, \sigma) \\
+\mu_i &amp;= \alpha + \beta_{h}\text{heat}_i + \beta_d\text{dryness}_i + \beta_{hd}\text{heat}_i \times \text{dryness}_i
+\end{align*}\]</span></p></li>
+<li><p>A car will go faster when it has more cylinders or when it has a better fuel injector.
+<span class="math display">\[\begin{align*}
+\text{Speed}_i &amp;\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &amp;= \alpha + \beta_c\text{cylinders}_i + \beta_f\text{fuel injector}_i
+\end{align*}\]</span></p></li>
+<li><p>Most people acquire their political beliefs from their parents, unless they get them instead from their friends.
+We first assume that political belief can be modeled as a number from minus infinity to plus infinity, where zero is moderate (also assuming most people are moderate, thus we can assume normal distribution), negative is left-leaning and positive right-leaning. We also introduce an indicator variable <span class="math inline">\(\text{Belief source}\)</span> that is 0 if the political belief is acquired from the parents and 1 if from the friends. Assuming a strict exclusive-or relationship, the linear model would look like this:
+<span class="math display">\[\begin{align*}
+\text{Politcal belief}_i &amp;\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &amp;= \alpha + \beta_{sp}\text{Parents belief}_i (1- \text{Belief source}_i) \\
+&amp;\quad \quad + \beta_{sf}\text{Belief source}_i \times \text{Friends belief}_i
+\end{align*}\]</span></p></li>
+<li><p>Intelligent animal species tend to be either highly social or have manipulative appendages.
+<span class="math display">\[\begin{align*}
+\text{Intelligence}_i &amp;\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &amp;= \alpha + \beta_s\text{Socialness}_i + \beta_a \text{Appendages}_i
+\end{align*}\]</span></p></li>
+</ol>
+</div>
+<div id="medium." class="section level2">
+<h2>Medium.</h2>
+<p><strong>7M1.</strong> The tulips example. Suppose another set of treatments adjusted the temperature in the greenhouse over two levels: cold and hot. The data before were all collected at the cold temperature. You find none of the plants grown under the hot temperature developed any blooms at all, regardless of the water and shade levels. What does this mean in terms of interactions?</p>
+<p>This would mean that temperature interacts with both water and shade, basically setting their effect to zero if it’s hot.</p>
+<p><strong>7M2.</strong> A regression equation for the example above could look as follows:
+<span class="math display">\[\begin{align*}
+\text{Blooms}_i &amp;\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &amp;= \alpha +  \text{Temperature}_i( \beta_{st} \text{Shade}_i + \beta_{wt} \text{Water}_i + \beta_{wst}\text{Water}_i \times \text{Shade}_i) \\
+&amp;\quad \quad + \beta_s \text{Shade}_i + \beta_w \text{Water}_i + \beta{ws} \text{Water}_i \times \text{Shade}_i + \beta_t \text{Temperature}_i
+\end{align*}\]</span>
+where <span class="math inline">\(\text{Temperature}\)</span> is 1 when it’s hot and 0 when it’s cold. If then <span class="math inline">\(\beta_{st} = - \beta_s\)</span>, <span class="math inline">\(\beta_{wt} = -\beta_w\)</span>, <span class="math inline">\(\beta_{wst} = -\beta_{ws}\)</span> and <span class="math inline">\(\beta_t = -\alpha\)</span> then the whole equation is 0 when it’s hot and the same as before when it’s cold.</p>
+<p><strong>7M3.</strong> In parts of america, ravens depend upon wolves for their food. Such a species relationship is generally described as a “species interaction”. How could a hypothetical set of data on raven population size look like in which this relationship would manifest as a statistical interaction? Do you think the biological interaction could be linear? Why or why not?</p>
+<p>The regression equation could look like this:
+<span class="math display">\[\begin{align*}
+\text{Ravens} &amp;\sim \text{Normal}(\mu, \sigma ) \\
+\mu &amp;= \alpha + \beta_p \text{Prey} + \beta_w\text{Wolves} + \beta_{pw}\text{Prey} \times \text{Wolves}
+\end{align*}\]</span>
+where <span class="math inline">\(\text{Ravens}\)</span> is the amount of ravens in an area, <span class="math inline">\(\text{Wolves}\)</span> the amount of wolves and <span class="math inline">\(\text{Prey}\)</span> is the amount of available prey.</p>
+<p>A data set could look like this:</p>
+<pre class="r"><code>prey &lt;- as.integer(rnorm(100, mean=50, sd=15) ) # as.integer, so we have &quot;whole&quot; animals
+wolves &lt;- as.integer(rnorm(100, mean=25, sd=7))
+ravens &lt;- as.integer(rnorm(100, mean= 5 + 0.3*prey + -1*wolves + 0.4*wolves*prey, sd=9))
+
+d &lt;- data.frame(prey=prey, wolves=wolves, ravens=ravens)
+par(mfrow=c(1,2))
+plot(ravens ~ prey, data=d)
+plot(ravens ~ wolves, data=d)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<p>The biological interaction is probably not linear, since both the amount of prey and predator (wolves and ravens) depend upon each other. The more prey there is, the more predator are there and the more predator there are, the less prey there is.</p>
+</div>
+<div id="hard." class="section level2">
+<h2>Hard.</h2>
+<p><strong>7H1.</strong> Return to the tulips data and include the <code>bed</code> variable.</p>
+<pre class="r"><code>library(rethinking)
+data(tulips)
+d &lt;- tulips
+d$bed_id &lt;- coerce_index(d$bed) 
+d$shade.c &lt;- d$shade - mean(d$shade)
+d$water.c &lt;- d$water - mean(d$water)
+
+m7.1 &lt;- map(
+  alist(
+    blooms ~ dnorm(mu, sigma),
+    mu &lt;- a + a_bed[bed_id] + bW*water.c + bS*shade.c + bWS*water.c*shade.c,
+    a ~ dnorm(130, 100),
+    a_bed[bed_id] ~ dnorm(0, 10),
+    sigma ~ dunif(0, 100)
+  ), 
+  data=d,
+  start=list(a=mean(d$blooms), a_bed=0, bW=0, bS=0, bWS=0, sigma=sd(d$blooms))
+)
+precis( m7.1 , depth = 2)</code></pre>
+<pre><code>##                mean        sd       5.5%      94.5%
+## a        128.992004  9.877024 113.206613 144.777396
+## a_bed[1] -10.743232  9.026258 -25.168936   3.682471
+## a_bed[2]   4.601234  8.836610  -9.521376  18.723844
+## a_bed[3]   6.184717  8.871049  -7.992933  20.362368
+## bW        75.692170  9.888165  59.888973  91.495368
+## bS       -41.542682  9.888131 -57.345825 -25.739540
+## bWS      -52.839553 12.110411 -72.194329 -33.484777
+## sigma     41.951725  5.974618  32.403132  51.500318</code></pre>
+<p><strong>7H2.</strong> Compare the model above with one that omits <code>bed</code> using WAIC. What do you infer from this comparison? Can you reconcile the WAIC results with the posterior distribution of the bed coefficients?</p>
+<pre class="r"><code>m7.2 &lt;- map(
+  alist(
+    blooms ~ dnorm( mu, sigma),
+    mu &lt;- a + bW*water.c + bS*shade.c + bWS*water.c*shade.c,
+    a ~ dnorm(130, 100),
+    c(bW, bS, bWS) ~ dnorm( 0, 10),
+    sigma ~ dunif(0, 100)
+  ),
+  data=d,
+  start=list(a=mean(d$blooms), bW=0, bS=0, bWS=0, sigma=sd(d$blooms))
+)
+precis(m7.2)</code></pre>
+<pre><code>##             mean        sd       5.5%      94.5%
+## a     129.018850 14.497692 105.848739 152.188962
+## bW     17.887622  9.789162   2.242651  33.532593
+## bS     -9.817393  9.065661 -24.306071   4.671284
+## bWS    -9.078940  9.417663 -24.130185   5.972305
+## sigma  76.136642 12.257391  56.546964  95.726321</code></pre>
+<pre class="r"><code>plot( coeftab(m7.1, m7.2) )</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>Estimates for all parameters are pretty much the same for the parameters included in both models.
+The index variables for the <code>bed</code> variable are all very close to zero.</p>
+<pre class="r"><code>compare( m7.1, m7.2 )</code></pre>
+<pre><code>##          WAIC        SE    dWAIC      dSE    pWAIC       weight
+## m7.1 293.9353 10.229241  0.00000       NA 7.608252 9.999881e-01
+## m7.2 316.6150  8.888837 22.67973 12.45336 3.153066 1.188924e-05</code></pre>
+<p>The two models have almost the same WAIC and similar weights. Indeed, running the function a few times gives sometimes the first model as having the lower WAIC and sometimes the second model as having lower WAIC. Also, both models have more or less the same number of parameters estimated by WAIC and similar amounts of weight.</p>
+<pre class="r"><code>plot( compare( m7.1, m7.2 ))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>Let’s have a closer look at the posterior distribution of the index variables.</p>
+<pre class="r"><code>post &lt;- extract.samples( m7.1 )
+post.a_bed &lt;- as.data.frame(post$a_bed)
+colnames(post.a_bed) &lt;- c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;)
+dens(post.a_bed$a)
+dens(post.a_bed$b, add=T, col=&quot;steelblue&quot;)
+dens(post.a_bed$c, add=T, col=col.desat(&quot;red&quot;))
+abline(v=0, lty=2, col=&quot;grey&quot;)
+legend(&#39;topright&#39;, lty=c(1,1,1), col=c(&quot;black&quot;, &quot;steelblue&quot;, col.desat(&quot;red&quot;)), 
+       legend=c(&quot;bed a&quot;, &quot;bed b&quot;, &quot;bed c&quot;), bty=&quot;n&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>All three index parameter have most of their posterior density around 0. It’s not even clear if the parameters should be positive or negative and there is a large uncertainty regarding the influence of the <code>bed</code> variable. In particular, the bed parameters for bed b and c appear to have the same distribution. Maybe it could be helpful to recode the levels, i.e. to merge b and c to one level. In my opinion, such recoding of levels should be driven by domain knowledge and not by results of models.</p>
+<p>This also explains why the WAIC of the two models are basically the same.</p>
+<p><strong>7H3.</strong> Consider again the <code>rugged</code> data on economic development and terrain ruggedness. There is one African country in the list, Seychelles, that has both a relatively high GDP and high ruggedness. Seychelles are a group of islands, far from mainland Africa, and it is highly touristic.</p>
+<pre class="r"><code>data(&quot;rugged&quot;)
+d &lt;- rugged
+d &lt;- d[complete.cases(d$rgdppc_2000),]
+d$log_gdp &lt;- log(d$rgdppc_2000)
+plot(log_gdp ~ rugged, data=d[d$cont_africa==0,], 
+     ylim=c(min(d$log_gdp) - 0.5, max(d$log_gdp)),
+     main=&quot;GDP versus Ruggedness&quot;,
+     ylab=&quot;log(GDP)&quot;, xlab=&quot;Ruggedness Index&quot;)
+points(log_gdp ~ rugged, data=d[d$cont_africa==1,], col=&quot;steelblue&quot;)
+points(log_gdp ~ rugged, data=d[d$country==&quot;Seychelles&quot;,], col=col.desat(&quot;red&quot;))
+text(d[d$country==&quot;Seychelles&quot;, &quot;rugged&quot;], d[d$country==&quot;Seychelles&quot;, &quot;log_gdp&quot;], 
+     labels=&quot;Seychelles&quot;, pos=1, col=col.desat(&quot;red&quot;))
+legend(&quot;bottomright&quot;, col=c(&quot;black&quot;, &quot;steelblue&quot;, col.desat(&quot;red&quot;)), 
+       bty=&quot;n&quot;, legend=c(&quot;Non-Africa&quot;, &quot;Africa&quot;, &quot;Seychelles&quot;),
+       pch=c(1,1,1))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-8-1.png" width="576" /></p>
+<p>It might be, that this one nation is exerting a strong influence on the conclusion from before, that high terrain ruggedness leads to higher GDP in Africa but lower outside Africa. We will now re-evaluate this hypothesis without the Seychelles.</p>
+<ol style="list-style-type: lower-alpha">
+<li>Does it still seem like the effect of ruggedness depends upon continent? How much has the expected relationship changed?</li>
+</ol>
+<pre class="r"><code>d1 &lt;- d[d$country != &quot;Seychelles&quot;,]
+
+m7.1 &lt;- map(
+  alist(
+    log_gdp ~ dnorm(mu, sigma),
+    mu &lt;- a + bA*cont_africa + bR*rugged + bAR*rugged*cont_africa,
+    a ~ dnorm( 8, 100),
+    bA ~ dnorm(0, 1),
+    bR ~ dnorm(0, 1),
+    bAR ~ dnorm( 0, 1),
+    sigma ~ dunif( 0, 10)
+  ), data=d1
+)
+precis(m7.1)</code></pre>
+<pre><code>##             mean         sd        5.5%       94.5%
+## a      9.1861140 0.13536065  8.96978151  9.40244644
+## bA    -1.7845603 0.21911312 -2.13474542 -1.43437523
+## bR    -0.1856806 0.07510124 -0.30570693 -0.06565435
+## bAR    0.2524989 0.13542676  0.03606079  0.46893702
+## sigma  0.9258750 0.05041309  0.84530513  1.00644482</code></pre>
+<pre class="r"><code>plot( precis( m7.1 ))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>Compare with the model on the full data:</p>
+<pre class="r"><code>m7.2 &lt;- map(
+  alist(
+    log_gdp ~ dnorm(mu, sigma),
+    mu &lt;- a + bA*cont_africa + bR*rugged + bAR*rugged*cont_africa,
+    a ~ dnorm( 8, 100),
+    bA ~ dnorm(0, 1),
+    bR ~ dnorm(0, 1),
+    bAR ~ dnorm( 0, 1),
+    sigma ~ dunif( 0, 10)
+  ), data=d
+)
+precis(m7.2)</code></pre>
+<pre><code>##             mean         sd       5.5%       94.5%
+## a      9.1835830 0.13641572  8.9655644  9.40160169
+## bA    -1.8461054 0.21848066 -2.1952797 -1.49693108
+## bR    -0.1843459 0.07568746 -0.3053091 -0.06338269
+## bAR    0.3483124 0.12749928  0.1445440  0.55208091
+## sigma  0.9332495 0.05067060  0.8522681  1.01423094</code></pre>
+<pre class="r"><code>plot( coeftab( m7.1, m7.2 ), pars=c(&quot;bA&quot;, &quot;bR&quot;, &quot;bAR&quot;))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>Most of the coefficients are still very close to each other, we can see some small change though for the parameter for the Africa dummy-variable and for the interaction between ruggedness and Africa. The parameter <span class="math inline">\(\beta_{\text{Africa}}\)</span> decreased, meaning removing the Seychelles decreased the mean for GDP for Africa. The interaction coefficient <span class="math inline">\(\beta_{AR}\)</span> decreased a bit and thus shrank a bit closer to zero.
+Let’s rearrange the coefficients for ruggedness and the interaction to one Gamma: <span class="math inline">\(\gamma = \beta_R + \beta_{AR} \texttt{cont_africa}\)</span></p>
+<pre class="r"><code>post &lt;- extract.samples(m7.1)
+gamma.Africa &lt;- post$bR + post$bAR*1
+gamma.notAfrica &lt;- post$bR + post$bAR*0
+
+mean(gamma.Africa)</code></pre>
+<pre><code>## [1] 0.06640391</code></pre>
+<p>Before, this was about 0.16.</p>
+<pre class="r"><code>mean(gamma.notAfrica)</code></pre>
+<pre><code>## [1] -0.1856139</code></pre>
+<p>Comparing the distributions:</p>
+<pre class="r"><code>dens( gamma.Africa, xlim=c(-0.5, 0.6), ylim=c(0, 5.5),
+      xlab=&quot;gamma&quot;, col=&quot;steelblue&quot; )
+dens( gamma.notAfrica, add=TRUE )
+legend(&quot;topright&quot;, col=c(&quot;black&quot;, &quot;steelblue&quot;), bty=&quot;n&quot;, 
+       legend=c(&quot;not Africa&quot;, &quot;Africa&quot;), lty=c(1,1))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p>There is now much more overlap between the two distributions than before and the distribution of the Africa parameter has more density mass around 0 than before.</p>
+<pre class="r"><code>diff &lt;- gamma.Africa - gamma.notAfrica
+mean(diff &lt; 0)</code></pre>
+<pre><code>## [1] 0.0299</code></pre>
+<p>The probability that the parameter for Africa is smaller than the parameter for Not Africa is still very low though.</p>
+<p>Compare with the model including the Seychelles:</p>
+<pre class="r"><code>post1 &lt;- extract.samples(m7.2)
+gamma.Africa1 &lt;- post1$bR + post1$bAR*1
+gamma.notAfrica1 &lt;- post1$bR + post1$bAR*0
+
+mean(gamma.Africa1)</code></pre>
+<pre><code>## [1] 0.1643866</code></pre>
+<pre class="r"><code>mean(gamma.notAfrica1)</code></pre>
+<pre><code>## [1] -0.1838824</code></pre>
+<pre class="r"><code>dens( gamma.Africa1, xlim=c(-0.5, 0.6), ylim=c(0, 5.5),
+      xlab=&quot;gamma&quot;, col=&quot;steelblue&quot; )
+dens( gamma.notAfrica1, add=TRUE )
+legend(&quot;topright&quot;, col=c(&quot;black&quot;, &quot;steelblue&quot;), bty=&quot;n&quot;, 
+       legend=c(&quot;not Africa&quot;, &quot;Africa&quot;), lty=c(1,1))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+<p>These results suggest, that without the Seychelles, there is more uncertainty, if ruggedness has a positive or any effect on GDP in Africa. The conclusion that the relationship between ruggedness and GDP differs inside and outside of Africa still holds with high probability.</p>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Plot the predictions of the interaction model, with and without Seychelles. Does it still seem like the effect of ruggedness depends upon continent? How much has the expected relationship changed?</li>
+</ol>
+<pre class="r"><code>d.A1 &lt;- d[d$cont_africa == 1,]
+d.A0 &lt;- d[d$cont_africa ==0,]
+rug.seq &lt;- seq(from=-1, to=8, length.out = 30)
+mu.Africa &lt;- link( m7.1, data=data.frame(cont_africa=1, rugged=rug.seq))
+mu.Africa.mean &lt;- apply(mu.Africa, 2, mean)
+mu.Africa.PI &lt;- apply(mu.Africa, 2, PI)
+
+mu.NotAfrica &lt;- link( m7.1, data=data.frame(cont_africa=0, rugged=rug.seq))
+mu.NotAfrica.mean &lt;- apply(mu.NotAfrica, 2, mean)
+mu.NotAfrica.PI &lt;- apply(mu.NotAfrica, 2, PI )
+
+
+
+mu.Africa1 &lt;- link( m7.2, data=data.frame(cont_africa=1, rugged=rug.seq))
+mu.Africa1.mean &lt;- apply(mu.Africa1, 2, mean)
+mu.Africa1.PI &lt;- apply(mu.Africa1, 2, PI)
+
+mu.NotAfrica1 &lt;- link( m7.2, data=data.frame(cont_africa=0, rugged=rug.seq))
+mu.NotAfrica1.mean &lt;- apply(mu.NotAfrica1, 2, mean)
+mu.NotAfrica1.PI &lt;- apply(mu.NotAfrica1, 2, PI )
+
+par(mfrow=c(2,2))
+plot( log_gdp ~ rugged, data=d.A1[d.A1$country != &quot;Seychelles&quot;,],
+      col=&quot;steelblue&quot;, ylab=&quot;log GDP year 2000&quot;,
+      xlab=&quot;Terrain Ruggedness Index&quot;)
+mtext(&quot;African nations (without Seychelles)&quot;)
+lines(rug.seq, mu.Africa.mean, col=&quot;steelblue&quot;)
+shade( mu.Africa.PI, rug.seq, col=col.alpha(&quot;steelblue&quot;))
+
+plot( log_gdp ~ rugged, data=d.A0,
+      col=&quot;black&quot;, ylab=&quot;log GDP year 2000&quot;,
+      xlab=&quot;Terrain Rugggedness Index&quot;)
+mtext( &quot;Non-African nations&quot;, 3)
+lines( rug.seq, mu.NotAfrica.mean )
+shade( mu.NotAfrica.PI, rug.seq )
+
+
+plot( log_gdp ~ rugged, data=d.A1,
+      col=&quot;steelblue&quot;, ylab=&quot;log GDP year 2000&quot;,
+      xlab=&quot;Terrain Ruggedness Index&quot;)
+points(log_gdp ~ rugged, data=d[d$country==&quot;Seychelles&quot;,], col=col.desat(&quot;red&quot;))
+text(d[d$country==&quot;Seychelles&quot;, &quot;rugged&quot;], d[d$country==&quot;Seychelles&quot;, &quot;log_gdp&quot;], 
+     labels=&quot;Seychelles&quot;, pos=1, col=col.desat(&quot;red&quot;))
+mtext(&quot;African nations (with Seychelles)&quot;)
+lines(rug.seq, mu.Africa1.mean, col=&quot;steelblue&quot;)
+shade( mu.Africa1.PI, rug.seq, col=col.alpha(&quot;steelblue&quot;))
+
+plot( log_gdp ~ rugged, data=d.A0,
+      col=&quot;black&quot;, ylab=&quot;log GDP year 2000&quot;,
+      xlab=&quot;Terrain Rugggedness Index&quot;)
+mtext( &quot;Non-African nations&quot;, 3)
+lines( rug.seq, mu.NotAfrica1.mean )
+shade( mu.NotAfrica1.PI, rug.seq )</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-20-1.png" width="960" /></p>
+<p>Comparing the prediction plots, the effect of ruggedness still does seem to depend upon continent but one can see how adding the Seychelles in, changed the regression line upwards.</p>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Conduct a model comparison analysis, using WAIC. Fit three models to the data without Seychelles:
+<span class="math display">\[\begin{align*}
+\text{Model 1} \; : y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &amp;= \alpha + \beta_R R_i \\
+\text{Model 2} \; : y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &amp;= \alpha + \beta_A A_i +  \beta_R R_i \\
+\text{Model 3} \; : y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &amp;= \alpha + \beta_A A_i +  \beta_R R_i + \beta_{AR}A_i R_i 
+\end{align*}\]</span>
+Use whatever priors you think are sensible. Plot the model-averaged predictions of this model set. Do your inferences differ from those in (b)?</li>
+</ol>
+<pre class="r"><code>m7.3 &lt;- map(
+  alist(
+    log_gdp ~ dnorm( mu, sigma),
+    mu &lt;- a + bR*rugged,
+    a ~ dnorm(8, 100),
+    bR ~ dnorm(0, 1),
+    sigma ~ dunif(0, 10)
+  ), data=d1
+)
+
+m7.4 &lt;- map(
+  alist(
+    log_gdp ~ dnorm( mu, sigma),
+    mu &lt;- a + bR*rugged + bA*cont_africa,
+    a ~ dnorm(8, 100),
+    bR ~ dnorm(0, 1),
+    bA ~ dnorm(0, 1),
+    sigma ~ dnorm(0, 10)
+  ), data=d1
+)
+
+m7.5 &lt;- map(
+  alist(
+    log_gdp ~ dnorm( mu, sigma),
+    mu &lt;- a + bR*rugged + bA*cont_africa + bAR*cont_africa*rugged,
+    a ~ dnorm(8, 100),
+    bR ~ dnorm(0, 1),
+    bA ~ dnorm(0, 1),
+    bAR ~ dnorm(0, 1),
+    sigma ~ dunif( 0, 10)
+  ), data=d1
+)
+
+compare(m7.3, m7.4, m7.5)</code></pre>
+<pre><code>##          WAIC       SE     dWAIC       dSE    pWAIC       weight
+## m7.5 463.5010 15.12417  0.000000        NA 4.687922 7.799901e-01
+## m7.4 466.0322 14.24932  2.531218  3.486042 3.896289 2.200099e-01
+## m7.3 536.0149 13.39854 72.513971 15.246376 2.597069 1.399202e-16</code></pre>
+<p>Now, most of the weight is on the model with the interaction. It also has the lowest WAIC. Including the Africa variable as a dummy variable gives a lower WAIC than only using ruggedness as predictor variable.</p>
+<pre class="r"><code>plot( compare( m7.3, m7.4, m7.5))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<p>There is quite a bit of uncertainty if the interaction model has a lower WAIC than the model with just the dummy variable.</p>
+<p>Plotting the model-averaged predictions:</p>
+<pre class="r"><code>rugged.Africa.ensemble &lt;- ensemble( m7.3, m7.4, m7.5, data=data.frame(cont_africa=1, rugged=rug.seq))
+mu.Africa.mean &lt;- apply(rugged.Africa.ensemble$link, 2, mean)
+mu.Africa.PI &lt;- apply(rugged.Africa.ensemble$link, 2, PI)
+log_gdp.Africa.PI &lt;- apply(rugged.Africa.ensemble$sim, 2, PI )
+
+rugged.notAfrica.ensemble &lt;- ensemble(m7.3, m7.4, m7.5, data=data.frame(cont_africa=0, rugged=rug.seq))
+mu.NotAfrica.mean &lt;-apply(rugged.notAfrica.ensemble$link, 2, mean)
+mu.NotAfrica.PI &lt;- apply(rugged.notAfrica.ensemble$link,2, PI)
+log_gdp.NotAfrica.PI &lt;- apply(rugged.notAfrica.ensemble$sim, 2, PI)
+
+par(mfrow=c(1,2))
+plot( log_gdp ~ rugged, data=d.A1[d.A1$country != &quot;Seychelles&quot;,],
+      col=&quot;steelblue&quot;, ylab=&quot;log GDP year 2000&quot;,
+      xlab=&quot;Terrain Ruggedness Index&quot;)
+mtext(&quot;African nations (without Seychelles)&quot;)
+lines(rug.seq, mu.Africa.mean, col=&quot;steelblue&quot;)
+shade( mu.Africa.PI, rug.seq, col=col.alpha(&quot;steelblue&quot;))
+# shade( log_gdp.Africa.PI, rug.seq, col=col.alpha(&quot;steelblue&quot;))
+
+plot( log_gdp ~ rugged, data=d.A0,
+      col=&quot;black&quot;, ylab=&quot;log GDP year 2000&quot;,
+      xlab=&quot;Terrain Rugggedness Index&quot;)
+mtext( &quot;Non-African nations&quot;, 3)
+lines( rug.seq, mu.NotAfrica.mean )
+shade( mu.NotAfrica.PI, rug.seq )</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-23-1.png" width="960" /></p>
+<pre class="r"><code># shade( log_gdp.NotAfrica.PI, rug.seq)</code></pre>
+<p>The slope for ruggedness for Africa nations seem to have got even a bit closer to zero and there is quite some uncertainty about the regression line. The uncertainty ribbon would for example also include the regression line with the same slope as the one for non-Africa nations. These models suggest, that one cannot conclude that there is a positive relationship between ruggedness and GDP in African nations.</p>
+<p><strong>7H4.</strong> The data set <code>data(nettle)</code> is data on language diversity in 74 nations. Evaluate the hypothesis that language diversity is partly a product of food security. The notion is that, in productive ecologies, people don’t need large social networks to buffer them against risk of food shortfalls and thus ethnic groups can be smaller and more self-sufficient.</p>
+<pre class="r"><code>data(nettle)
+d &lt;- nettle
+str(d)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    74 obs. of  7 variables:
+##  $ country            : Factor w/ 74 levels &quot;Algeria&quot;,&quot;Angola&quot;,..: 1 2 3 4 5 6 7 8 9 12 ...
+##  $ num.lang           : int  18 42 234 37 52 38 27 209 75 94 ...
+##  $ area               : int  2381741 1246700 7713364 143998 112622 1098581 581730 8511965 274000 622984 ...
+##  $ k.pop              : int  25660 10303 17336 118745 4889 7612 1348 153322 9242 3127 ...
+##  $ num.stations       : int  102 50 134 20 7 48 10 245 6 13 ...
+##  $ mean.growing.season: num  6.6 6.22 6 7.4 7.14 6.92 4.6 9.71 5.17 8.08 ...
+##  $ sd.growing.season  : num  2.29 1.87 4.17 0.73 0.99 2.5 1.69 5.87 1.07 1.21 ...</code></pre>
+<p>Specifically, try to model the number of languages per capita as the outcome variable:</p>
+<pre class="r"><code>d$lang.per.cap &lt;- d$num.lang / d$k.pop
+d$log.lang &lt;- log( d$lang.per.cap)</code></pre>
+<p>where <code>num.lang</code> is the number of languages spoken and <code>k.pop</code> is the population in thousands.
+We will use the predictor variables <code>mean.growing.season</code>, the average length of growing season in months and <code>sd.growing.season</code>, the standard deviation of length of growing season, in months, and their interactions.</p>
+<ol style="list-style-type: lower-alpha">
+<li>Evaluate the hypothesis that language diversity, as measured by <code>log(lang.per.cap)</code> is positively associated with the average length of the growing season. Consider <code>log(area)</code> as a covariate.</li>
+</ol>
+<p>We first center the variables used as predictor variables.
+The lowest value a country could have for languages per capita would be only one language for ~1.5 billion people (most populated country in the world: China). The ratio of this is ~6.7e-10 which on log scale (and counting population in thousands) translates to about -12 and the maximum value would be each thousand people speaks a different language (very unlikely), as ratio this is 1, so on log scale 0. I expect most countries to be in between these extremes, so the prior for the intercept is <span class="math inline">\(\alpha \sim \text{Normal}(-5, 10)\)</span>, allowing values between -25 and 20.
+For the parameters, I use weakly regularizing priors <span class="math inline">\(\beta \sim \text{Normal}(0,1)\)</span>.</p>
+<pre class="r"><code>d$log.area &lt;- log(d$area)
+d$mean.growing.season.c &lt;- d$mean.growing.season - mean(d$mean.growing.season)
+d$log.area.c &lt;- d$log.area - mean(d$log.area)
+
+m7.1 &lt;- map(
+  alist(
+    log.lang ~ dnorm( mu, sigma),
+    mu &lt;- a + bM*mean.growing.season.c,
+    a ~ dnorm(-5, 10),
+    bM ~ dnorm(0, 1),
+    sigma ~ dunif(0, 10)
+  ), data=d
+)
+m7.2 &lt;- map(
+  alist( 
+    log.lang ~ dnorm( mu, sigma),
+    mu &lt;- a + bM*mean.growing.season.c + bA*log.area.c,
+    a ~ dnorm(-5, 10),
+    bM ~ dnorm(0, 1),
+    bA ~ dnorm(0, 1),
+    sigma ~ dunif(0, 10)
+    ), data=d
+)
+coeftab(m7.1, m7.2 )</code></pre>
+<pre><code>##       m7.1    m7.2   
+## a       -5.46   -5.46
+## bM       0.17    0.14
+## sigma    1.41    1.39
+## bA         NA    -0.2
+## nobs       74      74</code></pre>
+<pre class="r"><code>plot( coeftab( m7.1, m7.2 ), pars=c(&quot;bM&quot;, &quot;bA&quot;))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-27-1.png" width="672" /></p>
+<p>The parameter for area has a huge uncertainty, so seems to not have a influence on our target variable. Including area leads to a slight decrease in the parameter for the mean length of growing season. For both models, the mean length of growing season is positively associated with the number of languages per capita.</p>
+<pre class="r"><code>compare( m7.1, m7.2)</code></pre>
+<pre><code>##          WAIC       SE    dWAIC      dSE    pWAIC    weight
+## m7.1 267.6969 15.05209 0.000000       NA 3.567583 0.6378318
+## m7.2 268.8288 16.04058 1.131932 3.552312 5.279668 0.3621682</code></pre>
+<pre class="r"><code>plot( compare( m7.1, m7.2 ))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
+<p>WAIC does not favor any of the two models, so adding the area doesn’t seem to bring big improvements to the model.</p>
+<pre class="r"><code>mean.g.s.seq &lt;- seq(from=-8, to=6, length.out = 50)
+mu &lt;- link(m7.1, data=data.frame(mean.growing.season.c=mean.g.s.seq ) )
+mu.mean &lt;- apply(mu, 2, mean)
+mu.PI &lt;- apply(mu, 2, PI)
+
+plot( log.lang ~ mean.growing.season.c, data=d,
+      xlab=&quot;Mean lenght of growing season (centered)&quot;,
+      ylab=&quot;log languages per capita&quot;)
+lines(mean.g.s.seq, mu.mean)
+shade(mu.PI, mean.g.s.seq)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-30-1.png" width="672" /></p>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Evaluate the hypothesis that language diversity is negatively associated with the standard deviation of length of growing season.</li>
+</ol>
+<pre class="r"><code>d$sd.growing.season.c &lt;- d$sd.growing.season - mean(d$sd.growing.season)
+m7.3 &lt;- map(
+  alist(
+    log.lang ~ dnorm(mu, sigma),
+    mu &lt;- a + bS*sd.growing.season.c,
+    a ~ dnorm(-5, 10),
+    bS ~ dnorm(0, 1),
+    sigma ~ dunif(0, 10)
+  ), data=d
+)
+
+m7.4 &lt;- map(
+  alist(
+    log.lang ~ dnorm( mu, sigma),
+    mu &lt;- a + bS*sd.growing.season.c + bA*log.area.c,
+    a ~ dnorm( -5, 10),
+    bS ~ dnorm( 0, 1),
+    bA ~ dnorm( 0, 1),
+    sigma ~ dunif( 0, 10)
+  ), data=d
+)
+coeftab(m7.3, m7.4)</code></pre>
+<pre><code>##       m7.3    m7.4   
+## a       -5.46   -5.46
+## bS      -0.35   -0.21
+## sigma    1.46    1.44
+## bA         NA   -0.24
+## nobs       74      74</code></pre>
+<pre class="r"><code>plot( coeftab( m7.3, m7.4 ), pars=c(&quot;bS&quot;, &quot;bA&quot;))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-32-1.png" width="672" /></p>
+<pre class="r"><code>cor(d$sd.growing.season, d$log.area)</code></pre>
+<pre><code>## [1] 0.5320083</code></pre>
+<p>There seems to be some collinearity between standard deviation of growing season and the area. This makes sense if the length of the growing season can also vary quite a bit inside a country if the country is large (consider for example Brazil or Australia, both having area that ranges through different climate zones, like desert and rain forests).</p>
+<p>Without the area, the standard deviation of length of growing season has a negative impact on language diversity.</p>
+<pre class="r"><code>compare(m7.3, m7.4)</code></pre>
+<pre><code>##          WAIC       SE      dWAIC      dSE    pWAIC    weight
+## m7.4 273.6346 17.00118 0.00000000       NA 5.242443 0.5074984
+## m7.3 273.6946 17.09992 0.05999204 3.790376 4.005921 0.4925016</code></pre>
+<pre class="r"><code>plot(compare( m7.3, m7.4))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-35-1.png" width="672" /></p>
+<p>Again, both models have almost identical WAIC and both get half of the weight.</p>
+<pre class="r"><code>sd.g.s.seq &lt;- seq(from=-2, to=5, length.out = 50)
+mu &lt;- link(m7.3, data=data.frame(sd.growing.season.c=sd.g.s.seq ) )
+mu.mean &lt;- apply(mu, 2, mean)
+mu.PI &lt;- apply(mu, 2, PI)
+
+plot( log.lang ~ sd.growing.season.c, data=d,
+      xlab=&quot;Standard deviation of lenght of growing season (centered)&quot;,
+      ylab=&quot;log languages per capita&quot;)
+lines(sd.g.s.seq, mu.mean)
+shade(mu.PI, sd.g.s.seq)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-36-1.png" width="672" /></p>
+<p>From the model, we can conclude a very slight negative association of standard deviation of length of growing season on the language diversity.</p>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Evaluate the hypothesis, that the average length of growing season and the standard deviation of length of growing season interact to synergistically reduce language diversity.</li>
+</ol>
+<pre class="r"><code>m7.5 &lt;- map(
+  alist(
+    log.lang ~ dnorm( mu, sigma),
+    mu &lt;- a + bM*mean.growing.season.c + bS*sd.growing.season.c + bMS*sd.growing.season.c*mean.growing.season.c,
+    a ~ dnorm( -5, 10),
+    bM ~ dnorm(0 , 1),
+    bS ~ dnorm(0, 1),
+    bMS ~ dnorm(0, 1),
+    sigma ~ dunif( 0, 10)
+  ), data=d
+)
+precis(m7.5)</code></pre>
+<pre><code>##             mean         sd        5.5%       94.5%
+## a     -5.4488211 0.15191752 -5.69161463 -5.20602757
+## bM     0.1143023 0.05544759  0.02568631  0.20291821
+## bS    -0.3373365 0.14254033 -0.56514348 -0.10952953
+## bMS   -0.1089685 0.04699723 -0.18407914 -0.03385783
+## sigma  1.3066827 0.10741265  1.13501652  1.47834885</code></pre>
+<pre class="r"><code>plot( coeftab( m7.1, m7.3, m7.5), pars=c(&quot;bM&quot;, &quot;bS&quot;, &quot;bMS&quot;))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-38-1.png" width="672" /></p>
+<p>Plotting the interaction. Since we don’t have discrete values as in the example in the chapter before, I only pick a subset of values for which to make a (counterfactual) plot.</p>
+<pre class="r"><code>par(mfrow=c(1,4))
+for (s in -1:2) {
+  plot( log.lang ~ mean.growing.season.c, data=d,
+        col=&quot;steelblue&quot;, type=&quot;n&quot;,
+        main=paste(&quot;sd.growing.season.c=&quot;,s),
+        xlab=&quot;mean growing season (centered)&quot;,
+        ylim=c(-8, -4))
+  mu &lt;- link( m7.5, data= data.frame(mean.growing.season.c=mean.g.s.seq,
+                                     sd.growing.season.c=s))
+  mu.mean &lt;- apply( mu, 2, mean)
+  mu.PI &lt;- apply( mu, 2, PI )
+  lines( mean.g.s.seq, mu.mean )
+  lines( mean.g.s.seq, mu.PI[1,], lty=2)
+  lines( mean.g.s.seq, mu.PI[2,], lty=2)
+}</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-39-1.png" width="1344" /></p>
+<p>For a very low standard deviation of length of growing season, the mean length is strongly positively associated with diversity of languages. With a growing standard deviation, this association decreases, so that for a very high standard deviation the association even reverses to a negative one. This fits with the proposed theory, that if the average length of growing season is long and the standard deviation is large as well, then it is crucial to store and redistribute food in years of a long growing season, thus fostering corporation and larger networks.</p>
+<pre class="r"><code>par(mfrow=c(1,4))
+for (m in c(-2,0,2,4)) {
+  plot( log.lang ~ sd.growing.season.c, data=d,
+        col=&quot;steelblue&quot;, type=&quot;n&quot;,
+        main=paste(&quot;mean.growing.season.c=&quot;,m),
+        xlab=&quot;standard deviation growing season (centered)&quot;,
+        ylim=c(-8, -4))
+  mu &lt;- link( m7.5, data= data.frame(mean.growing.season.c=m,
+                                     sd.growing.season.c=sd.g.s.seq))
+  mu.mean &lt;- apply( mu, 2, mean)
+  mu.PI &lt;- apply( mu, 2, PI )
+  lines( mean.g.s.seq, mu.mean )
+  lines( mean.g.s.seq, mu.PI[1,], lty=2)
+  lines( mean.g.s.seq, mu.PI[2,], lty=2)
+}</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-40-1.png" width="1344" /></p>
+<p>The higher the average length of growing season is, the more negative is the association between the standard deviation of growing season and language diversity.</p>
+</div>
+</div>

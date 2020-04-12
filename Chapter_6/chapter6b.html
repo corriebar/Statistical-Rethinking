@@ -1,0 +1,407 @@
+---
+title: "Information Theory and Model Performance"
+author: "Corrie"
+date: "July 2, 2018"
+output: 
+  github_document:
+    pandoc_args: --webtex
+---
+
+
+
+<div id="entropy" class="section level1">
+<h1>Entropy</h1>
+<pre class="r"><code>p &lt;- c( 0.3, 0.7)
+-sum( p*log(p) )</code></pre>
+<p>compare this with:</p>
+<pre class="r"><code>p &lt;- c(0.01, 0.99)
+-sum( p*log(p) )    # contains much less information</code></pre>
+</div>
+<div id="kullback-leibler-divergence" class="section level1">
+<h1>Kullback-Leibler Divergence</h1>
+<pre class="r"><code>p &lt;- c(0.3, 0.7)
+q1 &lt;- seq(from=0.01, to=0.99, length.out = 100)
+q &lt;- data.frame(q1 = q1, q2 = 1 - q1)
+
+kl_divergence &lt;- function(p, q) {
+  sum( p* log( p/ q) )
+}
+
+kl &lt;- apply(q, 1, function(x){kl_divergence(p=p, q=x)} )
+plot( kl ~ q1, type=&quot;l&quot;, col=&quot;steelblue&quot;, lwd=2)
+abline(v = p[1], lty=2)
+text(0.33 ,1, &quot;p=q&quot;)</code></pre>
+<p>Direction matters when computing divergence:</p>
+<pre class="r"><code>p &lt;- c(0.01, 0.99)
+q1 &lt;- seq(from=0.01, to=0.99, length.out = 100)
+q &lt;- data.frame(q1=q1, q2= 1 - q1 )
+kl &lt;- apply(q, 1, function(x) {kl_divergence(p=p, q=x)})
+plot(kl ~ q1, type=&quot;l&quot;, col=&quot;steelblue&quot;, lwd=2)
+abline(v=p[1], lty=2)
+text(0.05, 1, &quot;p=q&quot;)</code></pre>
+<p>Intuition: If you use a distribution with very low entropy (i.e. little information) to approximate a usual one (rather high information), you’d be more surprised than the other way round. For example, if you try to predict the amount of water on Mars (very dry, close to no water) using the Earth (two-thirds are water), you’d not be very surprised if you land on dry ground on Mars. The other way round, if you fly from Mars to Earth and predict amount of Water on Earth using the Mars, you’d be very surprised if you land on water.</p>
+<pre class="r"><code>mars &lt;- c(0.01, 0.99)
+earth &lt;- c(0.7, 0.3)
+kl_divergence(mars, earth)    # predicting water on Mars using Earth
+kl_divergence(earth, mars)    # predicting water on Earth using Mars</code></pre>
+</div>
+<div id="deviance" class="section level1">
+<h1>Deviance</h1>
+<p>Load data:</p>
+<pre class="r"><code>sppnames &lt;- c(&quot;afarensis&quot;, &quot;africanus&quot;, &quot;habilis&quot;, &quot;boisei&quot;, 
+              &quot;rudolfensis&quot;, &quot;ergaster&quot;, &quot;sapiens&quot;)
+brainvolcc &lt;- c( 438, 452, 612, 521, 752, 871, 1350 )
+masskg &lt;- c( 37.0, 35.5, 34.5, 41.5, 55.5, 61.0, 53.5 )
+d &lt;- data.frame( species=sppnames, brain=brainvolcc, mass=masskg)</code></pre>
+<p>Fit the model:</p>
+<pre class="r"><code>m6.1 &lt;- lm( brain ~ mass, d)</code></pre>
+<p>and compute deviance (by cheating):</p>
+<pre class="r"><code>(-2) * logLik(m6.1)</code></pre>
+<p>To compute the deviance (yourself):</p>
+<pre class="r"><code>library(rethinking)
+# standardize the mass before fitting
+d$mass.s &lt;- (d$mass - mean(d$mass)) / sd(d$mass)
+m6.8 &lt;- map(
+  alist(
+    brain ~ dnorm( mu, sigma),
+    mu &lt;- a + b*mass.s
+  ), 
+  data=d,
+  start=list(a=mean(d$brain), b=0, sigma=sd(d$brain)),
+  method=&quot;Nelder-Mead&quot;
+)
+
+# extract MAP estimates
+theta &lt;- coef(m6.8)
+
+# compute deviance
+dev &lt;- (-2)*sum( dnorm(
+  d$brain,
+  mean=theta[1] + theta[2]*d$mass.s,
+  sd=theta[3],
+  log=TRUE
+))</code></pre>
+<p>compare results:</p>
+<pre class="r"><code>dev
+-2* logLik(m6.8)</code></pre>
+<p>Note:</p>
+<pre class="r"><code>library(assertthat)
+are_equal( dev, (-2*logLik(m6.8))[1] ) 
+are_equal( dev, (-2*logLik(m6.1))[1] , tol=0.0000001)</code></pre>
+<p>The only difference between m6.8 and m6.1 is the use of scaling and centralizing of the predictor variable mass. Thus scaling and centralizing has no influence on the deviance (makes sense)</p>
+<pre class="r"><code>par(mfrow=c(1,2))
+plot( brain ~ mass, data=d)
+plot( brain ~ mass.s, data=d)</code></pre>
+</div>
+<div id="thought-experiment" class="section level1">
+<h1>Thought experiment</h1>
+<p>Let’s compute (simulate) the following data generating model:
+<span class="math display">\[
+\begin{align*}
+y &amp;\sim \text{Normal}(\mu, \sigma=1) \\
+\mu &amp;= 0.15x_1 - 0.4x_2
+\end{align*}\]</span></p>
+<p>We try to fit the data using models with increasing number of parameters (up to 5), first with <span class="math inline">\(N=20\)</span> observations:</p>
+<pre class="r"><code>N &lt;- 20
+kseq &lt;- 1:5
+dev &lt;- sapply( kseq, function(k) {
+  print(k);
+  # takes a long time ~ around an hour or so
+  #r &lt;- replicate( 1e4, sim.train.test( N=N, k=k, rho=c(0.15, -0.4)), mc.cores = 4 );
+  # faster to use mcreplicate (can use multiple cpu cores)
+  r &lt;- mcreplicate( 1e4, sim.train.test( N=N, k=k, rho=c(0.15, -0.4)), mc.cores = 4 );
+  c( mean(r[1, ]), mean(r[2,] ), sd(r[1,]), sd(r[2,]) )
+  # mean deviance in sample, mean deviance out sample, sd in sample deviance, sd out sample deviance
+})</code></pre>
+<p>and then with <span class="math inline">\(N=100\)</span> observations:</p>
+<pre class="r"><code>N &lt;- 100
+kseq &lt;- 1:5
+dev100 &lt;- sapply( kseq, function(k) {
+  print(k);
+  # takes a long time
+  r &lt;- mcreplicate( 1e4, sim.train.test( N=N, k=k, rho=c(0.15, -0.4)), mc.cores=4 );
+  c( mean(r[1, ]), mean(r[2,] ), sd(r[1,]), sd(r[2,]) )
+  # mean deviance in sample, mean deviance out sample, sd in sample deviance, sd out sample deviance
+})</code></pre>
+<pre class="r"><code>par(mfrow=c(1,2))
+plot( 1:5, dev[1,], ylim=c(min(dev[1:2,]) - 5, max(dev[1:2,]) + 10),
+      xlim =c(1,5.1), xlab=&quot;number of parameters&quot;, ylab=&quot;deviance&quot;,
+      pch=16, cex=1.3, col=&quot;steelblue&quot; )
+text(2-0.15, dev[1,2], labels=c(&quot;in&quot;), col=&quot;steelblue&quot;)
+text(2+0.3, dev[2,2], labels=c(&quot;out&quot;))
+
+mtext( concat( &quot;N=&quot;, 20))
+points( (1:5)+0.1, dev[2,], cex=1.3)  # out of sample deviance, slightly right of in sample deviance
+for ( i in kseq) {
+  pts_in &lt;- dev[1,i] + c(-1,1)*dev[3,i]   # standard deviation of in sample
+  pts_out &lt;- dev[2,i] + c(-1,1)*dev[4,i]
+  lines( c(i,i), pts_in, col=&quot;steelblue&quot;, lwd=2)
+  lines( c(i,i)+0.1, pts_out, lwd=2 )
+  if (i == 2) {
+    text(c(i,i) +0.35, pts_out, labels=c(&quot;-1SD&quot;, &quot;+1SD&quot;))
+  }
+} 
+
+plot( 1:5, dev100[1,], ylim=c(min(dev100[1:2,]) - 15, max(dev100[1:2,]) + 20),
+      xlim =c(1,5.1), xlab=&quot;number of parameters&quot;, ylab=&quot;deviance&quot;,
+      pch=16, cex=1.3, col=&quot;steelblue&quot; )
+text(2-0.15, dev100[1,2], labels=c(&quot;in&quot;), col=&quot;steelblue&quot;)
+text(2+0.3, dev100[2,2], labels=c(&quot;out&quot;))
+
+mtext( concat( &quot;N=&quot;, N))
+points( (1:5)+0.1, dev100[2,], cex=1.3) # out of sample deviance, slightly right of in sample deviance
+for ( i in kseq) {
+  pts_in &lt;- dev100[1,i] + c(-1,1)*dev100[3,i]  # standard deviation of in sample
+  pts_out &lt;- dev100[2,i] + c(-1,1)*dev100[4,i]
+  lines( c(i,i), pts_in, col=&quot;steelblue&quot;, lwd=2)
+  lines( c(i,i)+0.1, pts_out, lwd=2 )
+  if (i == 2) {
+    text(c(i,i) +0.35, pts_out, labels=c(&quot;-1SD&quot;, &quot;+1SD&quot;))
+  }
+} </code></pre>
+</div>
+<div id="thought-experiment---with-regularization" class="section level1">
+<h1>Thought experiment - with regularization</h1>
+<p>We do the same again, but this time not using flat priors for the Beta-coefficients but instead Gaussian priors with increasing narrowness:</p>
+<pre class="r"><code>sq &lt;- seq(from=-3.2, to=3.2, length.out = 200)
+n02 &lt;- dnorm(sq, mean=0, sd=0.2)
+n05 &lt;- dnorm(sq, mean=0, sd=0.5)
+n1 &lt;- dnorm(sq, mean=0, sd=1)
+
+plot(sq, n02, xlab=&quot;parameter value&quot;, ylab=&quot;Density&quot;, type=&quot;l&quot;, lwd=2)
+points(sq, n1, lty=5, type=&quot;l&quot;)
+points(sq, n05, type=&quot;l&quot;)
+legend(&quot;topright&quot;, c(&quot;N(0,1)&quot;, &quot;N(0,0.5)&quot;, &quot;N(0,0.2)&quot;), lty=c(5, 1, 1), lwd=c(1,1,2), bty=&quot;n&quot;)</code></pre>
+<p>First with 20 observations:</p>
+<pre class="r"><code>N &lt;- 20
+kseq &lt;- 1:5
+reg &lt;- c(1, 0.5, 0.2)
+dev_r &lt;- list()
+
+for (i in 1:length(reg) ) {
+  dev_r[[i]] &lt;- sapply( kseq, function(k) {
+    print(k);
+    regi &lt;- reg[i];
+    r &lt;- mcreplicate( 1e4, sim.train.test( N=N, k=k, rho=c(0.15, -0.4), b_sigma=regi), mc.cores=4 );
+    c( mean(r[1, ]), mean(r[2,] ), sd(r[1,]), sd(r[2,]) )
+    # mean deviance in sample, mean deviance out sample, sd in sample deviance, sd out sample deviance
+  })
+}</code></pre>
+<p>and then with 100 observations:</p>
+<pre class="r"><code>N &lt;- 100
+kseq &lt;- 1:5
+reg &lt;- c(1, 0.5, 0.2)
+dev_r100 &lt;- list()
+
+for (i in 1:length(reg)) {
+  dev_r100[[i]] &lt;- sapply( kseq, function(k) {
+    print(k);
+    # takes a long time
+    regi &lt;- reg[i]
+    r &lt;- mcreplicate( 1e4, sim.train.test( N=N, k=k, rho=c(0.15, -0.4), b_sigma=regi), mc.cores=4 );
+    c( mean(r[1, ]), mean(r[2,] ), sd(r[1,]), sd(r[2,]) )
+    # mean deviance in sample, mean deviance out sample, sd in sample deviance, sd out sample deviance
+  })
+}</code></pre>
+<p>The plot:</p>
+<pre class="r"><code>par(mfrow=c(1,2))
+plot( 1:5, dev[1,], ylim=c(min(dev[1:2,]) - 5, max(dev[1:2,]) + 10),
+      xlim =c(1,5.1), xlab=&quot;number of parameters&quot;, ylab=&quot;deviance&quot;,
+      pch=16, cex=1.3, col=&quot;steelblue&quot; )
+points(1:5, dev[2,], cex=1.3)
+
+# N(0,1)
+points(1:5, dev_r[[1]][1,], col=&quot;steelblue&quot;, lty=5, type=&quot;l&quot;)
+points(1:5, dev_r[[1]][2,], lty=5, type=&quot;l&quot;)
+
+# N(0,0.5)
+points(1:5, dev_r[[2]][1,], col=&quot;steelblue&quot;, lty=1, type=&quot;l&quot;)
+points(1:5, dev_r[[2]][2,], lty=1, type=&quot;l&quot;)
+
+# N(0,0.2)
+points(1:5, dev_r[[3]][1,], col=&quot;steelblue&quot;, lty=1, type=&quot;l&quot;, lwd=2)
+points(1:5, dev_r[[3]][2,], lty=1, type=&quot;l&quot;, lwd=2)
+legend(&quot;bottomleft&quot;, c(&quot;N(0,1)&quot;, &quot;N(0,0.5)&quot;, &quot;N(0,0.2)&quot;), lty = c(5, 1, 1), lwd=c(1,1,2), bty=&quot;n&quot;)
+mtext( concat( &quot;N=&quot;, 20))
+
+plot( 1:5, dev100[1,], ylim=c(min(dev100[1:2,]) - 5, max(dev100[1:2,]) + 10),
+      xlim =c(1,5.1), xlab=&quot;number of parameters&quot;, ylab=&quot;deviance&quot;,
+      pch=16, cex=1.3, col=&quot;steelblue&quot; )
+points(1:5, dev100[2,], cex=1.3)
+
+# N(0,1)
+points(1:5, dev_r100[[1]][1,], col=&quot;steelblue&quot;, lty=5, type=&quot;l&quot;)
+points(1:5, dev_r100[[1]][2,], lty=5, type=&quot;l&quot;)
+
+# N(0,0.5)
+points(1:5, dev_r100[[2]][1,], col=&quot;steelblue&quot;, lty=1, type=&quot;l&quot;)
+points(1:5, dev_r100[[2]][2,], lty=1, type=&quot;l&quot;)
+
+# N(0,0.2)
+points(1:5, dev_r100[[3]][1,], col=&quot;steelblue&quot;, lty=1, type=&quot;l&quot;, lwd=2)
+points(1:5, dev_r100[[3]][2,], lty=1, type=&quot;l&quot;, lwd=2)
+
+mtext( concat( &quot;N=&quot;, 100))</code></pre>
+<p>The points are the deviance in (blue) and out of sample (black), using flat priors (i.e. <span class="math inline">\(N(0,100)\)</span>). The lines show training (blue) and testing (black) deviance for three regularizing priors.</p>
+</div>
+<div id="motivation-for-aic" class="section level1">
+<h1>Motivation for AIC</h1>
+<p>The AIC (Akaike Information Criteria) provides a simple estimate of the average out-of-sample deviance:
+<span class="math display">\[ \text{AIC} = D_{\text{train}} + 2p\]</span> where p is the number of free parameters to be estimated in the model. The motivation for this can be seen in the following plots:</p>
+<pre class="r"><code>aic &lt;- dev[1,] + 2*kseq
+aic100 &lt;- dev100[1,] + 2*kseq
+
+par(mfrow=c(1,2))
+plot( 1:5, dev[1,], ylim=c(min(dev[1:2,]) - 5, max(dev[1:2,]) + 10),
+      xlim =c(1,5.5), xlab=&quot;number of parameters&quot;, ylab=&quot;deviance&quot;,
+      pch=16, col=&quot;steelblue&quot;, cex=1.3 )
+lines(aic, lty=2, lwd=1.5)
+legend(&quot;bottomleft&quot;, c(&quot;AIC&quot;), lty = c(2), lwd=c(1), bty=&quot;n&quot;)
+
+mtext( concat( &quot;N=&quot;, 20))
+points( (1:5), dev[2,], cex=1.3)   # out of sample deviance, slightly right of in sample deviance
+for ( i in kseq) {
+  dif &lt;- dev[2,i] - dev[1,i]
+  arrows(i+0.07, dev[1,i], i+0.07, dev[2,i], length=0.05, angle=90, code=3)
+  text(i+0.25, dev[1,i]+0.5*dif, labels = round(dif, digits=1))
+  }
+
+# for N=100
+plot( 1:5, dev100[1,], ylim=c(min(dev100[1:2,]) - 5, max(dev100[1:2,]) + 10),
+      xlim =c(1,5.5), xlab=&quot;number of parameters&quot;, ylab=&quot;deviance&quot;,
+      pch=16, col=&quot;steelblue&quot;, cex=1.3 )
+lines(aic100, lty=2, lwd=1.5)
+
+mtext( concat( &quot;N=&quot;, 100))
+points( (1:5), dev100[2,], cex=1.3)   # out of sample deviance, slightly right of in sample deviance
+for ( i in kseq) {
+  dif &lt;- dev100[2,i] - dev100[1,i]
+  arrows(i+0.07, dev100[1,i], i+0.07, dev100[2,i], length=0.05, angle=90, code=3)
+  text(i+0.25, dev100[1,i]+0.5*dif, labels = round(dif, digits=1))
+}</code></pre>
+</div>
+<div id="dic" class="section level1">
+<h1>DIC</h1>
+<p><span class="math display">\[\begin{align*}
+\text{DIC} &amp;= \bar{D} + (\bar{D} - \hat{D}) \\
+&amp;= \hat{D} + 2(\bar{D} - \hat{D}) \\
+&amp;= \hat{D} + 2p_D
+\end{align*}\]</span>
+where <span class="math inline">\(\bar{D}\)</span> is the mean of the posterior deviance, that is, if we draw 10,000 samples from the posterior, we compute 10,000 deviances, one for each sample, and then take the average. <span class="math inline">\(\hat{D}\)</span> is the deviance computed using the mean of the posterior sample. <span class="math inline">\(p_D\)</span> is the effective number of parameters.
+For comparison, we first compute the deviance and AIC:</p>
+<pre class="r"><code>data(cars)
+m &lt;- map(
+  alist(
+    dist ~ dnorm(mu, sigma) ,   # dist = distance
+    mu &lt;- a + b*speed,
+    a ~ dnorm(0, 100),
+    b ~ dnorm(0, 10),
+    sigma ~ dunif(0, 30)
+  ), data=cars
+)
+# deviance, AIC and DIC
+dev &lt;- (-2) * logLik(m)
+aic &lt;- dev + 2*length( coef(m) )
+assert_that(aic == AIC(m))   # can also use the function AIC() from R stats</code></pre>
+<p>Now computing the DIC:</p>
+<pre class="r"><code>post &lt;- extract.samples(m,n=1000)
+
+# compute dev at each sample
+n_samples &lt;- 1000
+dev.samples &lt;- sapply(1:n_samples,     
+             function(s) {
+               mu &lt;- post$a[s] + post$b[s]*cars$speed
+                (-2)*sum( dnorm( cars$dist, mu, post$sigma[s], log=TRUE)  )
+             })
+dev.bar &lt;- mean( dev.samples )         
+
+dev.hat &lt;- (-2)*sum( dnorm(     # dev (mean( post) )
+  cars$dist,
+  mean=mean(post$a) + mean(post$b)*cars$speed,
+  sd=mean(post$sigma), 
+  log=TRUE
+))
+p.D &lt;- dev.bar - dev.hat
+dic &lt;- dev.hat + 2*p.D    # = dev.bar + ( dev.bar - dev.hat )
+dic</code></pre>
+</div>
+<div id="waic---widely-applicable-information-critera" class="section level1">
+<h1>WAIC - Widely Applicable Information Critera</h1>
+<p>The WAIC does not require a multivariate Gaussian posterior and is thus even wider applicable, as the name says. It is computed pointwise, i.e. for each case in the data.
+It consists of the log-pointwise-predictive-density:
+<span class="math display">\[\text{lppd} = \sum_{i=1}^{N} \log \text{Pr}(y_i)\]</span>
+where <span class="math inline">\(\text{Pr}(y_i)\)</span> is the average likelihood of observation <span class="math inline">\(i\)</span> in the training sample. That is, we compute the likelihood of <span class="math inline">\(y_i\)</span> for parameter sample from the posterior and then average.
+The effective number of parameters for the WAIC is defined as follows:
+<span class="math display">\[p_{\text{WAIC}} = \sum_{i=1}^{N} V(y_i)\]</span>
+where <span class="math inline">\(V(y_i)\)</span> is the variance in log-likelihood for observation <span class="math inline">\(i\)</span> in the training sample.</p>
+<p>Easier to understand with code, so let’s compute WAIC using the same model as above:</p>
+<pre class="r"><code>ll &lt;- sapply( 1:n_samples,
+              function(s) {
+                mu &lt;- post$a[s] + post$b[s]*cars$speed
+                dnorm( cars$dist , mu, post$sigma[s], log=TRUE)
+              })
+dim(ll)   # computed likelihood for each sample in post, for each observation in cars
+          # observations in rows, samples in columns
+lppd &lt;- sum( log( apply(ll, 1, mean ) ) )</code></pre>
+<p>Problem: this is not numerically stable, so we use the numercially stable function <code>log_sum_exp</code>.</p>
+<pre class="r"><code>n_cases &lt;- nrow(cars)
+lppd &lt;-  sapply(1:n_cases, function(i) log_sum_exp(ll[i,]) - log(n_samples) ) 
+pWAIC &lt;- sapply( 1:n_cases, function(i) var(ll[i,]) ) 
+
+waic &lt;- -2*(sum( lppd ) - sum( pWAIC ) )</code></pre>
+<p>There will be simulation variance but the variance remains much smaller than the standard error of WAIC itself, which can be computed as follows:</p>
+<pre class="r"><code>waic_vec &lt;- -2*( lppd - pWAIC )
+se &lt;- sqrt( n_cases*var( waic_vec ) )
+se
+
+# almost the same, some difference remains because of simulation variance
+are_equal( waic, WAIC(m)[1] , tol=0.01)</code></pre>
+<p>Compare the three Information Criteria and the deviance:</p>
+<pre class="r"><code>ic &lt;- c(dev, aic, dic, waic)
+names(ic) &lt;- c(&quot;Deviance&quot;, &quot;AIC&quot;, &quot;DIC&quot;, &quot;WAIC&quot;)
+print(ic)</code></pre>
+<p>This is better seen in a plot, so as before, we compute a simulation and see how DIC and WAIC fare, in particular, how good do they estimate <strong>out-of-sample deviance</strong>?</p>
+<pre class="r"><code>N &lt;- 20
+kseq &lt;- 1:5
+reg &lt;- c(100, 0.5)
+dev_DIC_WAIC &lt;- list()
+
+for (i in 1:length(reg) ) {
+  dev_DIC_WAIC[[i]] &lt;- sapply( kseq, function(k) {
+    print(k);
+    regi &lt;- reg[i];
+    r &lt;- mcreplicate( 1e4, sim.train.test( N=N, k=k, rho=c(0.15, -0.4), b_sigma=regi, 
+                                            DIC=TRUE, WAIC=TRUE), mc.cores=4 );
+    c( mean(r[1, ]), mean(r[2,] ), mean(r[3,]), mean(r[4,]) )
+    # mean deviance in sample, mean deviance out sample, mean DIC, mean WAIC
+  })
+}</code></pre>
+<p>And the plot:</p>
+<pre class="r"><code>par(mfrow=c(2,1))
+par(mar = c(0.5, 2, 1, 1), oma=c(3,2,2,2))
+plot( 1:5, dev_DIC_WAIC[[1]][2,], 
+      #ylim=c(min(dev_DIC_WAIC[[1]][1:2,]) - 5, max(dev_DIC_WAIC[[1]][1:2,]) + 10),
+      xlim =c(1,5.1), xlab=NA, xaxt=&quot;n&quot;, cex=1.3 )
+axis(side = 1, at = 1:5, labels = FALSE, tck = -0.04)
+points( 1:5, dev_DIC_WAIC[[2]][2,], col=&quot;steelblue&quot;, cex=1.3)
+lines( dev_DIC_WAIC[[1]][3,] )
+lines( dev_DIC_WAIC[[2]][3,], col=&quot;steelblue&quot;)
+text(2, dev_DIC_WAIC[[2]][2,2]-5, &quot;N(0,0.5)&quot;, col=&quot;steelblue&quot;)
+text(4, dev_DIC_WAIC[[1]][2,4]+5, &quot;N(0,100)&quot;)
+legend(&quot;topleft&quot;, &quot;DIC&quot;, bty=&quot;n&quot;)
+mtext(text=&quot;deviance&quot;, side=2, line=2.5, outer=FALSE)
+mtext(concat(&quot;N=&quot;,20))
+
+plot( 1:5, dev_DIC_WAIC[[1]][2,], 
+      ylim=c(min(dev_DIC_WAIC[[1]][c(2,4),], dev_DIC_WAIC[[2]][c(2,4),]) - 5, 
+             max(dev_DIC_WAIC[[1]][c(2,4),], dev_DIC_WAIC[[2]][c(2,4),]) + 10),
+      xlim =c(1,5.1), xlab=NA, xaxt=&quot;n&quot;, cex=1.3 )
+axis(side = 1, at = 1:5, labels = FALSE, tck = -0.04)
+points( 1:5, dev_DIC_WAIC[[2]][2,], col=&quot;steelblue&quot;, cex=1.3)
+lines( dev_DIC_WAIC[[1]][4,] )                         # WAIC for N(0,100)
+lines( dev_DIC_WAIC[[2]][4,], col=&quot;steelblue&quot;)         # WAIC for N(0,0.5)
+legend(&quot;topleft&quot;, &quot;WAIC&quot;, bty=&quot;n&quot;)
+mtext(text=&quot;deviance&quot;, side=2, line=2.5, outer=FALSE)
+mtext(text=&quot;number of parameter&quot;,side=1,line=1,outer=TRUE)</code></pre>
+<p>The points in the plot are the out of sample deviance, once for the flat prior <span class="math inline">\(N(0,100)\)</span> in black, and once for the regularizing prior <span class="math inline">\(N(0,0.5)\)</span> in blue. The lines are the DIC respective WAIC, also both with flat and regularizing prior. While the DIC and WAIC alone can already give a good estimate of the out-of-sampe deviance, using regularizing priors still helps.</p>
+</div>

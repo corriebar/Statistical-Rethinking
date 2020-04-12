@@ -11,7 +11,7 @@ author: ""
 These are code snippets, plots and my solutions to some of the exercises of the book "Statistical Rethinking" by Richard McElreath.
 
 ## Chapter 3
-- [Exercises](Chapter_3/chapter3_Ex.md)
+- [Exercises]( {{< relref "Chapter_3/chapter3_Ex.md" >}} )
 
 ## Chapter 4
 - [How Normality arises](Chapter_4/chapter4.R)

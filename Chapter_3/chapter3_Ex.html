@@ -1,0 +1,209 @@
+---
+title: "Chapter 3 - Exercises"
+output: 
+  github_document:
+    pandoc_args: --webtex=http://chart.apis.google.com/chart?cht=tx&chl=
+---
+
+
+
+<p>These are my solutions to the practice questions of chapter 3, Sampling the Imaginary, of the book “Statistical Rethinking” (version 2) by Richard McElreath.</p>
+<div id="easy." class="section level2">
+<h2>Easy.</h2>
+<p>The Easy problems use the samples from the globe tossing example:</p>
+<pre class="r"><code>p_grid &lt;- seq( from=0, to=1, length.out=1000 )
+prior &lt;- rep( 1, 1000 )
+likelihood &lt;- dbinom( 6, size=9, prob=p_grid)
+
+posterior &lt;- likelihood * prior
+posterior &lt;- posterior / sum(posterior)
+
+set.seed(100)
+samples &lt;- sample( p_grid, prob=posterior, size=1e4, replace=TRUE )</code></pre>
+<p><strong>3E1.</strong> How much posterior probability lies below <span class="math inline">\(p=0.2\)</span>?</p>
+<pre class="r"><code>mean( samples &lt; 0.2 )</code></pre>
+<pre><code>## [1] 4e-04</code></pre>
+<p><strong>3E2.</strong> How much posterior probability lies above <span class="math inline">\(p=0.8\)</span>?</p>
+<pre class="r"><code>mean( samples &gt; 0.8 )</code></pre>
+<pre><code>## [1] 0.1116</code></pre>
+<p><strong>3E3.</strong> How much posterior probability lies between <span class="math inline">\(p=0.2\)</span> and <span class="math inline">\(p=0.8\)</span>?</p>
+<pre class="r"><code>mean( samples &gt; 0.2 &amp; samples &lt; 0.8 )</code></pre>
+<pre><code>## [1] 0.888</code></pre>
+<p><strong>3E4.</strong> 20% of the posterior probability lies below which value of <span class="math inline">\(p\)</span>?</p>
+<pre class="r"><code>quantile( samples, probs = 0.2 )</code></pre>
+<pre><code>##       20% 
+## 0.5185185</code></pre>
+<p>20% of the posterior probability is below 0.52.</p>
+<p><strong>3E5.</strong> 20% of the posterior probability lies above which value of <span class="math inline">\(p\)</span>?</p>
+<pre class="r"><code>quantile( samples, probs = 0.8 )</code></pre>
+<pre><code>##       80% 
+## 0.7557558</code></pre>
+<p>20% of the posterior probability is above 0.76.</p>
+<p><strong>3E6.</strong> Which values of <span class="math inline">\(p\)</span> contain the narrowest interval equal to 66% of the posterior probability?</p>
+<pre class="r"><code>library(rethinking)
+HPDI( samples, prob = 0.66 )</code></pre>
+<pre><code>##     |0.66     0.66| 
+## 0.5085085 0.7737738</code></pre>
+<p>66% of the posterior probability is between 0.51 and 0.77.</p>
+<p><strong>3E7.</strong> Which values of <span class="math inline">\(p\)</span> contain 66% of the posterior probability, assuming equal posterior probability both below and above the interval?</p>
+<pre class="r"><code>PI( samples, prob = 0.66 )</code></pre>
+<pre><code>##       17%       83% 
+## 0.5025025 0.7697698</code></pre>
+<p>66% of the posterior probability is between 0.50 and 0.77. The percentile interval is basically identical to the HPDI interval above, implying that the posterior is highly symmetric:</p>
+<pre class="r"><code>dens( samples )</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_3/chapter3_Ex_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+</div>
+<div id="medium." class="section level2">
+<h2>Medium.</h2>
+<p><strong>3M1.</strong> Suppose the glove tossing data had turned out to be 8 water in 15 tosses. Construct the posterior distribution, using grid approximation and the same flat prior as above.</p>
+<p>Since the prior and the grid stay the same, we only need to change the likelihood:</p>
+<pre class="r"><code>likelihood &lt;- dbinom( 8, size=15, prob=p_grid)
+posterior &lt;- likelihood * prior
+posterior &lt;- posterior / sum(posterior)</code></pre>
+<p><strong>3M2.</strong> Draw 10,000 sample from the grid approximation from above and use the samples to calculate the 90% HPDI for <span class="math inline">\(p\)</span>.</p>
+<p>We can use the same code from above:</p>
+<pre class="r"><code>samples &lt;- sample( p_grid, prob=posterior, size=1e4, replace=TRUE)
+HPDI(samples, prob = 0.9 )</code></pre>
+<pre><code>##      |0.9      0.9| 
+## 0.3293293 0.7167167</code></pre>
+<p><strong>3M3.</strong> Construct a posterior predictive check for this model and data.</p>
+<ul>
+<li>Simulate the distribution of samples, averaging over the posterior uncertatinty in <span class="math inline">\(p\)</span>.</li>
+</ul>
+<p>To compute the posterior predictive distribution, we generate samples using the <code>rbinom()</code> function and the posterior samples:</p>
+<pre class="r"><code>w &lt;- rbinom( 1e4, size = 15, prob=samples )
+head(w)</code></pre>
+<pre><code>## [1]  3 13  6  8  7 10</code></pre>
+<p><code>w</code> is then a vector containing simulated predictions of 15 globe tosses, averaged over the posterior probability</p>
+<pre class="r"><code>simplehist(w)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_3/chapter3_Ex_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<ul>
+<li>What is the probability of observing 8 water in 15 tosses?</li>
+</ul>
+<pre class="r"><code>mean( w == 8 )</code></pre>
+<pre><code>## [1] 0.1444</code></pre>
+<p>The probability of observing 8 water in 15 tosses is around 14.4%.</p>
+<p><strong>3M4.</strong> Using the posterior distribution constructed from the new (8/15) data, now calculate the probability of observing 6 water in 9 tosses.</p>
+<p>We compute a new posterior predictive distribution, where we use 9 instead of 15 for the <code>size</code>:</p>
+<pre class="r"><code>w &lt;- rbinom( 1e4, size = 9, prob=samples )
+mean( w == 6 )</code></pre>
+<pre><code>## [1] 0.1751</code></pre>
+<p>The probability to observe 6 water in 9 tosses (given the new data) is around 18%.</p>
+<p><strong>3M5.</strong>
+Start over at <strong>3M1</strong>, but now use a prior that is zero below <span class="math inline">\(p=0.5\)</span> and a constant above <span class="math inline">\(p=0.5\)</span>. This corresponds to prior information that a majority of the Earth’s surface is water. Repeat each problem above and compare the inferences. What difference does the prior make?
+If it helps, compare inferences (using both priors) to the true value <span class="math inline">\(p=0.7\)</span>.</p>
+<pre class="r"><code># I use 2, so the prior integrates to 1, 
+# doesn&#39;t make much of a difference since we standardize later anyway
+informed_prior &lt;- ifelse( p_grid &lt; 0.5, 0, 2 ) 
+likelihood &lt;- dbinom( 8, size = 15, prob=p_grid )
+new_posterior &lt;- likelihood * informed_prior
+new_posterior &lt;- new_posterior / sum(posterior )
+
+new_samples &lt;- sample( p_grid, prob=new_posterior, size=1e4, replace=TRUE)</code></pre>
+<pre class="r"><code>par(mfrow=c(1,2))
+dens(samples)
+mtext(&quot;Posterior with flat prior&quot;)
+
+dens(new_samples, xlim=c(0,1))
+mtext(&quot;Posterior with informed prior&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_3/chapter3_Ex_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<p>With the new, informed prior, the probability mass below 0.5 is zero. The posterior with the flat prior still puts quite a bit of probability mass below 0.5:</p>
+<pre class="r"><code>mean( samples &lt; 0.5 )</code></pre>
+<pre><code>## [1] 0.3957</code></pre>
+<p>We can compare how much probability mass the two different models put on the interval between 0.6 and 0.8 (this includes the true value 0.7):</p>
+<pre class="r"><code>mean( samples &gt; 0.6 &amp; samples &lt; 0.8 )</code></pre>
+<pre><code>## [1] 0.2787</code></pre>
+<pre class="r"><code>mean( new_samples &gt; 0.6 &amp; new_samples &lt; 0.8)</code></pre>
+<pre><code>## [1] 0.4586</code></pre>
+<p>The model with the informed prior puts much more probability mass on this interval containing the true value.</p>
+<p><strong>3M6.</strong> Suppose yu want to estimate the Earth’s proportion of water very precisely. Specifically, you want the 99% percentile interval of the posterior distribution of <span class="math inline">\(p\)</span> to be only 0.05 wide. This means, the distance between the upper and lower bound of the interval should be 0.05. How many times will you have to toss the globe to do this?</p>
+<p>We can just try some values. I am using here the true value of <span class="math inline">\(p\)</span> for the proportion of water to generate some “observed” data.</p>
+<pre class="r"><code>compute_pi_width &lt;- function(N, true_p) {
+  likelihood &lt;- dbinom( round(N*true_p), size=N, prob=p_grid )
+  posterior &lt;- likelihood * prior
+  posterior &lt;- posterior / sum(posterior)
+  samples &lt;- sample(p_grid, prob=posterior, size=1e4, replace=TRUE )
+  interval &lt;- PI(samples, prob=0.99)
+  names(interval) &lt;- NULL
+  diff( interval )
+}
+
+true_p &lt;- 0.7
+N &lt;- 10
+compute_pi_width(N, true_p)</code></pre>
+<pre><code>## [1] 0.6176226</code></pre>
+<p>With 10 observations, we’re not even close yet.</p>
+<pre class="r"><code>N &lt;- 100
+compute_pi_width(N, true_p)</code></pre>
+<pre><code>## [1] 0.2262262</code></pre>
+<p>Still some way to go.</p>
+<pre class="r"><code>N &lt;- 1000
+compute_pi_width(N, true_p)</code></pre>
+<pre><code>## [1] 0.07407908</code></pre>
+<p>With 1000 observations, we’re getting quite close to an PI of 0.05 width. With <span class="math inline">\(N = 2200\)</span> we then get a 95%-interval that is 0.05 wide.</p>
+<pre class="r"><code>N &lt;- 2200
+compute_pi_width(N, true_p)</code></pre>
+<pre><code>## [1] 0.05105105</code></pre>
+<p>Note however that is depends on the true value of <span class="math inline">\(p\)</span>. If for example the true value of <span class="math inline">\(p\)</span> would be heavily biased, such as 0.995 (almost all of Earth is water), then we’d only need 150 tosses to get such a small interval.</p>
+<pre class="r"><code>N &lt;- 150
+compute_pi_width(N, true_p = 0.995)</code></pre>
+<pre><code>## [1] 0.04704705</code></pre>
+<p>Similarly, using a more informed prior would also influence how many observations are needed.</p>
+</div>
+<div id="hard." class="section level2">
+<h2>Hard.</h2>
+<p>The Hard problems use the data below about the gender of the first and second born children in 100 two-child families.</p>
+<pre class="r"><code>data(homeworkch3)
+head(birth1)</code></pre>
+<pre><code>## [1] 1 0 0 0 1 1</code></pre>
+<pre class="r"><code>head(birth2)</code></pre>
+<pre><code>## [1] 0 1 0 1 0 1</code></pre>
+<p>The total number of boys born across all of these births is then:</p>
+<pre class="r"><code>sum(birth1) + sum(birth2)</code></pre>
+<pre><code>## [1] 111</code></pre>
+<p><strong>3H1.</strong> Using grid approximation, compute the posterior distribution for the probability of a birth being a boy. Assume a uniform prior probability.</p>
+<pre class="r"><code>boys &lt;- sum(birth1) + sum(birth2)
+N &lt;- length(birth1) + length(birth2)
+
+p_grid &lt;- seq( from=0, to=1, length.out = 10000 )
+prior &lt;- rep( 1, 10000 )
+likelihood &lt;- dbinom( boys, size=N, prob = p_grid)
+posterior &lt;- likelihood * prior
+posterior &lt;- posterior / sum(posterior )</code></pre>
+<p>Which parameter value maximizes the posterior probability?</p>
+<pre class="r"><code>p_grid[ which.max(posterior)]</code></pre>
+<pre><code>## [1] 0.5549555</code></pre>
+<p>MAP, the maximum a posterior, value is around 0.55.</p>
+<p><strong>3H2.</strong>
+Using the <code>sample()</code> function, draw 10,000 random parameter values from the posterior distribution and estimate the 50%, 89%, and 97% HPDIs.</p>
+<pre class="r"><code>samples &lt;- sample(p_grid, prob=posterior, size=1e5, replace = TRUE)
+HPDI(samples, c(0.1, 0.5, 0.89, 0.97))</code></pre>
+<pre><code>##     |0.97     |0.89      |0.5      |0.1      0.1|      0.5|     0.89|     0.97| 
+## 0.4795480 0.4993499 0.5299530 0.5469547 0.5557556 0.5770577 0.6107611 0.6299630</code></pre>
+<p><strong>3H3.</strong>
+Use <code>rbinom()</code> to simulate 10,000 replicates of 200 births. Compare the distribution of predicted numbers of boys to the actual count in the data.</p>
+<pre class="r"><code>pred_births &lt;- rbinom(1e4, size=200, prob = samples)
+pred_freqs &lt;- table(pred_births)
+simplehist(pred_births)
+lines(as.table(pred_freqs[names(pred_freqs) == boys]), col=&quot;deepskyblue&quot;, lwd=3)
+mtext(&quot;Posterior predictive distribution: Number of boys in 200 births&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_3/chapter3_Ex_files/figure-html/unnamed-chunk-31-1.png" width="672" /></p>
+<p>Our observed number of boys (in blue) is very much in the center of predicted numbers of boys. Based on this check, we would say that our model represents the observed data quite well.</p>
+<p><strong>3H4.</strong> Now compare 10,000 counts of boys from 100 simulated first borns only to the number of boys in the first births, <code>births1</code>. How does the model look in this light?</p>
+<pre class="r"><code>pred_births &lt;- rbinom(1e4, size=100, prob = samples)
+pred_freqs &lt;- table(pred_births)
+simplehist(pred_births)
+lines(as.table(pred_freqs[names(pred_freqs) == sum(birth1)]), col=&quot;deepskyblue&quot;, lwd=3)
+mtext(&quot;Posterior predictive distribution: Number of boys in 100 births&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_3/chapter3_Ex_files/figure-html/unnamed-chunk-32-1.png" width="672" /></p>
+<p>Our observed number of boys in the first borns is slightly less central in the posterior predictive distribution. However, it still seems to be a fairly likely outcome.</p>
+<p><strong>3H5.</strong> The model assumes that sex of first and second births are independent. To check this assumption, focus now on second births that followed female first borns. Compare 10,000 simulated counts of boys to only those second births that followed girls. Compare the counts of boys in your simulations to the actual observed count of boys following girls. How does the model look in this light? Any guesses what is going on in these data?</p>
+<pre class="r"><code>followed_a_girl &lt;- birth2[birth1 == 0]
+pred_births &lt;- rbinom(1e4, size=length(followed_a_girl), prob = samples)
+pred_freqs &lt;- table(pred_births)
+simplehist(pred_births)
+lines(as.table(pred_freqs[names(pred_freqs) == sum(followed_a_girl)]), col=&quot;deepskyblue&quot;, lwd=3)
+mtext(&quot;Posterior predictive distribution: Number of boys in 49 births&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_3/chapter3_Ex_files/figure-html/unnamed-chunk-33-1.png" width="672" /></p>
+<p>Our observed number of boys that followed a first-born girl (here in blue) is with 39 out of 49 births much higher than what is predicted by our model. According to our model, only a bit more than half of these births would be a boy but the observed data suggests that if the first-born is a girl, the chance of the second child being a boy is much much higher. It seems there is some biological mechanism in which the sex of the first child influences the sex of the second child. Since our model assumes complete independece between all births, the model fails to capthure this.</p>
+</div>

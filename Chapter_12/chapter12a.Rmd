@@ -134,7 +134,7 @@ m11.11 <- ulam(
 
 
 ```{r, fig.height=6, fig.width=11, warning=F, message=F}
-k <- LOOPk(m11.11)
+k <- PSIS( m11.11 , pointwise=TRUE )$k
 par(bty="l", mfrow=c(1,2))
 plot( d$population, d$total_tools, xlab="population", ylab="total tools",
       col=rangi2, pch=ifelse(dat2$cid == 1, 1, 16), lwd=2,

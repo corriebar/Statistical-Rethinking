@@ -79,7 +79,7 @@ dens( diff , col="steelblue", lwd=2,
 abline(v = 0, lty=2)
 abline(h=0, col="grey", lwd=1)
 
-pr <- attr(precis(m10.10, prob=0.95), "output")
+pr <- as.data.frame(precis(m10.10, prob=0.95))
 bc <- post$bc[1:500]
 bpc <- post$bpc[1:500]
 plot( bc, bpc, col=densCols(bc, bpc), pch=16, cex=0.7 )

@@ -1,0 +1,516 @@
+---
+title: "Interactions"
+author: "Corrie"
+date: "August 14, 2018"
+output: 
+  github_document:
+    pandoc_args: --webtex 
+---
+
+
+
+<div id="building-an-interaction" class="section level2">
+<h2>7.1 Building an interaction</h2>
+<pre class="r"><code>library(rethinking)
+data(rugged)
+d &lt;- rugged</code></pre>
+<p>How does terrain ruggedness influence the GDP?</p>
+<pre class="r"><code># make log version of outcome
+d$log_gdp &lt;- log(d$rgdppc_2000)
+
+dd &lt;- d[ complete.cases(d$rgdppc_2000), ]
+
+# split into Africa andnot-Africa
+d.A1 &lt;- dd[ dd$cont_africa == 1, ]
+d.A0 &lt;- dd[ dd$cont_africa == 0, ]</code></pre>
+<p>Make two model: one for Africa, one for non-Africa:</p>
+<pre class="r"><code># Africa
+m7.1 &lt;- map(
+  alist(
+    log_gdp ~ dnorm( mu, sigma) ,
+    mu &lt;- a + bR*rugged ,
+    a ~ dnorm(8, 100),
+    bR ~ dnorm( 0, 1 ),
+    sigma ~ dunif( 0, 10 )
+  ), data=d.A1
+)
+
+# non-Africa
+m7.2 &lt;- map(
+  alist(
+    log_gdp ~ dnorm( mu, sigma ),
+    mu &lt;- a + bR*rugged ,
+    a ~ dnorm( 8, 100),
+    bR ~ dnorm( 0, 1),
+    sigma ~ dunif( 0, 10 )
+  ), data=d.A0
+)</code></pre>
+<p>Make some plots:</p>
+<pre class="r"><code>rug.seq &lt;- seq(from=-1, to=8, length.out = 30)
+africa.mu &lt;- link( m7.1, data=data.frame(rugged=rug.seq) )
+africa.mu.mean &lt;- apply(africa.mu, 2, mean)
+africa.mu.PI &lt;- apply(africa.mu, 2, PI)
+
+non.africa.mu &lt;- link( m7.2, data=data.frame(rugged=rug.seq))
+non.africa.mu.mean &lt;- apply(non.africa.mu, 2, mean)
+non.africa.mu.PI &lt;- apply(non.africa.mu, 2, PI)
+
+par(mfrow=c(1,2))
+plot( log_gdp ~ rugged, data=d.A1, col=&quot;steelblue&quot;)
+lines(rug.seq, africa.mu.mean)
+shade(africa.mu.PI, rug.seq)
+mtext(&quot;Africa&quot;)
+
+plot( log_gdp ~ rugged, data=d.A0, col=&quot;black&quot;)
+lines(rug.seq, non.africa.mu.mean)
+shade(non.africa.mu.PI, rug.seq)
+mtext(&quot;not Africa&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_files/figure-html/unnamed-chunk-4-1.png" width="960" /></p>
+<p>Ruggedness seems to have different influence for countries outside and inside Africa, the slope is actually reversed!
+How can we capture the reversed slopes in a single model using all data?</p>
+<p>A simple regression on all the data:</p>
+<pre class="r"><code>m7.3 &lt;- map(
+  alist(
+    log_gdp ~ dnorm( mu, sigma),
+    mu &lt;- a + bR*rugged,
+    a ~ dnorm( 8, 100),
+    bR ~ dnorm(0, 1) ,
+    sigma ~ dunif( 0, 10)
+  ), data=dd
+)</code></pre>
+<p>A regression with a dummy variable for African nations:</p>
+<pre class="r"><code>m7.4 &lt;- map(
+  alist(
+    log_gdp ~ dnorm( mu, sigma ),
+    mu &lt;- a + bR*rugged + bA*cont_africa,
+    a ~ dnorm( 8, 100),
+    bR ~dnorm( 0, 1),
+    bA ~ dnorm( 0, 1),
+    sigma ~ dunif(0, 19)
+  ), data=dd
+)</code></pre>
+<p>Compare the two models:</p>
+<pre class="r"><code>compare( m7.3, m7.4)</code></pre>
+<pre><code>##          WAIC       SE    dWAIC      dSE    pWAIC       weight
+## m7.4 476.3781 15.40597  0.00000       NA 4.412373 1.000000e+00
+## m7.3 539.8512 13.32939 63.47314 15.12418 2.817129 1.648096e-14</code></pre>
+<pre class="r"><code>plot( compare( m7.3, m7.4 ))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>The model with the dummy-variable does perform better than without.
+Let’s plot the dummy-variable model.</p>
+<pre class="r"><code># mu, fixing cont_africa=0
+mu.NotAfrica &lt;- link( m7.4, data=data.frame(rugged=rug.seq, cont_africa=0 ) )
+mu.NotAfrica.mean &lt;- apply(mu.NotAfrica, 2, mean )
+mu.NotAfrica.PI &lt;- apply(mu.NotAfrica, 2, PI)
+
+# mu, fixing cont_africa=1
+mu.Africa &lt;- link( m7.4, data=data.frame(rugged=rug.seq, cont_africa=1 ) )
+mu.Africa.mean &lt;- apply( mu.Africa, 2, mean )
+mu.Africa.PI &lt;- apply( mu.Africa, 2, PI )
+
+plot( log_gdp ~ rugged, data=d.A1, col=&quot;steelblue&quot;, 
+      xlab=&quot;Terrain Ruggedness Index&quot;,
+      ylim= range(dd$log_gdp))
+points( log_gdp ~ rugged, data=d.A0, col=&quot;black&quot;)
+
+lines(rug.seq, mu.Africa.mean, col=&quot;steelblue&quot;)
+shade(mu.Africa.PI, rug.seq, col=col.alpha(&quot;steelblue&quot;))
+text(4, 6.8, &quot;Africa&quot;, col=&quot;steelblue&quot;)
+
+lines(rug.seq, mu.NotAfrica.mean, col=&quot;black&quot;)
+shade(mu.NotAfrica.PI, rug.seq, col=col.alpha(&quot;black&quot;))
+text(4.5, 9.25, &quot;not Africa&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_files/figure-html/unnamed-chunk-9-1.png" width="576" /></p>
+<p>The dummy-variable has only moved the intercept.</p>
+<div id="adding-an-interaction" class="section level3">
+<h3>Adding an interaction</h3>
+<pre class="r"><code>m7.5 &lt;- map(
+  alist(
+    log_gdp ~ dnorm(mu, sigma),
+    mu &lt;- a + gamma*rugged + bA*cont_africa,
+    gamma &lt;-bR + bAR*cont_africa,
+    a ~ dnorm( 8, 100),
+    bA ~ dnorm(0, 1),
+    bR ~ dnorm(0, 1),
+    bAR ~ dnorm( 0, 1),
+    sigma ~ dunif( 0, 10)
+  ), data=dd
+)
+
+compare( m7.3, m7.4, m7.5 )</code></pre>
+<pre><code>##          WAIC       SE     dWAIC       dSE    pWAIC       weight
+## m7.5 469.6916 15.08419  0.000000        NA 5.367398 9.663058e-01
+## m7.4 476.4039 15.32582  6.712311  6.364808 4.430297 3.369417e-02
+## m7.3 539.8972 13.26782 70.205606 15.220536 2.848713 5.497447e-16</code></pre>
+<pre class="r"><code>plot( compare( m7.3, m7.4, m7.5))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>The interaction model performs better than the other two, though it only performs slightly better than the dummy variable: Since there are few countries in Africa, the data are sparse.</p>
+</div>
+<div id="plotting-interactions" class="section level3">
+<h3>Plotting interactions</h3>
+<pre class="r"><code>mu.Africa &lt;- link( m7.5, data=data.frame(cont_africa=1, rugged=rug.seq))
+mu.Africa.mean &lt;- apply(mu.Africa, 2, mean)</code></pre>
+<pre><code>## Error in apply(mu.Africa, 2, mean): dim(X) must have a positive length</code></pre>
+<pre class="r"><code>mu.Africa.PI &lt;- apply(mu.Africa, 2, PI)</code></pre>
+<pre><code>## Error in apply(mu.Africa, 2, PI): dim(X) must have a positive length</code></pre>
+<pre class="r"><code>mu.NotAfrica &lt;- link( m7.5, data=data.frame(cont_africa=0, rugged=rug.seq))
+mu.NotAfrica.mean &lt;- apply(mu.NotAfrica, 2, mean)</code></pre>
+<pre><code>## Error in apply(mu.NotAfrica, 2, mean): dim(X) must have a positive length</code></pre>
+<pre class="r"><code>mu.NotAfrica.PI &lt;- apply(mu.NotAfrica, 2, PI )</code></pre>
+<pre><code>## Error in apply(mu.NotAfrica, 2, PI): dim(X) must have a positive length</code></pre>
+<pre class="r"><code>par(mfrow=c(1,2))
+plot( log_gdp ~ rugged, data=d.A1,
+      col=&quot;steelblue&quot;, ylab=&quot;log GDP year 2000&quot;,
+      xlab=&quot;Terrain Ruggedness Index&quot;)
+mtext(&quot;African nations&quot;)
+lines(rug.seq, mu.Africa.mean, col=&quot;steelblue&quot;)
+shade( mu.Africa.PI, rug.seq, col=col.alpha(&quot;steelblue&quot;))
+
+plot( log_gdp ~ rugged, data=d.A0,
+      col=&quot;black&quot;, ylab=&quot;log GDP year 2000&quot;,
+      xlab=&quot;Terrain Rugggedness Index&quot;)
+mtext( &quot;Non-African nations&quot;, 3)
+lines( rug.seq, mu.NotAfrica.mean )
+shade( mu.NotAfrica.PI, rug.seq )</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_files/figure-html/unnamed-chunk-12-1.png" width="960" /></p>
+<p>The slope reverses!
+We can also overlap the plots:</p>
+<pre class="r"><code>plot( log_gdp ~ rugged, data=d.A1, col=&quot;steelblue&quot;, 
+      xlab=&quot;Terrain Ruggedness Index&quot;,
+      ylim=range(dd$log_gdp))
+points( log_gdp ~ rugged, data=d.A0, col=&quot;black&quot;)
+
+lines(rug.seq, mu.Africa.mean, col=&quot;steelblue&quot;)
+shade( mu.Africa.PI, rug.seq, col=col.alpha(&quot;steelblue&quot;))
+text(4, 6.8, &quot;Africa&quot;, col=&quot;steelblue&quot;)
+
+lines( rug.seq, mu.NotAfrica.mean )
+shade( mu.NotAfrica.PI, rug.seq )
+text(4.5, 9.25, &quot;not Africa&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_files/figure-html/unnamed-chunk-13-1.png" width="576" /></p>
+<pre class="r"><code>plot( precis(m7.5) )</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<p>Gamma wasn’t estimated, we have to compute it ourselves.</p>
+<pre class="r"><code>post &lt;- extract.samples( m7.5 )
+gamma.Africa &lt;- post$bR + post$bAR*1
+gamma.notAfrica &lt;- post$bR + post$bAR*0
+
+mean( gamma.Africa )</code></pre>
+<pre><code>## [1] 0.1659071</code></pre>
+<pre class="r"><code>mean( gamma.notAfrica )</code></pre>
+<pre><code>## [1] -0.1835084</code></pre>
+<p>How do the distributions compare?</p>
+<pre class="r"><code>dens( gamma.Africa, xlim=c(-0.5, 0.6), ylim=c(0, 5.5),
+      xlab=&quot;gamma&quot;, col=&quot;steelblue&quot; )
+dens( gamma.notAfrica, add=TRUE )
+legend(&quot;topright&quot;, col=c(&quot;black&quot;, &quot;steelblue&quot;), bty=&quot;n&quot;, 
+       legend=c(&quot;not Africa&quot;, &quot;Africa&quot;), lty=c(1,1))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<pre class="r"><code>diff &lt;- gamma.Africa - gamma.notAfrica
+sum( diff &lt; 0 ) / length( diff )</code></pre>
+<pre><code>## [1] 0.0034</code></pre>
+<p>So there is a very low probability that the African slope is less than the Non-African slope.</p>
+</div>
+</div>
+<div id="symmetry-of-the-linear-interaction" class="section level2">
+<h2>7.2 Symmetry of the linear interaction</h2>
+<p>The above interaction can be interpreted in two ways:
+(1) How much does the influence of ruggedness (on GDP) depend upon whether the nation is in Africa?
+(2) How much does the influence of being in Africa (on GDP) depend upon ruggedness?</p>
+<p>Above, we plotted the first interpretation, which probably seems more natural for most.
+Let’s plot the other one:</p>
+<pre class="r"><code>q.rugged &lt;- range(dd$rugged)
+
+mu.ruggedlo &lt;- link( m7.5, 
+                     data=data.frame(rugged=q.rugged[1], cont_africa=0:1) )
+mu.ruggedlo.mean &lt;- apply(mu.ruggedlo, 2, mean)</code></pre>
+<pre><code>## Error in apply(mu.ruggedlo, 2, mean): dim(X) must have a positive length</code></pre>
+<pre class="r"><code>mu.ruggedlo.PI &lt;- apply(mu.ruggedlo, 2, PI)</code></pre>
+<pre><code>## Error in apply(mu.ruggedlo, 2, PI): dim(X) must have a positive length</code></pre>
+<pre class="r"><code>mu.ruggedhi &lt;- link( m7.5,
+                     data=data.frame(rugged=q.rugged[2], cont_africa=0:1 ) )
+mu.ruggedhi.mean &lt;- apply(mu.ruggedhi, 2, mean )</code></pre>
+<pre><code>## Error in apply(mu.ruggedhi, 2, mean): dim(X) must have a positive length</code></pre>
+<pre class="r"><code>mu.ruggedhi.PI &lt;- apply(mu.ruggedhi, 2, PI)</code></pre>
+<pre><code>## Error in apply(mu.ruggedhi, 2, PI): dim(X) must have a positive length</code></pre>
+<pre class="r"><code># plot everything
+med.r &lt;- median(dd$rugged)
+ox &lt;- ifelse(dd$rugged &gt; med.r, 0.05, -0.05 )
+
+plot( dd$cont_africa + ox, dd$log_gdp, 
+      col=ifelse(dd$rugged &gt; med.r, &quot;steelblue&quot;, &quot;black&quot;),
+      xlim = c(-0.25, 1.25), xaxt=&quot;n&quot;, 
+      ylab =&quot;log GDP year 2000&quot;,
+      xlab = &quot;Continent&quot;)
+
+axis(1, at=c(0, 1), labels=c(&quot;other&quot;, &quot;Africa&quot;))
+lines(0:1, mu.ruggedlo.mean, lty=2)</code></pre>
+<pre><code>## Error in xy.coords(x, y): object &#39;mu.ruggedlo.mean&#39; not found</code></pre>
+<pre class="r"><code>text(0.35, 9.4, &quot;Low ruggedness&quot;, col=&quot;black&quot;)
+
+shade(mu.ruggedlo.PI, 0:1 )</code></pre>
+<pre><code>## Error in shade(mu.ruggedlo.PI, 0:1): object &#39;mu.ruggedlo.PI&#39; not found</code></pre>
+<pre class="r"><code>lines(0:1, mu.ruggedhi.mean, col=&quot;steelblue&quot;)</code></pre>
+<pre><code>## Error in xy.coords(x, y): object &#39;mu.ruggedhi.mean&#39; not found</code></pre>
+<pre class="r"><code>shade(mu.ruggedhi.PI, 0:1, col=col.alpha(&quot;steelblue&quot;))</code></pre>
+<pre><code>## Error in shade(mu.ruggedhi.PI, 0:1, col = col.alpha(&quot;steelblue&quot;)): object &#39;mu.ruggedhi.PI&#39; not found</code></pre>
+<pre class="r"><code>text(0.35, 7.3, &quot;High ruggedness&quot;, col=&quot;steelblue&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_files/figure-html/unnamed-chunk-19-1.png" width="576" /></p>
+<p>Blue points are nations with above-median ruggedness. Black points are below the median.
+The dashed black line is the relationship between continent and log-GDP for an imaginary nation with minimum observed ruggedness (0.003).
+The blue line is an imaginary nation with maximum observed ruggedness (6.2).</p>
+<p>That is, if we have a nation with low ruggedness and we “move” it to Africa, it’s GDP goes down, whereas a nation with high ruggedness would see its GDP increase.</p>
+</div>
+<div id="continuous-interactions" class="section level2">
+<h2>7.3 Continuous interactions</h2>
+<pre class="r"><code>data(tulips)
+d &lt;- tulips
+str(d)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    27 obs. of  4 variables:
+##  $ bed   : Factor w/ 3 levels &quot;a&quot;,&quot;b&quot;,&quot;c&quot;: 1 1 1 1 1 1 1 1 1 2 ...
+##  $ water : int  1 1 1 2 2 2 3 3 3 1 ...
+##  $ shade : int  1 2 3 1 2 3 1 2 3 1 ...
+##  $ blooms: num  0 0 111 183.5 59.2 ...</code></pre>
+<p>Both water and light help plants grow and produce blooms, so we can model this as an interaction. The difficulty for continuous interactions is how to interpret them.</p>
+<p>Let’s first implement two models, one with and one without interaction. This time, we use very flat priors.</p>
+<pre class="r"><code>m7.6 &lt;- map(
+  alist(
+    blooms ~ dnorm(mu, sigma),
+    mu &lt;- a + bW*water + bS*shade,
+    a ~ dnorm( 0, 100),
+    bW ~ dnorm( 0, 100),
+    bS ~ dnorm( 0, 100),
+    sigma ~ dunif( 0, 100)
+  ), data=d
+)</code></pre>
+<pre><code>## Error in map(alist(blooms ~ dnorm(mu, sigma), mu &lt;- a + bW * water + bS * : non-finite finite-difference value [4]
+## Start values for parameters may be too far from MAP.
+## Try better priors or use explicit start values.
+## If you sampled random start values, just trying again may work.
+## Start values used in this attempt:
+## a = 58.2856784186492
+## bW = -28.6386112286791
+## bS = -1.69223744085149
+## sigma = 80.0392973003909</code></pre>
+<pre class="r"><code>m7.7 &lt;- map(
+  alist(
+    blooms ~ dnorm( mu, sigma),
+    mu &lt;- a + bW*water + bS*shade + bWS*water*shade,
+    a ~ dnorm(0, 100),
+    bW ~ dnorm( 0, 100),
+    bS ~ dnorm( 0, 100),
+    bWS ~ dnorm( 0, 100),
+    sigma ~ dunif( 0, 100)
+  ), data=d
+)</code></pre>
+<pre><code>## Error in map(alist(blooms ~ dnorm(mu, sigma), mu &lt;- a + bW * water + bS * : non-finite finite-difference value [5]
+## Start values for parameters may be too far from MAP.
+## Try better priors or use explicit start values.
+## If you sampled random start values, just trying again may work.
+## Start values used in this attempt:
+## a = -65.7131587461438
+## bW = 186.855859227364
+## bS = -53.6572959015913
+## bWS = 139.909189010882
+## sigma = 96.2640689685941</code></pre>
+<p>Fitting this code very likely produces errors: The flat priors make it hard for the optimizer to find good start values that converge. We can fix this problem different ways:</p>
+<ul>
+<li>use another optimizer</li>
+<li>search longer, that is raise the maximum iterations</li>
+<li>rescale the data to make it easier to find the right values</li>
+</ul>
+<p>We first try the first two options:</p>
+<pre class="r"><code>m7.6 &lt;- map(
+  alist(
+    blooms ~ dnorm(mu, sigma),
+    mu &lt;- a + bW*water + bS*shade,
+    a ~ dnorm( 0, 100),
+    bW ~ dnorm( 0, 100),
+    bS ~ dnorm( 0, 100),
+    sigma ~ dunif( 0, 100)
+  ), 
+  data=d,
+  method=&quot;Nelder-Mead&quot;,
+  control=list(maxit=1e4)
+)
+
+m7.7 &lt;- map(
+  alist(
+    blooms ~ dnorm( mu, sigma),
+    mu &lt;- a + bW*water + bS*shade + bWS*water*shade,
+    a ~ dnorm(0, 100),
+    bW ~ dnorm( 0, 100),
+    bS ~ dnorm( 0, 100),
+    bWS ~ dnorm( 0, 100),
+    sigma ~ dunif( 0, 100)
+  ), 
+  data=d,
+  method=&quot;Nelder-Mead&quot;,
+  control=list(maxit=1e4)
+)</code></pre>
+<p>No more warnings this time.</p>
+<pre class="r"><code>coeftab(m7.6, m7.7)</code></pre>
+<pre><code>##       m7.6    m7.7   
+## a       53.46  -84.37
+## bW      76.36  151.06
+## bS     -38.92   35.00
+## sigma   57.38   46.26
+## bWS        NA  -39.52
+## nobs       27      27</code></pre>
+<pre class="r"><code>plot( coeftab( m7.6, m7.7 ) )</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+<p>The estimates are all over the place…
+The intercept changes from positive to negative in the second model. In the first model, both the water and shade coefficient are as expected: more water, more blooms and more shade less blooms. For shade, the influence actually becomes positive in the second model.
+The estimates are not that easy to understand and shouldn’t be taken at face value.</p>
+<pre class="r"><code>compare( m7.6, m7.7 )</code></pre>
+<pre><code>##          WAIC       SE    dWAIC      dSE    pWAIC      weight
+## m7.7 296.3745 9.969884 0.000000       NA 6.271265 0.991632131
+## m7.6 305.9245 9.018187 9.549906 6.198311 5.308270 0.008367869</code></pre>
+<p>Pretty much all weight is on the second model with interaction term, so it seems to be a better model than without interaction term.</p>
+<div id="center-and-re-estimate" class="section level3">
+<h3>Center and re-estimate</h3>
+<p>Now, let’s center the variables instead.</p>
+<pre class="r"><code>d$shade.c &lt;- d$shade - mean(d$shade)
+d$water.c &lt;- d$water - mean(d$water)</code></pre>
+<p>Run the models again:</p>
+<pre class="r"><code>m7.8 &lt;- map(
+  alist(
+    blooms ~ dnorm( mu, sigma),
+    mu &lt;- a + bW*water.c + bS*shade.c ,
+    a ~ dnorm( 0, 100),
+    bW ~ dnorm( 0, 100),
+    bS ~ dnorm( 0, 100),
+    sigma ~ dunif( 0, 100)
+  ), 
+  data=d,
+  start=list(a=mean(d$blooms), bW=0, bS=0, sigma=sd(d$blooms))
+)
+m7.9 &lt;- map(
+  alist(
+    blooms ~ dnorm( mu, sigma),
+    mu &lt;- a + bW*water.c + bS*shade.c + bWS*water.c*shade.c,
+    a ~ dnorm(0, 100),
+    bW ~ dnorm( 0, 100),
+    bS ~ dnorm( 0, 100),
+    bWS ~ dnorm( 0, 100),
+    sigma ~ dunif( 0, 100)
+  ), 
+  data=d,
+  start=list(a=mean(d$blooms), bW=0, bS=0, bWS=0,
+             sigma=sd(d$blooms))
+)
+coeftab( m7.8, m7.9)</code></pre>
+<pre><code>##       m7.8    m7.9   
+## a      127.44  128.05
+## bW      74.43   74.95
+## bS     -40.85  -41.13
+## sigma   57.37   45.23
+## bWS        NA  -51.83
+## nobs       27      27</code></pre>
+<pre class="r"><code>plot( coeftab( m7.8, m7.9 ))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_files/figure-html/unnamed-chunk-28-1.png" width="672" /></p>
+<p>The estimates for both models look more reasonable: The intercept for both models is the same, it now corresponds to the average bloom. The influence of shade is also negative in both models now.</p>
+<pre class="r"><code>mean(d$bloom)</code></pre>
+<pre><code>## [1] 128.9937</code></pre>
+<p>Just the estimates of the interaction model:</p>
+<pre class="r"><code>precis( m7.9 )</code></pre>
+<pre><code>##            mean        sd      5.5%     94.5%
+## a     128.05308  8.675182 114.18846 141.91769
+## bW     74.94620 10.602917  58.00069  91.89171
+## bS    -41.13326 10.601175 -58.07599 -24.19054
+## bWS   -51.83366 12.949359 -72.52923 -31.13808
+## sigma  45.22859  6.154896  35.39188  55.06530</code></pre>
+</div>
+<div id="plot-continuous-interactions" class="section level3">
+<h3>Plot continuous interactions</h3>
+<p>Let’s plot the predictions. We make a plot showing the predictions for different values of water to get a feeling of the interaction effect.</p>
+<pre class="r"><code>par(mfrow=c(2,3))
+
+shade.seq &lt;- -1:1
+# plot for model m7.8
+for ( w in -1:1 ){
+  dt &lt;- d[d$water.c==w, ]
+  plot(blooms ~ shade.c, data=dt, col=&quot;steelblue&quot;,
+       main=paste(&quot;water.c = &quot;, w), xaxp=c(-1,1,2),
+       ylim=c(0, 362), xlab=&quot;shade (centered)&quot;)
+  mu &lt;- link( m7.8, data=data.frame(water.c=w, shade.c=shade.seq ) )
+  mu.mean &lt;- apply(mu, 2, mean)
+  mu.PI &lt;- apply( mu, 2, PI)
+  lines( shade.seq, mu.mean )
+  lines( shade.seq, mu.PI[1,], lty=2 )
+  lines( shade.seq, mu.PI[2,], lty=2)
+}
+
+# plot for model m7.9
+for ( w in -1:1 ){
+  dt &lt;- d[d$water.c==w, ]
+  plot(blooms ~ shade.c, data=dt, col=&quot;steelblue&quot;,
+       main=paste(&quot;water.c = &quot;, w), xaxp=c(-1,1,2),
+       ylim=c(0, 362), xlab=&quot;shade (centered)&quot;)
+  mu &lt;- link( m7.9, data=data.frame(water.c=w, shade.c=shade.seq ) )
+  mu.mean &lt;- apply(mu, 2, mean)
+  mu.PI &lt;- apply( mu, 2, PI)
+  lines( shade.seq, mu.mean )
+  lines( shade.seq, mu.PI[1,], lty=2 )
+  lines( shade.seq, mu.PI[2,], lty=2)
+}</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_files/figure-html/unnamed-chunk-31-1.png" width="960" /></p>
+<p>In the top row, the model without the interaction, the slope for shade does not change, only the intercept.
+In the bottom row, the influence of shade changes, depending on how much water there is.
+If there is little water, the plant can’t grow well, so no shade or a lot of shade doesn’t change the bloom much. Whereas, if we have a more water, shade has a big difference, noticeably in the steep slope.
+In all plots, the blue points are the data points that had the corresponding water value.</p>
+<p>We can also visualize this the other way round:</p>
+<pre class="r"><code>par(mfrow=c(2,3))
+
+water.seq &lt;- -1:1
+# plot for model m7.8
+for ( s in -1:1 ){
+  dt &lt;- d[d$shade.c==s, ]
+  plot(blooms ~ water.c, data=dt, col=&quot;steelblue&quot;,
+       main=paste(&quot;shade.c = &quot;, s), xaxp=c(-1,1,2),
+       ylim=c(0, 362), xlab=&quot;water (centered)&quot;)
+  mu &lt;- link( m7.8, data=data.frame(water.c=water.seq, shade.c=s ) )
+  mu.mean &lt;- apply(mu, 2, mean)
+  mu.PI &lt;- apply( mu, 2, PI)
+  lines( shade.seq, mu.mean )
+  lines( shade.seq, mu.PI[1,], lty=2 )
+  lines( shade.seq, mu.PI[2,], lty=2)
+}
+
+# plot for model m7.9
+for ( s in -1:1 ){
+  dt &lt;- d[d$shade.c==s, ]
+  plot(blooms ~ water.c, data=dt, col=&quot;steelblue&quot;,
+       main=paste(&quot;shade.c = &quot;, s), xaxp=c(-1,1,2),
+       ylim=c(0, 362), xlab=&quot;water (centered)&quot;)
+  mu &lt;- link( m7.9, data=data.frame(water.c=water.seq, shade.c=s ) )
+  mu.mean &lt;- apply(mu, 2, mean)
+  mu.PI &lt;- apply( mu, 2, PI)
+  lines( shade.seq, mu.mean )
+  lines( shade.seq, mu.PI[1,], lty=2 )
+  lines( shade.seq, mu.PI[2,], lty=2)
+}</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_files/figure-html/unnamed-chunk-32-1.png" width="960" /></p>
+</div>
+</div>
+<div id="interactions-in-design-formulas" class="section level2">
+<h2>7.4 Interactions in design formulas</h2>
+<pre class="r"><code>m7.x &lt;- lm( y ~ x + z + x*z, data=d)</code></pre>
+<p>Same model:</p>
+<pre class="r"><code>m7.x &lt;- lm( y ~ x*z, data=d)</code></pre>
+<p>Fit a model with interaction term but without direct effect:</p>
+<pre class="r"><code>m7.x &lt;- lm( y ~ x + x*z - z, data=d)</code></pre>
+<p>Run a model with interaction term and all lower-order interactions:</p>
+<pre class="r"><code>m7.x &lt;- lm( y ~ x*z*w, data=d)</code></pre>
+<p>corresponds to
+<span class="math display">\[\begin{align*}
+y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &amp;= \alpha + \beta_x x_i + \beta_z z_i + \beta_w w_i + \beta_{xz} x_i z_i + \beta_{xw} x_i w_i + \beta_{zw} z_i w_w + \beta_{xzw} x_i z_i w_i
+\end{align*}\]</span></p>
+<p>You can also get direct access to the function used by <code>lm</code> to expand these formulas:</p>
+<pre class="r"><code>x &lt;- z &lt;- w &lt;- 1
+colnames( model.matrix(~ x*z*w ))</code></pre>
+<pre><code>## [1] &quot;(Intercept)&quot; &quot;x&quot;           &quot;z&quot;           &quot;w&quot;           &quot;x:z&quot;        
+## [6] &quot;x:w&quot;         &quot;z:w&quot;         &quot;x:z:w&quot;</code></pre>
+<p>where <code>:</code> stands for multiplication.</p>
+</div>

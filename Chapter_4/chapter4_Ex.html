@@ -1,0 +1,297 @@
+---
+title: "Chapter 4 - Exercise"
+author: "Corrie"
+date: "May 21, 2018"
+output: 
+  github_document:
+    pandoc_args: --webtex
+
+---
+
+
+
+<div id="chapter-4---exercises" class="section level1">
+<h1>Chapter 4 - Exercises</h1>
+<p>These are my solutions to the practice questions of chapter 4, Linear Models, of the book “Statistical Rethinking” by Richard McElreath.</p>
+<div id="easy-questions." class="section level2">
+<h2>Easy Questions.</h2>
+<p><strong>4E1.</strong> In the model definition below, which line is the likelihood:
+<span class="math display">\[
+\begin{align*}
+y_i &amp;\sim \text{Normal}(\mu, \sigma) &amp; &amp; \text{This is the likelihood}\\
+\mu &amp;\sim \text{Normal}(0, 10) \\
+\sigma &amp;\sim \text{Normal}(0,10)
+\end{align*} \]</span></p>
+<p><strong>4E2.</strong> In the model definition just above, how many parameters are in the posterior distribution?</p>
+<p>There are <strong>2</strong> parameters, <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\sigma\)</span>.</p>
+<p><strong>4E3.</strong> Write down the appropriate form of Bayes’ theorem that includes the proper likelihood and priors.</p>
+<p><span class="math display">\[\begin{align*}
+P(\mu, \sigma| y_i) &amp;\propto \text{Likelihood } \times \text{ Prior probability} \\
+\\
+P(\mu, \sigma| y_i) &amp;= \frac{\prod_i \text{Normal}(y_i|\mu, \sigma) \times 
+\text{Normal}(\mu| 0,10) \times \text{Normal}(\sigma|0,10) }
+{\int \prod_i \text{Normal}(y_i|\mu, \sigma) \times 
+\text{Normal}(\mu| 0,10) \times \text{Normal}(\sigma|0,10) \text{ d}\mu\text{d}\sigma} 
+\end{align*}\]</span>
+where
+<span class="math display">\[\text{Normal}(x|\mu, \sigma) = \frac{1}{\sqrt{2\pi \sigma^2} }\exp(- \frac{(x-\mu)^2}{2\sigma^2})\]</span>.</p>
+<p><strong>4E4.</strong> In the model definition below, which line is the linear model?
+<span class="math display">\[\begin{align*}
+y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &amp;= \alpha + \beta x_i &amp; \text{This is the linear model}\\
+\alpha &amp;\sim \text{Normal}(0,10) \\
+\beta &amp;\sim \text{Normal}(0,1) \\
+\sigma &amp;\sim \text{Uniform}(0,10)
+\end{align*}\]</span></p>
+<p><strong>4E5.</strong> In the model definition just above, how many parameters are in the posterior distribution?</p>
+<p>There are <strong>3</strong> parameters in the posterior distribution, <span class="math inline">\(\alpha\)</span>, <span class="math inline">\(\beta\)</span>, and <span class="math inline">\(\sigma\)</span>.</p>
+</div>
+<div id="medium-questions." class="section level2">
+<h2>Medium questions.</h2>
+<p><strong>4M1.</strong> For the model definition below, simulate observed heights from the prior (not the posterior).
+<span class="math display">\[\begin{align*}
+y_i &amp;\sim \text{Normal}(\mu, \sigma) \\
+\mu &amp;\sim \text{Normal}(0, 10) \\
+\sigma &amp;\sim \text{Uniform}(0,10)
+\end{align*}\]</span></p>
+<pre class="r"><code>n &lt;- 10000
+mu &lt;- rnorm(n, 0, 10)
+sigma &lt;- runif(n, 0, 10)
+y_prior &lt;- rnorm(n, mu, sigma)
+hist(y_prior)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<p><strong>4M2.</strong> Translate the model just above into a <code>map</code> formula.</p>
+<pre class="r"><code>flist &lt;- alist(
+            y ~ dnorm(mu, sigma),
+            mu ~ dnorm(0, 10),
+            sigma ~ dunif(0,10)
+          ) </code></pre>
+<p><strong>4M3.</strong> Translate the <code>map</code> formula below into a mathematical model definition.</p>
+<pre class="r"><code>flist &lt;- alist(
+  y ~ dnorm( mu, sigma ),
+  mu &lt;- a + b*x,
+  a ~ dnorm( 0, 50 ),
+  b ~ dnorm( 0, 10 ),
+  sigma ~ dunif( 0, 50 )
+)</code></pre>
+<p>The mathematical definition:
+<span class="math display">\[\begin{align*}
+y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &amp;= \alpha + \beta x_i \\
+\alpha &amp;\sim \text{Normal}(0,50) \\
+\beta &amp;\sim  \text{Uniform}(0,10) \\
+\sigma &amp;\sim \text{Uniform}(0,50) 
+\end{align*}\]</span></p>
+<p><strong>4M4.</strong> A sample of students is measured for height each year for three years. You want to fit a linear regression, using year as a prediction. Write down the mathematical model definition.
+<span class="math display">\[\begin{align*}
+h_i &amp;\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &amp;= \alpha + \beta t_i \\
+\alpha &amp;\sim \text{Normal}(160, 50) \\
+\beta &amp;\sim \text{Normal}(0, 10) \\
+\sigma &amp;\sim \text{Uniform}(0, 50)
+\end{align*}\]</span>
+Here, <span class="math inline">\(h_i\)</span> is the height and <span class="math inline">\(t_i\)</span> is the year of the <span class="math inline">\(i\)</span>th observation. Since <span class="math inline">\(\alpha\)</span> is the average height of a student at year zero, I picked a normal distribution with mean 160 (assuming an average height of 160cm) and standard deviation 50, this is relatively weak, leaving a wide range of possible heights. For <span class="math inline">\(\beta\)</span>, I picked a normal distribution with mean 0 and standard deviation 10, meaning on average, a person grows 0cm per year with standard deviation 10cm, since I don’t expect many people to grow or shrink more than 20cm per year.</p>
+<p><strong>4M5.</strong> Now suppose, the average in the first year was 120cm and that every student got taller each year. I will change my priors as follows:
+<span class="math display">\[\begin{align*}
+\alpha &amp;\sim \text{Normal}(120, 50) \\
+\beta &amp;\sim \text{Uniform}(0, 20)
+\end{align*}\]</span>
+I adjusted the mean for the average height accordingly and changed <span class="math inline">\(\beta\)</span> to a uniform distribution, so that <span class="math inline">\(\beta\)</span>, the indicator for growth per year, is greater or equal than zero. I still don’t expect people to grow more than 20cm per year.</p>
+<p><strong>4M6.</strong> Now suppose, the variance among heights for students of the same age is never more than 64cm. I thus change my priors as follows:
+<span class="math display">\[\sigma \sim \text{Uniform}(0, 64).\]</span></p>
+</div>
+<div id="hard-question." class="section level2">
+<h2>Hard question.</h2>
+<p><strong>4H1.</strong> !Kung census data: Provide predicted heights and 89% intervals (either HPDI or PI) for the following weights of individuals.</p>
+<pre class="r"><code>weights &lt;- c(46.95, 43.72, 64.78, 32.59, 54.63)</code></pre>
+<p>For this, we first load the !Kung data from the <code>Howell1</code> data set and set up a model. I will use a linear model with priors as in the model definition given earlier in the chapter.</p>
+<pre class="r"><code>library(rethinking)
+data(Howell1)
+d &lt;- Howell1
+d2 &lt;- d[ d$age &gt;= 18, ]
+d2$weight.c &lt;- d2$weight - mean(d2$weight)    # centering the weights
+
+# fit model
+model &lt;- map(
+  alist(
+    height ~ dnorm( mu, sigma) ,
+    mu &lt;- a + b*weight.c,   
+    a ~ dnorm( 156, 100) ,   # average height with weak prior
+    b ~ dnorm( 0, 10),       # fairly uninformative prior
+    sigma ~ dunif( 0, 50)
+  ), 
+  data=d2
+)
+
+precis( model)</code></pre>
+<pre><code>##              mean         sd        5.5%       94.5%
+## a     154.5969239 0.27033196 154.1648812 155.0289666
+## b       0.9050112 0.04192777   0.8380026   0.9720199
+## sigma   5.0718956 0.19115590   4.7663916   5.3773997</code></pre>
+<p>How to interpret the model: Since we centered the weights such that the mean of <code>weight.c</code> is zero, <code>a</code> corresponds to the average height. The value 0.91 for <code>b</code> means that a person 1kg heavier is expected to be 0.90cm taller. The estimate for <span class="math inline">\(\sigma\)</span>, <code>sigma</code> tells us about the width of the distribution of heights around the mean.
+Let’s now use the model to predict the heights for the weight values given above. For this, we simulate heights for each given weight value. We do this by first obtaining a sample from the posterior distribution and then use this sample to draw samples from a Gaussian distribution. Note that we also need to center the given weights now.</p>
+<pre class="r"><code>weights.c &lt;- weights - mean(d2$weight)
+post &lt;- extract.samples(model)
+sim.height &lt;- sapply( weights.c, function(weight) {
+  rnorm(
+    n = nrow(post),
+    mean = post$a + post$b*weight,
+    sd = post$sigma
+  )
+})
+
+height.PI &lt;- apply(sim.height, 2, PI, prob=0.89)
+height.HPDI &lt;- apply(sim.height, 2, HPDI, prob=0.89)
+height.mean &lt;- apply(sim.height, 2, mean)
+
+pred_df &lt;- data.frame(&quot;individual&quot;=1:5, &quot;weight&quot;=weights, &quot;exptected_height&quot;=height.mean, 
+                      &quot;PI_89_lower&quot;=height.PI[1,], &quot;PI_89_upper&quot;=height.PI[2,])
+pred_df</code></pre>
+<pre><code>##   individual weight exptected_height PI_89_lower PI_89_upper
+## 1          1  46.95         156.4820    148.2687    164.6616
+## 2          2  43.72         153.4181    145.1454    161.5758
+## 3          3  64.78         172.5132    164.3326    180.6486
+## 4          4  32.59         143.4134    135.3042    151.4555
+## 5          5  54.63         163.2921    155.1128    171.6002</code></pre>
+<p><strong>4H2.</strong> Select the rows from the <code>Howell1</code> data with age below 18 years.</p>
+<ol style="list-style-type: lower-alpha">
+<li>Fit a linear regression to these data, using <code>map</code>.
+I will use the same model as above.</li>
+</ol>
+<pre class="r"><code>d18 &lt;- d[ d$age &lt; 18, ]
+d18$weight.c &lt;- d18$weight - mean(d18$weight)   # centering the data
+
+# fit the model
+
+model18 &lt;- map(
+  alist(
+    height ~ dnorm( mu, sigma) ,
+    mu &lt;- a + b*weight.c ,
+    a ~ dnorm( 156, 100) ,
+    b ~ dnorm( 0, 10) ,
+    sigma ~ dunif(0, 50)
+  ),
+  data=d18
+)
+precis(model18)</code></pre>
+<pre><code>##             mean         sd       5.5%      94.5%
+## a     108.320665 0.60888121 107.347555 109.293774
+## b       2.719960 0.06829049   2.610818   2.829101
+## sigma   8.437062 0.43054886   7.748961   9.125162</code></pre>
+<p>As above, since we centered the weights, the intercept <code>a</code> corresponds to the average height, which is here 108.3. This is much lower than in the model above (but expected since the individuals in this data set are younger). The slope <code>b</code> is interpreted such that for every 10kg heavier, an individual is expected to be 27cm taller. The standard deviation <code>sigma</code> in this model is higher than in the one above, suggesting a higher uncertainty in the predictions.</p>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Plot the raw data and superimpose the MAP regression line and 89% HPDI for the mean and for the predicted height.
+We first compute the regression line by generating a sequence over the whole range of (centered) weights for which we then sample from the posterior distribution to compute a sample of mu, of which we can then compute the mean and the 89% HPDI.
+We similarly compute the 89% HPDI for the predicted height (as also done in the question before).</li>
+</ol>
+<pre class="r"><code>weight.seq &lt;- seq(from=-15, to=30, length.out = 30)             # generate weights (centered) over the whole range
+post &lt;- extract.samples(model18)                                # extract a posterior sample
+# compute mu
+mu.link &lt;- function(weight.c) post$a + post$b*weight.c           # the function to compute mu, using the sample above
+mu &lt;- sapply(weight.seq, mu.link)
+mu.mean &lt;- apply(mu, 2, mean)
+mu.HPDI &lt;- apply(mu, 2, HPDI, prob=0.89)
+
+# compute predicted height
+sim.height &lt;- sapply( weight.seq, function(weight) {
+  rnorm(
+    n = nrow(post),
+    mean = post$a + post$b*weight,
+    sd = post$sigma
+  )
+})
+
+height.HPDI &lt;- apply(sim.height, 2, HPDI, prob=0.89)
+height.mean &lt;- apply(sim.height, 2, mean)
+
+# plot everything
+plot(height ~ weight.c, data=d18, col=col.alpha(rangi2, 0.9), ylim=c(50, 180))   # the raw data
+lines(weight.seq, mu.mean)                                      # the MAP regression line
+shade( mu.HPDI, weight.seq)                                     # draw HPDI region around the regression line
+shade( height.HPDI, weight.seq)                                 # draw HPDI region for the simulated heights</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>What aspects of the model fit concern you?
+The linear model doesn’t seem to be a very good fit for the data. It performs very poorly for the lower and higher values of weight. One possibility to improve the model could be to use a polynomial model (e.g. of 2nd order) instead.</li>
+</ol>
+<p><strong>4H3.</strong> A colleague exclaims: “Only the <em>logarithm</em> of body weight scales with height!” Let’s try this out.</p>
+<ol style="list-style-type: lower-alpha">
+<li>Use the entire <code>Howell1</code> data frame using the following model:
+<span class="math display">\[\begin{align*}
+h_i &amp;\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &amp;= \alpha + \beta \log(w_i) \\
+\alpha &amp;\sim \text{Normal}(178, 100) \\
+\beta &amp;\sim \text{Normal}(0, 100) \\
+\sigma &amp;\sim \text{Uniform}(0, 50)
+\end{align*}\]</span>
+Here the model description in R:</li>
+</ol>
+<pre class="r"><code>d &lt;- Howell1
+# fit the model
+
+model.l &lt;- map(
+  alist(
+    height ~ dnorm( mu, sigma) ,
+    mu &lt;- a + b*log(weight) ,
+    a ~ dnorm( 178, 100) ,
+    b ~ dnorm( 0, 100) ,                
+    sigma ~ dunif(0, 50)
+  ),
+  data=d
+)
+precis(model.l)</code></pre>
+<pre><code>##             mean        sd       5.5%      94.5%
+## a     -23.783347 1.3350891 -25.917078 -21.649617
+## b      47.074967 0.3825376  46.463598  47.686336
+## sigma   5.134596 0.1556603   4.885821   5.383371</code></pre>
+<p>Interpreting these results is a bit more difficult since we transformed the weights using the logarithm. Furthermore, the data is not centralized as before, so the intercept <code>a</code> corresponds to the average height of someone whose log weight is zero, i.e. whose weight is 1kg.
+How to interpret the <code>b</code> value?
+If we raise the weight by one unit, we get the following expression for mu:
+<span class="math display">\[\begin{align*}
+\mu &amp;= \alpha + \beta \log(\text{weight} + 1) 
+\end{align*}\]</span>
+Using some rules for logarithms, we get:
+<span class="math display">\[\begin{align*}
+\mu &amp;= \alpha + \beta \log(\text{weight}) + \beta \log(1 + \frac{1}{\text{weight}})
+\end{align*}\]</span>
+That is, an increase of one unit in the weight variable is associated with an increase of the mean <span class="math inline">\(\mu\)</span> of <span class="math inline">\(\beta \log(1 + \frac{1}{\text{weight}})\)</span>.
+I personally find that not very intuitive, so let’s have a look at some plots as well.</p>
+<pre class="r"><code>weight.seq &lt;- seq(from=2, to=65, length.out = 70)             # generate weights over the whole range
+                                                              # min(d$weight) = 4.25, max(d$weight) = 62.99
+post &lt;- extract.samples(model.l)                              # extract a posterior sample
+# compute mu
+mu.link &lt;- function(weight) post$a + post$b*log(weight)       # the function to compute mu, using the sample above
+mu &lt;- sapply(weight.seq, mu.link)
+mu.mean &lt;- apply(mu, 2, mean)
+mu.HPDI &lt;- apply(mu, 2, HPDI, prob=0.89)
+
+# compute predicted height
+sim.height &lt;- sapply( weight.seq, function(weight) {
+  rnorm(
+    n = nrow(post),
+    mean = post$a + post$b*log(weight),
+    sd = post$sigma
+  )
+})
+
+height.HPDI &lt;- apply(sim.height, 2, HPDI, prob=0.89)
+height.mean &lt;- apply(sim.height, 2, mean)
+
+# the plot
+plot(height ~ log(weight), data=d, col=col.alpha(rangi2, 0.6))
+lines(log(weight.seq), mu.mean)                                      # the MAP regression line
+shade( mu.HPDI, log(weight.seq))                                     # draw HPDI region around the regression line
+shade( height.HPDI, log(weight.seq))                                 # draw HPDI region for the simulated heights</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>Compared to the model above fit to only the children and also compared to the models earlier in the chapter using the full data set with polynomial regression, this model seems to perform quite well on the data.</p>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Let’s make the same plot without using the logarithmic scale.</li>
+</ol>
+<pre class="r"><code>plot(height ~ weight, data=d, col=col.alpha(rangi2, 0.6))
+lines(weight.seq, mu.mean)
+shade(mu.HPDI, weight.seq)
+shade( height.HPDI, weight.seq)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>Given the last two plots, I’d say the colleague was right: The logarithm of body weight scales very well with height.</p>
+</div>
+</div>

@@ -1,0 +1,630 @@
+---
+title: "Chapter 10 - Exercise"
+author: "Corrie"
+date: "November 17, 2018"
+output:   
+  github_document:
+    pandoc_args: --webtex 
+---
+
+
+
+<div id="easy." class="section level2">
+<h2>Easy.</h2>
+<p><strong>10E1.</strong> If an event has probability 0.35, what are the log-odds of this event?</p>
+<pre class="r"><code>log( 0.35 / (1 - 0.35))</code></pre>
+<pre><code>[1] -0.6190392</code></pre>
+<p><strong>10E2.</strong> If an event has log-odds 3.2, what is the probabiity of this event?</p>
+<pre class="r"><code>1 / (1 + exp(-3.2))</code></pre>
+<pre><code>[1] 0.9608343</code></pre>
+<p><strong>10E3.</strong> A coefficient in a logistic regression has value 1.7. What does this imply about the proportional change in odds of the outcome?</p>
+<pre class="r"><code>exp(1.7)</code></pre>
+<pre><code>[1] 5.473947</code></pre>
+<p>For a change from 0 to 1 in variable for this coefficient would mean that there would be a proportional increase of 5.47 in the odds of the outcome. That is, the odds would increase by 447%.</p>
+<p><strong>10E4.</strong> Why do Poisson regressions sometimes require the use of an <em>offset</em>?
+If the measurements are over different time intervals then an offset is necessary to align all observations with each other.</p>
+<p>For example, if we want to compare two different call centers regarding the number of support calls they receive. Now call center A might register the calls per hour while call center B could register the calls per day. For each observation (i.e. the registered number of phone calls) of call center A, the exposure time is then one hour while for call center B it is 24 hours. The offset is then the log of the exposure time. A linear model could look as follows:
+<span class="math display">\[\begin{align*}
+Calls_i &amp;\sim \text{Poisson}(\lambda) \\
+\log(\lambda) &amp;= \log(exposure_i) + \alpha + \beta Center_i
+\end{align*}\]</span></p>
+</div>
+<div id="medium." class="section level2">
+<h2>Medium.</h2>
+<p><strong>10M1.</strong> Binomial data can be organized in aggregated and disaggregated forms, without any impact on inference. But the likelihood of the data does change when the data are converted between the two formats. Why?</p>
+<p>Let’s look at the <code>chimpanzees</code> data again and compare the same model, one time using aggregated and one time disaggregated data.</p>
+<pre class="r"><code>library(rethinking)
+data(chimpanzees)
+d &lt;- chimpanzees
+d.aggregated &lt;- aggregate( d$pulled_left,
+                           list(prosoc_left=d$prosoc_left,
+                                condition=d$condition,
+                                actor=d$actor),
+                           sum)</code></pre>
+<p>First, the disaggregated model:</p>
+<pre class="r"><code>m10.disaggregated &lt;- map(
+  alist(
+    pulled_left ~ dbinom(1, p),
+    logit(p) &lt;- a + (bp + bpC*condition)*prosoc_left,
+    a ~ dnorm(0, 10),
+    bp ~ dnorm(0, 10),
+    bpC ~ dnorm(0, 10)
+  ),
+  data=d
+)
+precis(m10.disaggregated)</code></pre>
+<pre><code>           mean        sd       5.5%     94.5%
+a    0.04771728 0.1260040 -0.1536615 0.2490960
+bp   0.60967160 0.2261462  0.2482463 0.9710969
+bpC -0.10396808 0.2635904 -0.5252364 0.3173003</code></pre>
+<p>And then the aggregated model:</p>
+<pre class="r"><code>m10.aggregated &lt;- map(
+  alist(
+    x ~ dbinom( 18, p ), # 18 = the number of trials per row
+    logit(p) &lt;- a + (bp + bpC*condition)*prosoc_left,
+    a ~ dnorm(0, 10),
+    bp ~ dnorm(0, 10),
+    bpC ~ dnorm(0, 10)
+  ),
+  data = d.aggregated
+)
+precis(m10.aggregated)</code></pre>
+<pre><code>           mean        sd       5.5%     94.5%
+a    0.04771729 0.1260040 -0.1536615 0.2490961
+bp   0.60967130 0.2261462  0.2482460 0.9710966
+bpC -0.10396774 0.2635904 -0.5252361 0.3173006</code></pre>
+<p>Both models give the same estimates, the same standard deviation, and the same credible intervals.</p>
+<pre class="r"><code>logLik(m10.disaggregated)</code></pre>
+<pre><code>&#39;log Lik.&#39; -338.1697 (df=3)</code></pre>
+<pre class="r"><code>logLik(m10.aggregated)</code></pre>
+<pre><code>&#39;log Lik.&#39; -128.0794 (df=3)</code></pre>
+<p>The likelihood (and thus also the log likelihood) differ though. To better see, why they differ, let’s calculate the likelihood manually and then check at which step in the computation they differ. First, we compute it for the disaggregated version:</p>
+<pre class="r"><code>theta.disagg &lt;- coef(m10.disaggregated)
+p.disagg &lt;- logistic(theta.disagg[1] + 
+                       (theta.disagg[2] + 
+                          theta.disagg[3]*d$condition)*d$prosoc_left )
+loglkhd.disagg &lt;- sum(
+  dbinom(d$pulled_left,
+         size=1,
+         prob=p.disagg,
+         log=TRUE)
+)
+loglkhd.disagg</code></pre>
+<pre><code>[1] -338.1697</code></pre>
+<p>And for the aggregated version:</p>
+<pre class="r"><code>theta.agg &lt;- coef(m10.aggregated)
+p.aggregated &lt;- logistic(theta.agg[1] + 
+                           (theta.agg[2] + 
+                            theta.agg[3]*d.aggregated$condition)*d.aggregated$prosoc_left)
+loglkhd.aggregated &lt;- sum(
+  dbinom(d.aggregated$x,
+         size=18,
+         prob= p.aggregated ,
+         log = TRUE)
+)
+loglkhd.aggregated</code></pre>
+<pre><code>[1] -128.0794</code></pre>
+<p>If we compute the likelihood for a single experiment (that is, 18 observations in the disaggregated data or 1 observation in the aggregated data), we see one first difference:</p>
+<pre class="r"><code>exp1.disagg &lt;- dplyr::filter(d, condition==0 &amp; actor==1 &amp; prosoc_left==0)
+exp1.disagg$x &lt;- exp1.disagg$pulled_left      # align notation
+p.disagg &lt;- logistic(theta.disagg[1] + 
+                       (theta.disagg[2] + 
+                          theta.disagg[3]*exp1.disagg$condition)*exp1.disagg$prosoc_left)
+p.disagg</code></pre>
+<pre><code> [1] 0.5119271 0.5119271 0.5119271 0.5119271 0.5119271 0.5119271 0.5119271
+ [8] 0.5119271 0.5119271 0.5119271 0.5119271 0.5119271 0.5119271 0.5119271
+[15] 0.5119271 0.5119271 0.5119271 0.5119271</code></pre>
+<pre class="r"><code>exp1.agg &lt;- d.aggregated[1,]
+p.agg &lt;- logistic(theta.agg[1] + 
+                    (theta.agg[2] + theta.agg[3]*exp1.agg$condition)*exp1.agg$prosoc_left)
+p.agg</code></pre>
+<pre><code>        a 
+0.5119271 </code></pre>
+<p>Since both times we have the same predictor values, the computed probabilities are the same, only for the disaggregated data, we get 18 values (one for each observation).</p>
+<p>We can go one step further and calculate the likelihood by hand, using the formula for the density of the binomial distribution:
+<span class="math display">\[p(x) = {n \choose x} p^x (1-p)^{n-x}.\]</span>
+If we only have one observation (as in the case of the aggregated data) then this is the likelihood for one experiment. In the case of the disaggregated data, we get the likelihood for one experiment by multiplying the likelihood of each observation:
+<span class="math display">\[L(x) = \prod_{i=1}^{18} {n \choose x_i} p^{x_i} (1-p)^{1-x_i} .\]</span> In the case of the log-likelihood, we take the sum instead of the product.
+Now these likelihoods are the same except for the factor <span class="math inline">\({n \choose x}\)</span>. To see why, consider the following:
+In the disaggregated case, we have 18 observations <span class="math inline">\(x_1, x_2, ... x_{18}\)</span> such that <span class="math inline">\(\sum x_i = x\)</span> where <span class="math inline">\(x\)</span> is the value used in the aggregated case. As we’ve seen above, the value for <span class="math inline">\(p\)</span> is the same in both cases. We thus get:
+<span class="math display">\[\begin{align*}
+&amp;\quad \prod_{i=1}^{18} p_{x_i}(1-p)^{1-x_i} \\
+&amp;= p^{x_1}(1-p)^{1-x_1}p^{x_2}(1-p)^{1-x_2}...p^{x_18}(1-p)^{1-x_{18}} \\
+&amp;=p^{x_1 +x_2 + ... + x_n}(1-p)^{1-x_1 + 1-x_2 + ... + 1-x_{18}} \\
+&amp;= p^x (1-p)^{18-x}
+\end{align*}\]</span>
+Thus, the only way the two likelihoods differ, is by the factor of <span class="math inline">\({n \choose x}\)</span>.</p>
+<p>Since <span class="math inline">\(x_i\)</span> is either 0 or 1 in the aggregated case, <span class="math inline">\(1 \choose x_i\)</span> is always 1. In the aggregated case, this factor can be much larger:</p>
+<pre class="r"><code>choose(18, exp1.agg$x)</code></pre>
+<pre><code>[1] 18564</code></pre>
+<p>We thus get the following likelihoods for the first experiment:
+In the aggregated case, we have</p>
+<pre class="r"><code>log( choose(18, exp1.agg$x) * p.agg^exp1.agg$x * (1 - p.agg)^(18 - exp1.agg$x) ) </code></pre>
+<pre><code>        a 
+-2.795944 </code></pre>
+<p>and in the disaggregated case</p>
+<pre class="r"><code>sum( 
+  log( choose( 1, exp1.disagg$x) * p.disagg^exp1.disagg$x * (1 - p.disagg)^(1 - exp1.disagg$x) ) 
+  )</code></pre>
+<pre><code>[1] -12.62492</code></pre>
+<p>If we omit the binomial factor, we get the same value for both cases:</p>
+<pre class="r"><code>log( p.agg^exp1.agg$x * (1-p.agg)^(18 - exp1.agg$x) ) </code></pre>
+<pre><code>        a 
+-12.62492 </code></pre>
+<pre class="r"><code>sum( 
+  log(  p.disagg^exp1.disagg$x * (1-p.disagg)^(1 - exp1.disagg$x) ) 
+  )</code></pre>
+<pre><code>[1] -12.62492</code></pre>
+<p><strong>10M2.</strong> If a coefficient in a Poisson regression has value 1.7, what does this imply about the change in the outcome?</p>
+<p>If the predictor variable associated with this coefficient goes up by one unit, then the rate <span class="math inline">\(\lambda\)</span> is multiplied by <code>exp(1.7)</code>, that is about 5.5. This means, there are on average 5.5 times more events happening in the same time interval.</p>
+<p><strong>10M3.</strong> Why is the logit link appropriate for a binomial generalized linear model?</p>
+<p>The binomial generalized linear model has as its main parameter a probability.
+The logit link maps a probability (i.e. a value between 0 and 1) onto the real line <span class="math inline">\(\mathbb{R}\)</span>. The mapped value can then be used for a linear model.</p>
+<p><strong>10M4.</strong> Why is the log link appropriate for a Poisson generalized linear model?</p>
+<p>The Poisson generalized linear model has as only parameter the rate <span class="math inline">\(\lambda\)</span> which gives the average number of events per time interval. Hence, <span class="math inline">\(\lambda\)</span> is constrained to be positive. The log function maps positive value onto <span class="math inline">\(\mathbb{R}\)</span> and thus the function links count values (positive values) to a linear model.</p>
+<p><strong>10M5.</strong> What would it imply to use a logit link for the mean of a Poisson generalized linear model?</p>
+<p>Using a logit link for the parameter <span class="math inline">\(\lambda\)</span> in a Poisson model would imply that <span class="math inline">\(\lambda\)</span> is constrained to be between 0 and 1. If <span class="math inline">\(\lambda\)</span> is between 0 and 1, then there are on average less than one event per time interval. This could be useful in cases where there would be at maximum one event per interval.</p>
+<p><strong>10M6.</strong> What are the constraints for which the binomial and Poisson distribution have maximum entropy?</p>
+<p>Both the binomial distribution and the Poisson distribution have maximum entropy when</p>
+<ul>
+<li>each trial results in one of two events and</li>
+<li>the expected value is constant.</li>
+</ul>
+<p>The Poisson distribution is mathematically a special case of the Binomial and thus it has maximum entropy under the same constraints. Practically, it is used for counts that never get close to any theoretical maximum.</p>
+</div>
+<div id="hard." class="section level2">
+<h2>Hard.</h2>
+<p><strong>10H1.</strong> Use <code>map()</code> to construct a quadratic approximate posterior distribution for the chimpanzee model that includes a unique intercept for each actor and compare the quadratic approximation to the posterior produced from MCMC.</p>
+<pre class="r"><code>data(&quot;chimpanzees&quot;)
+d &lt;- chimpanzees
+d2 &lt;- d
+d2$recipient &lt;- NULL  # remove NA values</code></pre>
+<pre class="r"><code>m10.4 &lt;- map(
+  alist(
+    pulled_left ~ dbinom(1, p),
+    logit(p) &lt;- a[actor] + (bp + bpC*condition)*prosoc_left,
+    a[actor] ~ dnorm(0, 10),
+    bp ~ dnorm(0, 10),
+    bpC ~ dnorm(0, 10)
+  ),
+  data=d2
+)
+precis(m10.4, depth=2)</code></pre>
+<pre><code>           mean        sd       5.5%      94.5%
+a[1] -0.7261788 0.2684852 -1.1552700 -0.2970875
+a[2]  6.6748374 3.6117402  0.9025790 12.4470958
+a[3] -1.0309247 0.2784265 -1.4759039 -0.5859454
+a[4] -1.0309225 0.2784264 -1.4759017 -0.5859434
+a[5] -0.7261795 0.2684852 -1.1552707 -0.2970882
+a[6]  0.2127786 0.2670016 -0.2139415  0.6394987
+a[7]  1.7545483 0.3845067  1.1400324  2.3690642
+bp    0.8221334 0.2610079  0.4049925  1.2392744
+bpC  -0.1318289 0.2969351 -0.6063884  0.3427307</code></pre>
+<pre class="r"><code>m10.4stan &lt;- map2stan(
+  alist(
+    pulled_left ~ dbinom(1, p),
+    logit(p) &lt;- a[actor] + (bp + bpC*condition)*prosoc_left,
+    a[actor] ~ dnorm(0, 10),
+    bp ~ dnorm(0, 10),
+    bpC ~ dnorm(0, 10)
+  ),
+  data=d2, chains=2, iter=2500, warmup=500
+)</code></pre>
+<pre class="r"><code>precis( m10.4stan, depth=2)</code></pre>
+<pre><code>           mean        sd       5.5%      94.5%    n_eff     Rhat4
+a[1] -0.7331254 0.2734764 -1.1789290 -0.2957578 3328.292 1.0005743
+a[2] 10.8771818 5.3662503  4.4933721 21.0171822 1637.169 1.0002197
+a[3] -1.0478100 0.2781406 -1.4960169 -0.6113475 3410.213 0.9995746
+a[4] -1.0476568 0.2813204 -1.4961636 -0.6111763 3397.656 1.0000357
+a[5] -0.7434107 0.2735527 -1.1964252 -0.3156118 3247.475 1.0001032
+a[6]  0.2190848 0.2613211 -0.1888388  0.6376196 3473.640 0.9995833
+a[7]  1.8178495 0.3982279  1.2175817  2.4849365 4434.329 0.9996345
+bp    0.8445868 0.2557357  0.4424893  1.2572969 1861.668 0.9996819
+bpC  -0.1465494 0.2966052 -0.6250358  0.3191767 2503.575 0.9996573</code></pre>
+<p>While the estimates for <code>bp</code> and <code>bpC</code> are pretty much the same for both the <code>map</code> and the MCMC model, the estimates for actor 2 are very different:</p>
+<pre class="r"><code>plot( coeftab( m10.4, m10.4stan))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<p>We can compare the posterior distribution for the parameter for actor 2 under the two models:</p>
+<pre class="r"><code>post &lt;- extract.samples(m10.4)
+post.stan &lt;- extract.samples(m10.4stan)
+
+par(mfrow=c(1,2))
+dens( post$a[,2], main=&quot;Quadratic Approximation for Actor 2&quot;)
+dens( post.stan$a[,2], main=&quot;MCMC Approximation for Actor 2&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-23-1.png" width="768" /></p>
+<p>The quadratic approximation gives some weight to negative values which doesn’t match with the observed outcomes for actor 2: Actor 2 always pulled left, i.e. each trial was successful. The MCMC approximation on the other hand only puts weight on positive values with a right-skewed distribution (that is, small weight on very high values).</p>
+<p>Since all other parameters have a Gaussian distribution, their estimates are the same in both posterior approximations. Since the distribution for actor 2 is highly non-Gaussian but <code>map()</code> assumes Gaussian distributions for all parameters, the estimate differs.</p>
+<p><strong>10H2.</strong> Use WAIC to compare the chimpanzee model that includes a unique intercept for each actor to the simpler models fit in the same section.</p>
+<pre class="r"><code># only an intercept
+m10.1 &lt;- map2stan(
+  alist(
+    pulled_left ~ dbinom(1, p),
+    logit(p) &lt;- a,
+    a ~ dnorm(0, 10)
+  ), data=d2, iter=2500, warmup=500, chains=4
+)
+
+m10.2 &lt;- map2stan(
+  alist(
+    pulled_left ~ dbinom(1, p),
+    logit(p) &lt;- a + bp*prosoc_left,
+    a ~ dnorm(0, 10),
+    bp ~ dnorm(0, 10)
+  ), data=d2, iter=2500, warmup=500, chains=4
+)
+
+m10.3 &lt;- map2stan(
+  alist(
+    pulled_left ~ dbinom(1, p),
+    logit(p) &lt;- a + ( bp + bpC*condition)*prosoc_left,
+    a ~ dnorm(0, 10),
+    c(bp, bpC) ~ dnorm(0, 10)
+  ), data=d2, iter=2500, warmup=500, chains=4
+)
+
+m10.4 &lt;- map2stan(
+  alist(
+    pulled_left ~ dbinom(1, p),
+    logit(p) &lt;- a[actor] + ( bp + bpC*condition)*prosoc_left,
+    a[actor] ~ dnorm(0, 10),
+    c(bp, bpC) ~ dnorm(0, 10)
+  ), data=d2, iter=2500, warmup=500, chains=4
+)</code></pre>
+<pre class="r"><code>( comp &lt;- compare( m10.1, m10.2, m10.3, m10.4) )</code></pre>
+<pre><code>          WAIC        SE    dWAIC      dSE     pWAIC       weight
+m10.4 529.7703 19.968061   0.0000       NA 8.2815834 1.000000e+00
+m10.2 680.5682  9.364528 150.7979 19.24287 2.0361655 1.797417e-33
+m10.3 682.4191  9.425778 152.6488 19.18353 3.0396255 7.124062e-34
+m10.1 687.9076  7.122701 158.1373 19.94592 0.9837377 4.580607e-35</code></pre>
+<pre class="r"><code>plot(comp)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-26-1.png" width="672" /></p>
+<p>Even though the fourth model with the unique intercepts has much more parameters than the other three models (9 parameter versus 1 - 3 parameter), it performs much better and also gets the full Akaike weight.</p>
+<p><strong>10H3.</strong> The <code>eagles</code> data from the library <code>MASS</code> are records of salmon pirating attempts by Bald Eagles in Washington State.
+While one eagle feeds, sometimes another will swoop in and try to steal the salmon from it. Call the feeding eagle the “victim” and the thief the “pirate”. Use the available data to build a binomial GLM of successful pirating attempts.</p>
+<ol style="list-style-type: lower-alpha">
+<li>Consider the following model:
+<span class="math display">\[\begin{align*}
+  y_i &amp;\sim \text{Binomial}(n_i, p_i) \\
+  \log \frac{p_i}{1-p_i} &amp;= \alpha + \beta_P P_i + \beta_V V_i + \beta_A A_i \\
+  \alpha &amp;\sim \text{Normal}(0, 10) \\
+  \beta_P &amp;\sim \text{Normal}(0, 5) \\
+  \beta_V &amp;\sim \text{Normal}(0, 5) \\
+  \beta_A &amp;\sim \text{Normal}(0, 5) 
+  \end{align*}\]</span>
+where <span class="math inline">\(y\)</span> is the number of successful attempts, <span class="math inline">\(n\)</span> is the total number of attempts, <span class="math inline">\(P\)</span> is a dummy variable indicating whether or not the pirate had large body size, <span class="math inline">\(V\)</span> is a dummy variable indicating whether or not the victim had large body size, and finally <span class="math inline">\(A\)</span> is a dummy variable indicating whether or not the pirate was an adult.</li>
+</ol>
+<p>Fit the model using both <code>map()</code> and <code>map2stan()</code>. Is the quadratic approximation okay?</p>
+<pre class="r"><code>library(MASS)
+data(eagles)
+d &lt;- eagles
+str(d)</code></pre>
+<pre><code>&#39;data.frame&#39;:   8 obs. of  5 variables:
+ $ y: int  17 29 17 20 1 15 0 1
+ $ n: int  24 29 27 20 12 16 28 4
+ $ P: Factor w/ 2 levels &quot;L&quot;,&quot;S&quot;: 1 1 1 1 2 2 2 2
+ $ A: Factor w/ 2 levels &quot;A&quot;,&quot;I&quot;: 1 1 2 2 1 1 2 2
+ $ V: Factor w/ 2 levels &quot;L&quot;,&quot;S&quot;: 1 2 1 2 1 2 1 2</code></pre>
+<p>First, we’ll need to transform the factor variables to dummy variables containing only 0 or 1 values.</p>
+<pre class="r"><code>d$pirate &lt;- ifelse(d$P == &quot;L&quot;, 1, 0)
+d$adult &lt;- ifelse(d$A == &quot;A&quot;, 1, 0)
+d$victim &lt;- ifelse(d$V == &quot;L&quot;, 1, 0)</code></pre>
+<p>Next, we build the model and fit is using both <code>map()</code> and <code>map2stan()</code>:</p>
+<pre class="r"><code>m.eagle1 &lt;- map(
+  alist(
+    y ~ dbinom( n, p),
+    logit(p) &lt;- a + bp*pirate + ba*adult + bv*victim,
+    a ~ dnorm(0, 10),
+    c(bp, ba, bv) ~ dnorm(0, 5)
+  ), data=d
+)
+
+m.eagle1stan &lt;- map2stan(m.eagle1, iter=2500, chains=4, warmup=500)</code></pre>
+<p>Let’s check the estimates for the coefficients:</p>
+<pre class="r"><code>plot( coeftab(m.eagle1, m.eagle1stan) )</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-30-1.png" width="672" /></p>
+<p>The estimates do differ slightly, in particular for the parameter <code>bv</code> and <code>bp</code>, but they look close enough. Let’s check the pair plots for both models as well.</p>
+<pre class="r"><code>pairs(m.eagle1, main=&quot;Model fit with map()&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-31-1.png" width="672" /></p>
+<p>The parameters for the pirate and the victim variable are negatively correlated: A high parameter value for the pirate variable implies a lower parameter value for the victim variable.</p>
+<pre class="r"><code>pairs(m.eagle1stan, main=&quot;Model fit with map2stan()&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-32-1.png" width="672" /></p>
+<p>We can see in the pair plot that there is some correlation between <code>bp</code> and <code>bv</code> and that both parameters are skewed in opposite directions. This suggests that the quadratic approximation is not a good approximation of the posterior and thus from now on, we’ll only use the Stan model.</p>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Interpret the estimates. Plot the posterior predictions. Compute and display both (1) the predicted <strong>probability</strong> of success and its 89% interval for each row (<em>i</em>), as well as (2) the predicted success <strong>count</strong> and its 89% interval.</li>
+</ol>
+<p>What different information does each type of posterior prediction provide?</p>
+<pre class="r"><code> precis(m.eagle1stan)</code></pre>
+<pre><code>         mean        sd       5.5%     94.5%    n_eff    Rhat4
+a   0.6507621 0.6853213 -0.4063126  1.776273 3834.991 1.000757
+bp  4.6476045 1.0166087  3.1981470  6.392321 3064.455 1.000868
+ba  1.1342125 0.5535286  0.2791731  2.038835 3928.665 1.001531
+bv -5.0496376 1.0440801 -6.8317781 -3.545005 3128.344 1.000570</code></pre>
+<pre class="r"><code>post &lt;- extract.samples(m.eagle1stan)</code></pre>
+<p>The intercept is at 0.65, meaning that if all other predictor variables are 0 (that is, the pirate did not have a large body, the victim did not have a large body and the pirate was not an adult) then the probability of a successful attempt is <code>logistic(0.65)</code>, that is</p>
+<pre class="r"><code>mean(logistic(post$a))</code></pre>
+<pre><code>[1] 0.6428047</code></pre>
+<p>If the pirating eagle is large, then this probability increases to almost 100%:</p>
+<pre class="r"><code>dens(logistic(post$a + post$bp), xlim=c(0,1))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-36-1.png" width="672" /></p>
+<p>Similarly, if the pirating eagle is an adult, the probability of a successful attempt is quite high with a mean of about 85%:</p>
+<pre class="r"><code>dens(logistic(post$a + post$ba), xlim=c(0,1))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-37-1.png" width="672" /></p>
+<p>If the pirating eagle is large, then it doesn’t matter much if the eagle is an adult or not, the distribution for the probablity now puts even more weight closer to 1, but the mean doesn’t change much.</p>
+<pre class="r"><code>dens(logistic(post$a + post$ba + post$bp), xlim=c(0,1))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-38-1.png" width="672" /></p>
+<p>If on the other hand the victim has a large body (and the attacker is neither adult nor big), then the probability decreases to almost 0:</p>
+<pre class="r"><code>dens(logistic(post$a + post$bv), xlim=c(0,1))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-39-1.png" width="672" /></p>
+<p>If the victim eagle is large, then it also doesn’t improve the chances much when the pirating eagle is an adult. While higher than before, it is still mostly below 10%:</p>
+<pre class="r"><code>dens(logistic(post$a + post$bv + post$ba), xlim=c(0,1))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-40-1.png" width="672" /></p>
+<p>It becomes interesting when both the pirating and the victim eagle are large. The probability is then almost 50% with a very slight advantage for the pirating eagle. It appears, as if the two events large pirate and large victim cancel each other out but if we compare it to the base case (neither large pirate nor victim and non-adult pirate), then we see that a large victim still has better chances than a victim in the base case:</p>
+<pre class="r"><code>dens(logistic(post$a + post$bv + post$bp), xlim=c(0,1))
+dens(logistic(post$a), col=&quot;blue&quot;, add=T)
+legend(&quot;topleft&quot;, col=c(&quot;black&quot;, &quot;blue&quot;), 
+       lty=c(1,1), bty=&quot;n&quot;,
+       legend = c(&quot;large pirat; large victim&quot;, &quot;base case&quot;))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-41-1.png" width="672" /></p>
+<p>If the pirating eagle is large and an adult, then chances are in his favor even if the victim eagle is large.</p>
+<pre class="r"><code>dens(logistic(post$a + post$ba), col=&quot;blue&quot;, xlim=c(0,1))
+dens(logistic(post$a + post$bv + post$bp + post$ba), add=T)
+legend(&quot;topleft&quot;, col=c(&quot;black&quot;, &quot;blue&quot;), 
+       lty=c(1,1), bty=&quot;n&quot;,
+       legend = c(&quot;large, adult pirat; large victim&quot;, &quot;adult pirat&quot;))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-42-1.png" width="672" /></p>
+<ol style="list-style-type: decimal">
+<li>Predicted <strong>probability</strong> of success:</li>
+</ol>
+<pre class="r"><code>d$prop &lt;- d$y / d$n
+p.link &lt;- link(m.eagle1stan)
+p.mean &lt;- apply(p.link, 2, mean)
+p.HPDI &lt;- apply(p.link, 2, HPDI, prob=0.89)</code></pre>
+<pre class="r"><code>o &lt;- order(p.mean)
+dotchart(p.mean[o], main=&quot;Success probability&quot;,
+         labels=paste0(&quot;       &quot;, d$pirate, &quot;/&quot;, d$adult, &quot;/&quot;, d$victim, &quot;         &quot;)[o])
+mtext(&quot;pirate/adult/victim&quot;, side=2, adj=0.5, padj=-11.5, las=1)
+for (i in 1:nrow(d)){
+  j &lt;- o[i]
+  points( d$prop[j], i, col=&quot;midnightblue&quot; , pch=19)
+  lines( p.HPDI[,j], rep(i, 2))
+}</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-44-1.png" width="672" /></p>
+<p>Blue filled points show the observed proportions whereas the estimates probability and 89% percent interval are shown in black and open points.
+Except for the case 0/0/0 (small, immature pirate and small victim), all observed proportions of success are within the 89% interval for the predicted probabilities.</p>
+<ol start="2" style="list-style-type: decimal">
+<li>Predicted <strong>success count</strong></li>
+</ol>
+<pre class="r"><code>eagle.sim &lt;- sim(m.eagle1stan)
+eagle.med &lt;- apply(eagle.sim, 2, median)
+eagle.HPDI &lt;- apply(eagle.sim, 2, HPDI)</code></pre>
+<pre class="r"><code>dotchart(eagle.med[o], main=&quot;Success count&quot;,
+         labels=paste0(&quot;       &quot;, d$pirate, &quot;/&quot;, d$adult, &quot;/&quot;, d$victim, &quot;         &quot;)[o])
+mtext(&quot;pirate/adult/victim&quot;, side=2, adj=0.5, padj=-11.5, las=1)
+for (i in 1:nrow(d)){
+  j &lt;- o[i]
+  points( d$y[j], i, col=&quot;midnightblue&quot; , pch=19)
+  points( d$n[j], i, col=&quot;gray&quot;, pch=3 )
+  lines( eagle.HPDI[,j], rep(i, 2))
+}</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-46-1.png" width="672" /></p>
+<p>Even though the predicted probability interval for the base case 0/0/0 did not contain the observed proportions of success, the observed number of successful attempts is contained in its 89% interval for the predicted success count.</p>
+<p>Since there are different number of total attempts (depicted as gray crosses in the plot) for each case, there is also a different ordering for the predicted counts than for the predicted probabilities.
+The plot for the predicted counts in some sense also makes it harder to compare the uncertainty: while the case 1/0/1 has a higher uncertainty compared to the base case 0/0/0 for the predicted counts, it is the opposite way when we compare their uncertainties for the probability. The case 0/0/0 has had fewer total attempts and thus its uncertainty interval covers relatively more of the possible outputs than for case 1/0/1.</p>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Try to improve the model. Consider an interaction between the pirate’s size and age (immature or adult). Compare this model to the previous one, using WAIC.</li>
+</ol>
+<pre class="r"><code>m.eagle2 &lt;- map2stan(
+  alist(
+    y ~ dbinom( n, p),
+    logit(p) &lt;- a + bp*pirate + ba*adult + bv*victim + bap*adult*pirate,
+    a ~ dnorm(0, 10),
+    c(bp, ba, bv, bap) ~ dnorm(0, 5)
+  ), data=d, iter=2500, chains=4, warmup=500
+)</code></pre>
+<pre class="r"><code>pairs(m.eagle2)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-48-1.png" width="672" /></p>
+<p>As before, we have some correlations between the coefficients: <code>bap</code> and <code>ba</code>, as well as <code>bap</code> and <code>bp</code> are negatively correlated. <code>bp</code> and <code>ba</code>are now positively correlated and <code>bp</code> and <code>bv</code> are again negatively correlated but slightly less than in the model without interaction.</p>
+<p>Let’s now compare the WAIC for the two models:</p>
+<pre class="r"><code>( comp &lt;- compare(m.eagle1stan, m.eagle2) )</code></pre>
+<pre><code>                 WAIC       SE    dWAIC      dSE    pWAIC     weight
+m.eagle2     93.90555 12.75133 0.000000       NA 4.726311 0.91024356
+m.eagle1stan 98.53877 13.31762 4.633225 4.711181 4.009218 0.08975644</code></pre>
+<p>Almost all the Akaike weight is on the interaction model but there is a relatively high standard error for both the WAIC and the difference. We can compute the probability that the first model has a lower WAIC then the interaction model as follows:</p>
+<pre class="r"><code>diff &lt;- rnorm(1e5, 5, 4.72)
+mean(diff &lt; 0)</code></pre>
+<pre><code>[1] 0.14441</code></pre>
+<p>There is a probability of 14% that the model without the interaction has the better WAIC.</p>
+<pre class="r"><code>plot(comp, xlim=c(79,  114))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-51-1.png" width="672" /></p>
+<p>Let’s compare the coefficients for the two models:</p>
+<pre class="r"><code>plot( coeftab( m.eagle2, m.eagle1stan ))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-52-1.png" width="672" /></p>
+<p>All coefficients increased in magnitude in the new model. In particular, the coefficients for the Adult variable and the Pirate variable increased quite a bit. The coefficient for the new interaction variable on the other hand has a relatively large negative value. The coefficient for the intercept turned negative in the new model.</p>
+<p>Let’s check how the interaction variable changes the probability distribution for each case:</p>
+<pre class="r"><code>p2.link &lt;- link(m.eagle2)
+p2.mean &lt;- apply(p2.link, 2, mean)
+p2.HPDI &lt;- apply(p2.link, 2, HPDI, prob=0.89)</code></pre>
+<pre class="r"><code># the plot
+o &lt;- order(p2.mean)
+dotchart(p2.mean[o], main=&quot;Success probability&quot;,
+         labels=paste0(&quot;       &quot;, d$pirate, &quot;/&quot;, d$adult, &quot;/&quot;, d$victim, &quot;         &quot;)[o])
+mtext(&quot;pirate/adult/victim&quot;, side=2, adj=0.5, padj=-11.5, las=1)
+for (i in 1:nrow(d)){
+  j &lt;- o[i]
+  points( d$prop[j], i, col=&quot;midnightblue&quot; , pch=19)
+  points(p.mean[j], i-0.2, col=&quot;gray&quot;, pch=1, cex=0.8)
+  lines(p.HPDI[,j], rep(i-0.2, 2), col=&quot;gray&quot;)
+  lines( p2.HPDI[,j], rep(i, 2))
+}</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-54-1.png" width="672" /></p>
+<p>The probability estimates and the uncertainty estimates for the model without the interaction are shown in grey. The observed values are again in blue.
+The most notable change is for the base case 0/0/0, that is a small, immature pirating eagle and a small victim. The success probability for this case decreased from around 65% to about 35%
+Before, the observed proportions where not contained in the estimated 89% probability interval whereas now, all observed proportions are contained in the estimated probability interval.</p>
+<pre class="r"><code>eagle2.sim &lt;- sim(m.eagle2)
+eagle2.med &lt;- apply(eagle2.sim, 2, median)
+eagle2.HPDI &lt;- apply(eagle2.sim, 2, HPDI)</code></pre>
+<pre class="r"><code>dotchart(eagle2.med[o], main=&quot;Success counts&quot;,
+         labels=paste0(&quot;       &quot;, d$pirate, &quot;/&quot;, d$adult, &quot;/&quot;, d$victim, &quot;         &quot;)[o])
+mtext(&quot;pirate/adult/victim&quot;, side=2, adj=0.5, padj=-11.5, las=1)
+for (i in 1:nrow(d)){
+  j &lt;- o[i]
+  points( d$y[j], i, col=&quot;midnightblue&quot; , pch=19)
+  points( d$n[j], i, col=&quot;gray&quot;, pch=3 )
+  points(eagle.med[j], i-0.2, col=&quot;gray&quot;, pch=1, cex=0.8)
+  lines(eagle.HPDI[,j], rep(i-0.2, 2), col=&quot;gray&quot;)
+  lines( eagle2.HPDI[,j], rep(i, 2))
+}</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-56-1.png" width="672" /></p>
+<p>For almost all cases, the predicted success counts are now even equal to the observed counts.</p>
+<p><strong>10H4.</strong> The data contained in <code>data(salamanders)</code> are counts of salamanders from 47 different 49m² plots in northern California. The column <code>SALAMAN</code> is the count in each plot, and the columns <code>PCTCOVER</code> and <code>FORESTAGE</code> are percent of ground cover and age of trees in the plot respectively. Model <code>SALAMAN</code> as a Poisson variable.</p>
+<ol style="list-style-type: lower-alpha">
+<li>Model the relationship between density and percent cover. Use a log-link, weakly informative priors and check the quadratic approximation.
+Plot the expected counts and their 89% interval against percent cover. In which ways does the model do a good job and in which ways a bad job?</li>
+</ol>
+<pre class="r"><code>data(&quot;salamanders&quot;)
+d &lt;- salamanders
+d$PCTCOVER_c &lt;- d$PCTCOVER - mean(d$PCTCOVER)
+str(d)</code></pre>
+<pre><code>&#39;data.frame&#39;:   47 obs. of  5 variables:
+ $ SITE      : int  1 2 3 4 5 6 7 8 9 10 ...
+ $ SALAMAN   : int  13 11 11 9 8 7 6 6 5 5 ...
+ $ PCTCOVER  : int  85 86 90 88 89 83 83 91 88 90 ...
+ $ FORESTAGE : int  316 88 548 64 43 368 200 71 42 551 ...
+ $ PCTCOVER_c: num  26 27 31 29 30 ...</code></pre>
+<p>As priors, we’ll use as prior a normal distribution with mean zero and standard deviation of 50 for the intercept. That is, if there is no ground covered, we expect up 100 salamander in one plot. As I don’t know much about salamander, this is a rather conservative prior, and a glimpse on the salamander count in the first rows suggests it is likely much lower.</p>
+<p>The ground cover is given in percentage points between 0 and 100, so we’ll use as prior a normal distribution with mean 0 and standard deviation of 1, so that a one percent point increase in covering could mean up to two more salamanders.</p>
+<pre class="r"><code>m.salam1 &lt;- map(
+  alist(
+    SALAMAN ~ dpois( lambda ),
+    log(lambda) &lt;- a + bc*PCTCOVER_c,
+    a ~ dnorm(0, 50),
+    bc ~ dnorm(0, 1)
+  ),
+  data=d
+)
+
+m.salam1stan &lt;- map2stan(m.salam1, chains=2)</code></pre>
+<pre class="r"><code> coeftab( m.salam1, m.salam1stan ) </code></pre>
+<pre><code>     m.salam1 m.salam1stan
+a       0.43     0.42     
+bc      0.03     0.03     
+nobs      47       47     </code></pre>
+<pre class="r"><code>plot( coeftab( m.salam1, m.salam1stan))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-60-1.png" width="672" /></p>
+<p>The estimates seem to be quite similar, only the intercept differs a bit. Let’s check the pair plots:</p>
+<pre class="r"><code>pairs( m.salam1 )</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-61-1.png" width="480" /></p>
+<p>Even after centering the predictor, there is still a strong negative correlation between the intercept and the parameter for the covering.</p>
+<pre class="r"><code>pairs(m.salam1stan)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-62-1.png" width="480" /></p>
+<p>The posterior distributions are both skewed in opposite directions. The quadratic approximation thus is not a good approximation for the posterior and we’ll use the Stan model from now on.</p>
+<pre class="r"><code># sequence of percent ground cover
+cover.seq &lt;- seq(from=0, to=100, length.out=100)
+
+d.pred &lt;- data.frame(
+  PCTCOVER = cover.seq,
+  PCTCOVER_c = cover.seq - mean(d$PCTCOVER)
+)
+
+lambda.pred &lt;- link(m.salam1stan, data=d.pred)
+lambda.med &lt;- apply(lambda.pred, 2, median)
+lambda.PI &lt;- apply(lambda.pred, 2, PI, prob=0.89)</code></pre>
+<pre class="r"><code># raw data plot
+plot( d$PCTCOVER, d$SALAMAN,
+      xlab=&quot;Percent ground cover&quot;, 
+      ylab=&quot;Salamander count&quot;,
+      col=&quot;steelblue&quot;, pch=16,
+      main=&quot;Posterior prediction for salamander counts&quot;)
+
+lines( cover.seq, lambda.med, col=&quot;steelblue&quot;)
+shade( lambda.PI, cover.seq, col=col.alpha(&quot;steelblue&quot;, 0.2))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-64-1.png" width="672" /></p>
+<p>If there is little or no covered ground, then there are only a handful of salamanders. Once the covered ground is more than 80%, the salamander count rises. This behaviour is well captured by the model. For high covered ground plots though, there is a much wider range of possible salamander counts than is estimated by our model. This indicates that some important factor is still missing in the model.</p>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Can you improve the model by using the other predictor <code>FORESTAGE</code>? Can you explain why it helps or does not help with prediction?</li>
+</ol>
+<p>Forest age ranges from very young forests of just a few years to some very old forests.</p>
+<pre class="r"><code>hist(d$FORESTAGE, breaks = 10,
+     main=&quot;Histogram of Forest age&quot;, xlab=&quot;Forest age&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-65-1.png" width="672" /></p>
+<p>The distribution is skewed in that most forests are younger than 100 years but a few forests are older than 500 years. It thus makes sense to use the log of forest age.</p>
+<pre class="r"><code>d$logFORESTAGE &lt;- log(d$FORESTAGE + 1 )
+d$logFORESTAGE_c &lt;- d$logFORESTAGE - mean(d$logFORESTAGE)
+m.salam2 &lt;- map2stan(
+  alist(
+    SALAMAN ~ dpois( lambda ),
+    log(lambda) &lt;- a + bc*PCTCOVER_c +bf*logFORESTAGE_c,
+    a ~ dnorm(0, 50),
+    bc ~ dnorm(0, 1),
+    bf ~ dnorm(0, 1)
+  ),
+  data=d, chains=2
+)</code></pre>
+<pre class="r"><code>precis(m.salam2, digits = 5)</code></pre>
+<pre><code>          mean          sd        5.5%      94.5%    n_eff     Rhat4
+a   0.40385885 0.162141389  0.13935383 0.64255854 610.2638 1.0151923
+bc  0.03508199 0.006408387  0.02520333 0.04541341 694.8960 1.0124212
+bf -0.05739072 0.099349711 -0.21788226 0.09757437 895.9881 0.9997187</code></pre>
+<pre class="r"><code>plot(precis(m.salam2, digits=5))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-68-1.png" width="672" /></p>
+<p><code>FORESTAGE</code> has a very small negative coefficient but with a large standard deviation: the 89% percent interval for the parameter includes 0. This supports the hypothesis that the forest age doesn’t add meaningful information to the model.</p>
+<p>Checking the parameters, we see that the parameter <code>a</code> and <code>bc</code> again have a relatively high correlation, though a bit less than in the model before.</p>
+<pre class="r"><code>pairs(m.salam2)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-69-1.png" width="576" /></p>
+<p>One reason why forest age doesn’t improve the model can be that forest age and the coverage are strongly correlated:</p>
+<pre class="r"><code>plot(PCTCOVER ~ FORESTAGE, data=d, log=&quot;x&quot;,
+     main=&quot;Correlation between Forest age and Coverage&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-70-1.png" width="672" /></p>
+<p>The model before failed in particular for plots where the ground coverage was above 75%. If we have a look at the salamander count depending on forest age for plots that have a coverage greater than 75%, we further see, that forest age does not add any information:</p>
+<pre class="r"><code>plot(SALAMAN ~ FORESTAGE, data=d[d$PCTCOVER &gt; 75,],
+     main=&quot;Salamander count depending on Forest age&quot;,
+     sub=&quot;For plots of a coverage greater than 75%&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-71-1.png" width="672" /></p>
+<p>In summary, the older a forest is, the more likely it has a high ground coverage. If the ground coverage is high, then the age of the forest doesn’t add any additional information that help predict the salamder count.</p>
+<p>We can also check the WAIC of the two models:</p>
+<pre class="r"><code>set.seed(2405)
+(cmp &lt;- compare(m.salam1stan, m.salam2 ) )</code></pre>
+<pre><code>                 WAIC       SE    dWAIC      dSE    pWAIC    weight
+m.salam1stan 213.2742 26.38574 0.000000       NA 4.662922 0.8870301
+m.salam2     217.3958 27.76167 4.121516 2.476505 7.640148 0.1129699</code></pre>
+<pre class="r"><code>plot(cmp, xlim=c(185, 247))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-73-1.png" width="672" /></p>
+<p>Almost all Akaike weight is on the first, simpler model. We can compute the proability that the second model would have a lower WAIC:</p>
+<pre class="r"><code>diff &lt;- rnorm(1e5, 4.5, 2.45)
+mean(diff &lt; 0)</code></pre>
+<pre><code>[1] 0.03261</code></pre>
+<p>The probability that the second model has a lower WAIC is only 3%. It is thus recommended to use the first model without the predictor forest age.</p>
+<p>Since forest age and ground cover are strongly correlated, how would a model perform where we use only forest age as a predictor? Could this model perform as good or better than the model using the ground coverage?</p>
+<pre class="r"><code>m.salam3 &lt;- map2stan(
+  alist(
+    SALAMAN ~ dpois( lambda ),
+    log(lambda) &lt;- a + bf*logFORESTAGE_c,
+    a ~ dnorm(0, 50),
+    bf ~ dnorm(0, 1)
+  ),
+  data=d, chains=2
+)</code></pre>
+<p>Let’s check how the parameter compare:</p>
+<pre class="r"><code>coeftab(m.salam1stan, m.salam2, m.salam3)</code></pre>
+<pre><code>     m.salam1stan m.salam2 m.salam3
+a       0.42         0.40     0.72 
+bc      0.03         0.04       NA 
+bf        NA        -0.06     0.39 
+nobs      47           47       47 </code></pre>
+<p>The intercept is higher in the third model and <code>bf</code> is now positive and quite large, whereas before in model 2 it was close to 0.</p>
+<pre class="r"><code>plot(coeftab(m.salam1stan, m.salam2, m.salam3))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-77-1.png" width="672" /></p>
+<p>Let’s check correlations between the parameters:</p>
+<pre class="r"><code>pairs(m.salam3)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-78-1.png" width="672" /></p>
+<p>The model has less correlation between its two parameters.</p>
+<p>We can compare all three models using WAIC:</p>
+<pre class="r"><code>(cmp &lt;- compare(m.salam1stan, m.salam2, m.salam3) )</code></pre>
+<pre><code>                 WAIC       SE     dWAIC       dSE    pWAIC       weight
+m.salam1stan 213.2742 26.38574  0.000000        NA 4.662922 8.870301e-01
+m.salam2     217.3958 27.76167  4.121516  2.476505 7.640148 1.129698e-01
+m.salam3     247.5621 31.86877 34.287851 18.520871 5.788950 3.179993e-08</code></pre>
+<p>The first model still performs best, whereas the model using only forest age performs much worse than the other two models.</p>
+<pre class="r"><code>plot(cmp, xlim=c(185, 282))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10_Ex_files/figure-html/unnamed-chunk-80-1.png" width="672" /></p>
+</div>

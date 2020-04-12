@@ -81,9 +81,9 @@ m10.3 <- map(
 ```
 The model without the interaction seems to fare better even though the third model best reflects the structure of the experiment.
 ```{r, fig.height=2.2, fig.width=8}
-plot( cp , 
-      xlim=c( min( cp@output$WAIC - cp@output$SE) , 
-              max(cp@output$WAIC + cp@output$SE ) ) )
+plot( cp )#, 
+     # xlim=c( min( cp@output$WAIC - cp@output$SE) , 
+    #          max(cp@output$WAIC + cp@output$SE ) ) )
 ```
 
 Note also that the difference has a small standard error, so the order of the models wouldn't easily change.
@@ -314,9 +314,9 @@ m10.7 <- map(
 
 The model using male as a predictor performs better than without. The comparison suggests that gender actually matters a lot:
 ```{r}
-plot( cp , 
-      xlim=c( min( cp@output$WAIC - cp@output$SE) , 
-              max(cp@output$WAIC + cp@output$SE ) ) )
+plot( cp)# , 
+     # xlim=c( min( cp@output$WAIC - cp@output$SE) , 
+      #        max(cp@output$WAIC + cp@output$SE ) ) )
 ```
 
 In which way does it matter?
@@ -395,9 +395,9 @@ We then compare all three models:
 
 As a plot:
 ```{r}
-plot( cp , 
-      xlim=c( min( cp@output$WAIC - cp@output$SE) , 
-              max(cp@output$WAIC + cp@output$SE ) ) )
+plot( cp )#, 
+      #xlim=c( min( cp@output$WAIC - cp@output$SE) , 
+       #       max(cp@output$WAIC + cp@output$SE ) ) )
 ```
 
 The two new models with the unique intercepts perform much better. Now, the model without `male` is ranked first but the difference between the first two models is tiny. Both models got about half the Akaike weight so you could call it a tie.

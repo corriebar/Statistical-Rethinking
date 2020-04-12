@@ -1,0 +1,252 @@
+---
+title: "Other count regressions"
+author: "Corrie"
+date: "November 11, 2018"
+output: 
+  github_document:
+    pandoc_args: --webtex 
+---
+
+
+
+<div id="multinomial-regression" class="section level2">
+<h2>Multinomial Regression</h2>
+<p>A multinomial regression is used when more than two things can happen.
+As an example, suppose we are modelling career choices for some young adults. Let’s assume there are three career choices one can take and expected income is one of the predictors. One option to model the career choices would be the explicit multinomial model which uses the multinomial logit. The multinomial logit uses the multinomial distribution which is an extension of the binomial distribution to the case with <span class="math inline">\(K&gt;2\)</span> events.</p>
+<div id="explicit-multinomial-model" class="section level3">
+<h3>Explicit Multinomial Model</h3>
+<p>In the explicit multinomial model we need <span class="math inline">\(K-1\)</span> linear models for <span class="math inline">\(K\)</span> different events. In our example, we’d thus have two different linear models.</p>
+<p>We first simulate the career choices:</p>
+<pre class="r"><code>library(rethinking)
+set.seed(2405)
+N &lt;- 1000                # number of individuals
+income &lt;- 1:3           # expected income of each career
+score &lt;- 0.5*1:3        # scores for each career, based on income
+
+# convert scores to probabilities
+(p &lt;- softmax(score[1], score[2], score[3]) )</code></pre>
+<pre><code>[1] 0.1863237 0.3071959 0.5064804</code></pre>
+<p>Next, we simulate the career choice an individual made.</p>
+<pre class="r"><code>career &lt;- sample(1:3, N, prob=p, replace=TRUE)</code></pre>
+<p>To fit the model, we use the <code>dcategorical</code> likelihood.</p>
+<pre class="r"><code>m10.16 &lt;- map(
+  alist(
+    career ~ dcategorical( softmax( 0, s2, s3 )),
+    s2 &lt;- b*2,         # linear model for event type 2
+    s3 &lt;- b*3,         # linear model for event type 3
+    b  ~ dnorm(0, 5)
+  ), data=list(career=career)
+)</code></pre>
+<pre class="r"><code>precis(m10.16)</code></pre>
+<pre><code>       mean         sd      5.5%     94.5%
+b 0.3499246 0.02952974 0.3027303 0.3971188</code></pre>
+<p>So what does this estimate mean? From the parameter <code>b</code> we can compute the scores <code>s2 =</code> 0.62 and <code>s3 =</code> 0.93. The probabilities are then computed from these scores via <code>softmax()</code>. However, these score are very difficult to interpret. In this example, we assigned a fixed score of 0 to the first event, but we also could have assigned a fixed score to the second or third event. The score would be very different in that case. The probabilities obtained through <code>softmax()</code> will stay the same though, so it’s absolutely important to always convert these scores to probabilities.</p>
+<pre class="r"><code>post &lt;- extract.samples(m10.16)
+post$s2 &lt;- post$b * 2
+post$s3 &lt;- post$b * 3
+probs &lt;- apply(post, 1, function(x) softmax(0, x[2], x[3]))
+(pr &lt;- apply(probs, 1, mean) )</code></pre>
+<pre><code>[1] 0.1705797 0.3428060 0.4866143</code></pre>
+<p>The probabilities are reasonably close to the one we used to simulate our data.</p>
+<p>For comparison, the proportions of our simulated data:</p>
+<pre class="r"><code>table(career) / length(career)</code></pre>
+<pre><code>career
+    1     2     3 
+0.180 0.314 0.506 </code></pre>
+<p>Note again, the scores we obtain from the model are very different from the scores we used for the simulation, only the probabilities match!</p>
+<p>Let’s have a look at the densities for each probability:</p>
+<pre class="r"><code>dens(probs[1,], main=&quot;Probability for Event 1&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10c_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<pre class="r"><code>dens(probs[2,], main=&quot;Probability for Event 2&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10c_files/figure-html/unnamed-chunk-7-2.png" width="672" /></p>
+<pre class="r"><code>dens(probs[3,], main=&quot;Probability for Event 3&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10c_files/figure-html/unnamed-chunk-7-3.png" width="672" /></p>
+<p>The distribution for the probability of the second event is heavily skewed. I assume this is since the three probabilities are not linearly independent of each other: They need to sum up to 1. Furthermore, we constructed the non-fixed scores as multiples of each other.</p>
+<p><strong>Further notes</strong></p>
+<p>There are various ways how to put the linear models and its scores in the softmax. Here we used</p>
+<pre class="r"><code>s1 &lt;- 0
+s2 &lt;- b*2
+s3 &lt;- b*3</code></pre>
+<p>which translates to trying to find a <span class="math inline">\(\beta\)</span> such that
+<span class="math display">\[\begin{align*}
+p_1 = 0.186 &amp;=  \frac{1}{1 + \exp(2\beta) + \exp(3\beta)} + \epsilon \\
+p_2 = 0.307 &amp;=  \frac{\exp(2\beta)}{1 + \exp(2\beta) + \exp(3\beta)} + \epsilon \\
+p_3 = 0.506 &amp;=  \frac{\exp(3\beta)}{1 + \exp(2\beta) + \exp(3\beta)} + \epsilon .
+\end{align*}\]</span>
+But actually, even without the error term <span class="math inline">\(\epsilon\)</span>, it’s not guaranteed that such a <span class="math inline">\(\beta\)</span> exists. In this case, such a <span class="math inline">\(\beta\)</span> does not exist, so the best <span class="math inline">\(\beta\)</span> is the one that minimizes the error term. The solution to this optimization problem is indeed very close to the result we got for <code>b</code>.</p>
+<p>There are also other possibilities in how we specify our model. One option for example would be to use different multiplicands for the scores:</p>
+<pre class="r"><code>s1 &lt;- 0
+s2 &lt;- b
+s3 &lt;- b*2</code></pre>
+<p>which would indeed get better estimates in this case, since there is a <span class="math inline">\(\beta\)</span> that almost solves the resulting equations exactly.
+For such a model, we would get the following estimate for <span class="math inline">\(\beta\)</span></p>
+<pre><code>       mean         sd      5.5%     94.5%
+b 0.5098878 0.04125471 0.4439548 0.5758208</code></pre>
+<p>and the resulting probability estimates would be</p>
+<pre><code>[1] 0.1840538 0.3060746 0.5098716</code></pre>
+<p>For comparison, the proportions in our simulated data:</p>
+<pre><code>career
+    1     2     3 
+0.180 0.314 0.506 </code></pre>
+<p>These are quite close!</p>
+<p>We don’t need to restrict ourselves to just one parameter for the scores and its multiples, we an also introduce another parameter for each score. For example, we could specify the models as follows:</p>
+<pre class="r"><code>s1 &lt;- 0
+s2 &lt;- b2
+s3 &lt;- b2 + b3</code></pre>
+<p>This also gives better estimates than the original model but also introduces correlation between <code>b2</code> and <code>b3</code>.</p>
+<pre><code>        mean        sd      5.5%     94.5%
+b2 0.5563025 0.0934674 0.4069236 0.7056815
+b3 0.4771160 0.0718306 0.3623168 0.5919151</code></pre>
+<p>The resulting probability estimates are</p>
+<pre><code>[1] 0.1800222 0.3139969 0.5059809</code></pre>
+<p>Interestingly, if we use a model, where each score gets its own parameter as follow</p>
+<pre class="r"><code>s1 &lt;- 0
+s2 &lt;- b2
+s3 &lt;- b3</code></pre>
+<p>the correlation of the estimates get worse:</p>
+<pre><code>        mean         sd      5.5%     94.5%
+b2 0.5560173 0.09345729 0.4066545 0.7053801
+b3 1.0331494 0.08675576 0.8944969 1.1718018</code></pre>
+<p>The resulting probabilities:</p>
+<pre><code>[1] 0.1800629 0.3139782 0.5059589</code></pre>
+<p>In total, which model specification to pick in an explicit multinomial is not quite straightforward.</p>
+<div id="including-predictor-variables" class="section level4">
+<h4>Including Predictor Variables</h4>
+<p>The model sofar isn’t very interesting yet. It doesn’t use any predictor variables and thus for every individual it simply outputs the same probabilities as above.
+Let’s get this a bit more interesting by including family income as a predictor variable into our model.
+We first simulate new data where the family income has an influence on the career taken by an individual:</p>
+<pre class="r"><code>N &lt;- 100
+# simulate family incomes for each individual
+family_income &lt;- runif(N)
+# assign a unique coefficient for each type of event
+b &lt;- (1:-1)
+career &lt;- c()
+for (i in 1:N) {
+  score &lt;- 0.5*(1:3) +   b * family_income[i]
+  p &lt;- softmax(score[1], score[2], score[3])
+  career[i] &lt;- sample(1:3, size=1, prob = p)
+}</code></pre>
+<p>To include the predictor variable in our model, we include it for both linear models of event type 1 and type 2. It is important that the predictor variable has the same value in both models but we use unique parameters:</p>
+<pre class="r"><code>m10.17 &lt;- map(
+  alist(
+    career ~ dcategorical( softmax( 0, s2, s3)),
+    s2 &lt;- a2 + b2*family_income,
+    s3 &lt;- a3 + b3*family_income,
+    c(a2, a3, b2, b3) ~ dnorm(0, 5)
+  ), 
+  data=list(career=career, family_income=family_income)
+)
+precis(m10.17)</code></pre>
+<pre><code>         mean        sd       5.5%      94.5%
+a2 -0.6593230 0.5301211 -1.5065589  0.1879128
+a3  0.9576812 0.4229572  0.2817140  1.6336485
+b2  1.0681466 0.8794221 -0.3373397  2.4736329
+b3 -1.4571748 0.8330821 -2.7886009 -0.1257488</code></pre>
+<p>Again, we should look at the probabilities and not the scores.</p>
+<p>First, we compute scores for each individual:</p>
+<pre class="r"><code>scores &lt;- link(m10.17)</code></pre>
+<pre class="r"><code>str(scores)</code></pre>
+<pre><code>List of 2
+ $ s3: num [1:1000, 1:100] 0.754 0.475 1.308 0.646 0.896 ...
+ $ s2: num [1:1000, 1:100] -0.956 -0.882 -0.71 -0.935 -0.464 ...</code></pre>
+<p>This time, since the score depends on the family income, we get different scores for each individual.
+For the first individual, we would then get the following probability estimates:</p>
+<pre class="r"><code>apply(softmax(0, scores$s2[,1], scores$s3[,1]), 2, mean)</code></pre>
+<pre><code>[1] 0.2655084 0.1576247 0.5768670</code></pre>
+</div>
+</div>
+<div id="multinomial-using-poisson" class="section level3">
+<h3>Multinomial using Poisson</h3>
+<p>One way to fit a multinomial likelihood is to refactor it into a series of Poisson likelihoods. It is often computationally easier to use Poisson rather than multinomial likelihood.
+We first will take an example from earlier with only two events (that is, a binomial case) and model it using Poisson regression:</p>
+<pre class="r"><code>data(&quot;UCBadmit&quot;)
+d &lt;- UCBadmit</code></pre>
+<p>First the binomial model for comparison:</p>
+<pre class="r"><code>set.seed(2405)
+m_binom &lt;- map(
+  alist(
+    admit ~ dbinom(applications, p),
+    logit(p) &lt;- a,
+    a ~ dnorm(0, 100)
+  ), data=d
+)
+precis(m_binom)</code></pre>
+<pre><code>        mean         sd       5.5%      94.5%
+a -0.4567393 0.03050707 -0.5054955 -0.4079832</code></pre>
+<p>And then the Poisson model. To obtain the probability of admission, we model both the rate of admission and the rate of rejection using Poisson:</p>
+<pre class="r"><code>d$rej &lt;- d$reject
+m_pois &lt;- map2stan(
+  alist(
+    admit ~ dpois(lambda1),
+    rej ~ dpois(lambda2),
+    log(lambda1) &lt;- a1,
+    log(lambda2) &lt;- a2,
+    c(a1, a2) ~ dnorm(0, 100)
+  ), data=d, chains=3, cores=3
+)</code></pre>
+<p>We will consider only the posterior means.</p>
+<p>For the binomial model, the inferred probability of admission is:</p>
+<pre class="r"><code> logistic(coef(m_binom)) </code></pre>
+<pre><code>        a 
+0.3877596 </code></pre>
+<p>In the Poisson model, the probability of admission is given by:
+<span class="math display">\[\begin{align*}
+p_{ADMIT} = \frac{\lambda_1}{\lambda_1 + \lambda_2} = \frac{\exp(a_1)}{\exp(a_1) + \exp(a_2)}
+\end{align*}\]</span>
+That is:</p>
+<pre class="r"><code>a &lt;- as.numeric(coef(m_pois))
+exp(a[1]) / ( exp(a[1]) + exp(a[2]) ) </code></pre>
+<pre><code>[1] 0.3874977</code></pre>
+<div id="career-choices-again-with-poisson" class="section level4">
+<h4>Career Choices again, with Poisson</h4>
+<p>In our example from above, estimating probabilities for career choices, we would build the following model:</p>
+<p>First, we need to reform the data set:</p>
+<pre class="r"><code>d &lt;- data.frame(career, 
+                career1= 1*(career==1), 
+                career2= 1*(career==2), 
+                career3= 1*(career==3))</code></pre>
+<pre class="r"><code>m10.16_poisson &lt;- map2stan(
+  alist(
+    career1 ~ dpois(lambda1),
+    career2 ~ dpois(lambda2),
+    career3 ~ dpois(lambda3),
+    log(lambda1) &lt;- b1,         # linear model for event type 1
+    log(lambda2) &lt;- b2,         # linear model for event type 2
+    log(lambda3) &lt;- b3,         # linear model for event type 3
+    c(b1, b2, b3)  ~ dnorm(0, 5)
+  ), data=d
+)
+precis(m10.16_poisson, corr = TRUE)</code></pre>
+<p>This then gives us the following probability estimates for the three career choices:</p>
+<pre class="r"><code>a &lt;- as.numeric(coef(m10.16_poisson))
+exp(a) / sum( exp(a)  )</code></pre>
+<pre><code>[1] 0.2985534 0.2691924 0.4322543</code></pre>
+<p>For comparison, the proportions in the data set:</p>
+<pre><code>career
+   1    2    3 
+0.30 0.27 0.43 </code></pre>
+</div>
+</div>
+</div>
+<div id="geometric-model" class="section level2">
+<h2>Geometric Model</h2>
+<p>The geometric distribution can be used if you have a count variable that is counting the number of events up until something happens. Modelling the probability of the terminating event is also known as <em>Event history analysis</em> or <em>Survival analysis</em>. If the probability of that event happening is constant through time and the units of time are discrete, then the geometric distribution is a common likelihood function that has maximum entropy under certain conditions.</p>
+<pre class="r"><code># simulate
+N &lt;- 100
+x &lt;- runif(N)
+y &lt;- rgeom(N, prob=logistic(-1 + 2*x ))
+
+# estimate
+m10.18 &lt;- map(
+  alist(
+    y ~ dgeom( p) ,
+    logit(p) &lt;- a + b*x,
+    a ~ dnorm(0, 10),
+    b ~ dnorm(0, 1)
+  ), data=list(y=y, x=x)
+)
+precis(m10.18)</code></pre>
+<pre><code>       mean        sd      5.5%      94.5%
+a -1.268826 0.2312125 -1.638348 -0.8993034
+b  2.128150 0.4533893  1.403546  2.8527532</code></pre>
+</div>

@@ -1,0 +1,367 @@
+---
+title: "Poisson Regression"
+author: "Corrie"
+date: "October 28, 2018"
+output: 
+  github_document:
+    pandoc_args: --webtex 
+---
+
+
+
+<div id="poisson-regression" class="section level2">
+<h2>Poisson Regression</h2>
+<div id="oceanic-tools" class="section level3">
+<h3>Oceanic Tools</h3>
+<p>A binomial distriution with many trials (that is <span class="math inline">\(n\)</span> large) and a small probability of an event (<span class="math inline">\(p\)</span> small) approaches a Poisson distribution where both the mean and the variance are equal:</p>
+<pre class="r"><code>y &lt;- rbinom(1e5, 1000, 1/1000)
+c(mean(y), var(y))</code></pre>
+<pre><code>[1] 1.00005 1.00184</code></pre>
+<p>A Poisson model allows us to model binomial events for which the number of trials <span class="math inline">\(n\)</span> is unknown.</p>
+<p>We work with the <code>Kline</code> data, a dataset about Oceanic societies and the number of found tools. We will analyse the number of found tools in dependance of the population size and contact rate. The hypothesis is, that a society with a large population has a larger number of tools and further that a high contact rate to other societies increases the effect of population size.</p>
+<pre class="r"><code>library(rethinking)
+data(Kline)
+d &lt;- Kline
+knitr::kable(d)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">culture</th>
+<th align="right">population</th>
+<th align="left">contact</th>
+<th align="right">total_tools</th>
+<th align="right">mean_TU</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Malekula</td>
+<td align="right">1100</td>
+<td align="left">low</td>
+<td align="right">13</td>
+<td align="right">3.2</td>
+</tr>
+<tr class="even">
+<td align="left">Tikopia</td>
+<td align="right">1500</td>
+<td align="left">low</td>
+<td align="right">22</td>
+<td align="right">4.7</td>
+</tr>
+<tr class="odd">
+<td align="left">Santa Cruz</td>
+<td align="right">3600</td>
+<td align="left">low</td>
+<td align="right">24</td>
+<td align="right">4.0</td>
+</tr>
+<tr class="even">
+<td align="left">Yap</td>
+<td align="right">4791</td>
+<td align="left">high</td>
+<td align="right">43</td>
+<td align="right">5.0</td>
+</tr>
+<tr class="odd">
+<td align="left">Lau Fiji</td>
+<td align="right">7400</td>
+<td align="left">high</td>
+<td align="right">33</td>
+<td align="right">5.0</td>
+</tr>
+<tr class="even">
+<td align="left">Trobriand</td>
+<td align="right">8000</td>
+<td align="left">high</td>
+<td align="right">19</td>
+<td align="right">4.0</td>
+</tr>
+<tr class="odd">
+<td align="left">Chuuk</td>
+<td align="right">9200</td>
+<td align="left">high</td>
+<td align="right">40</td>
+<td align="right">3.8</td>
+</tr>
+<tr class="even">
+<td align="left">Manus</td>
+<td align="right">13000</td>
+<td align="left">low</td>
+<td align="right">28</td>
+<td align="right">6.6</td>
+</tr>
+<tr class="odd">
+<td align="left">Tonga</td>
+<td align="right">17500</td>
+<td align="left">high</td>
+<td align="right">55</td>
+<td align="right">5.4</td>
+</tr>
+<tr class="even">
+<td align="left">Hawaii</td>
+<td align="right">275000</td>
+<td align="left">low</td>
+<td align="right">71</td>
+<td align="right">6.6</td>
+</tr>
+</tbody>
+</table>
+<p>The data looks rather small, it has only 10 rows.</p>
+<pre class="r"><code>d$log_pop &lt;- log(d$population)
+d$contact_high &lt;- ifelse( d$contact == &quot;high&quot;, 1, 0)</code></pre>
+<p>We will use the following model:
+<span class="math display">\[\begin{align*}
+T_i &amp;\sim \text{Poisson}(\lambda_i) \\
+\log \lambda_i &amp;= \alpha + \beta_P \log P_i + \beta_C C_i + \beta_{PC}C_i \log P_i \\
+\alpha &amp;\sim \text{Normal}(0, 100) \\
+\beta_P &amp;\sim \text{Normal}(0, 1) \\
+\beta_C &amp;\sim \text{Normal}(0, 1) \\
+\beta_{PC} &amp;\sim \text{Normal}(0, 1)
+\end{align*}\]</span>
+where <span class="math inline">\(P\)</span> is <code>population</code>, <span class="math inline">\(C\)</span> is <code>contact_high</code>, and the <span class="math inline">\(T\)</span> is <code>total_tools</code>.</p>
+<pre class="r"><code>m10.10 &lt;- map(
+  alist(
+    total_tools ~ dpois( lambda ),
+    log(lambda) &lt;- a + bp*log_pop + 
+                    bc*contact_high + bpc*contact_high*log_pop,
+    a ~ dnorm( 0, 100),
+    c(bp, bc, bpc) ~ dnorm(0, 1)
+  ), data=d
+)
+precis(m10.10, corr=TRUE)</code></pre>
+<pre><code>           mean         sd       5.5%     94.5%
+a    0.94406885 0.36008763  0.3685793 1.5195584
+bp   0.26403303 0.03466728  0.2086280 0.3194380
+bc  -0.09018609 0.84140064 -1.4349068 1.2545346
+bpc  0.04256259 0.09227121 -0.1049046 0.1900298</code></pre>
+<pre class="r"><code>plot( precis( m10.10 ))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10b_files/figure-html/unnamed-chunk-5-1.png" width="576" /></p>
+<p>It appears as if the contact rate, as well as its interaction with population, has no influence on the number of tools.
+But the table is misleading. Let’s compute some counterfactual predictions. Consider two islands, both with log-population of 8 but one with high and the other with low contact rate.</p>
+<pre class="r"><code>post &lt;- extract.samples(m10.10 )
+lambda_high &lt;- exp( post$a + post$bc + (post$bp + post$bpc)*8 ) 
+lambda_low &lt;- exp( post$a + post$bp*8 )
+diff &lt;- lambda_high - lambda_low
+sum(diff &gt; 0) / length(diff)</code></pre>
+<pre><code>[1] 0.9543</code></pre>
+<p>There is a 95% probability that the high-contact island has more tools than the island with low-contact.</p>
+<pre class="r"><code>par(mfrow=c(1,2))
+dens( diff , col=&quot;steelblue&quot;, lwd=2, 
+      xlab=&quot;lambda_high - lambda_low&quot;)
+abline(v = 0, lty=2)
+abline(h=0, col=&quot;grey&quot;, lwd=1)
+
+pr &lt;- as.data.frame(precis(m10.10, prob=0.95))
+bc &lt;- post$bc[1:500]
+bpc &lt;- post$bpc[1:500]
+plot( bc, bpc, col=densCols(bc, bpc), pch=16, cex=0.7 )
+lines( pr[&quot;bc&quot;, 3:4], rep(min(bpc), 2))
+lines( rep(min(bc), 2),  pr[&quot;bpc&quot;, 3:4])
+points(c( pr[&quot;bc&quot;, 1], min(bc) ), c(min(bpc), pr[&quot;bpc&quot;, 1] ), 
+       pch=16, cex=0.7 )</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10b_files/figure-html/unnamed-chunk-7-1.png" width="960" /></p>
+<p>The reason for this behaviour lies in the strong correlation in the uncertainty of the two parameters. It is important to not just inspect the <em>marginal</em> uncertainty in each parameter, but also the <em>joint</em> uncertainty.</p>
+<p>A better way to assess whether a predictor is expected to improve prediction is to use model comparison.
+We will compare 5 models.</p>
+<p>A model that omits the interaction:</p>
+<pre class="r"><code># no interaction
+m10.11 &lt;- map(
+  alist(
+    total_tools ~ dpois( lambda ),
+    log(lambda) &lt;- a + bp*log_pop + bc*contact_high,
+    a ~ dnorm(0, 100),
+    c(bp, bc) ~ dnorm(0, 1)
+  ), data=d
+)</code></pre>
+<p>Two more models, each with only one of the predictors:</p>
+<pre class="r"><code># one predictor
+m10.12 &lt;- map(
+  alist(
+    total_tools ~ dpois( lambda ),
+    log(lambda) &lt;- a + bp*log_pop,
+    a ~ dnorm(0, 100),
+    bp ~ dnorm(0, 1)
+  ), data=d
+)
+m10.13 &lt;- map(
+  alist(
+    total_tools ~ dpois( lambda ),
+    log(lambda) &lt;- a + bc*contact_high,
+    a ~ dnorm(0, 100),
+    bc ~ dnorm( 0, 1)
+  ), data=d
+)</code></pre>
+<p>A “null” model with only the intercept:</p>
+<pre class="r"><code># no predictor
+m10.14 &lt;- map(
+  alist(
+    total_tools ~ dpois( lambda ),
+    log(lambda) &lt;- a,
+    a ~ dnorm(0, 100)
+  ), data=d
+)</code></pre>
+<p>We compare all models using WAIC:</p>
+<pre class="r"><code>( islands.compare &lt;- compare( m10.10, m10.11, m10.12, m10.13, m10.14, n=1e4) )</code></pre>
+<pre><code>            WAIC        SE     dWAIC       dSE     pWAIC       weight
+m10.11  79.08059 11.231130  0.000000        NA  4.228401 6.101048e-01
+m10.10  80.21065 11.341891  1.130066  1.264173  4.900114 3.467477e-01
+m10.12  84.37860  8.861656  5.298010  8.432156  3.733238 4.314755e-02
+m10.14 141.49895 31.485852 62.418365 34.334893  8.321843 1.703840e-14
+m10.13 148.83144 42.929543 69.750855 44.817591 16.892930 4.357112e-16</code></pre>
+<pre class="r"><code>plot( islands.compare )</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10b_files/figure-html/unnamed-chunk-12-1.png" width="768" /></p>
+<p>The top two models include both predictors but the top model excludes the interaction. However, a lot of model weight is assigned to both models. This suggests that the interactionis probably overfit but the model set is decent evidence that contact rate matters.</p>
+<p>Let’s plot some counterfactual predictions.</p>
+<pre class="r"><code># different plot markers for high/low contact
+pch &lt;- ifelse( d$contact_high==1, 16, 1)
+plot( d$log_pop, d$total_tools, col=&quot;steelblue&quot;, pch=pch,
+      xlab=&quot;log-population&quot;, ylab=&quot;total tools&quot;)
+
+# sequence of log-population sizes to compute over
+log_pop.seq &lt;- seq(from=6, to=13, length.out = 30)
+
+# compute trend for high contact islands
+d.pred &lt;- data.frame(
+  log_pop = log_pop.seq,
+  contact_high = 1
+)
+
+lambda.pred.h &lt;- ensemble( m10.10, m10.11, m10.12, data=d.pred)
+lambda.med &lt;- apply( lambda.pred.h$link, 2, median )
+lambda.PI &lt;- apply( lambda.pred.h$link, 2, PI )
+
+# plot predicted trend for high contact islands
+lines( log_pop.seq, lambda.med, col=&quot;steelblue&quot;)
+shade( lambda.PI, log_pop.seq, col=col.alpha(&quot;steelblue&quot;, 0.2))
+
+# compute trend for low contact islands
+d.pred &lt;- data.frame(
+  log_pop = log_pop.seq,
+  contact_high = 0
+)
+
+lambda.pred.l &lt;- ensemble( m10.10, m10.11, m10.12, data=d.pred)
+lambda.med &lt;- apply( lambda.pred.l$link, 2, median )
+lambda.PI &lt;- apply( lambda.pred.l$link, 2, PI )
+
+# plot predicted trend for high contact islands
+lines( log_pop.seq, lambda.med, lty=2)
+shade( lambda.PI, log_pop.seq, col=col.alpha(&quot;black&quot;, 0.1 ))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10b_files/figure-html/unnamed-chunk-13-1.png" width="576" /></p>
+<p>Next, we’ll check if the MAP estimates accurately describe the shape of the posterior.</p>
+<pre class="r"><code>m10.10stan &lt;- map2stan( m10.10, iter=3000, warmup=1000, chains=4)</code></pre>
+<pre class="r"><code>precis( m10.10stan)</code></pre>
+<pre><code>           mean         sd       5.5%     94.5%    n_eff    Rhat4
+a    0.92946915 0.35973934  0.3426740 1.5006825 2831.914 1.000376
+bp   0.26488980 0.03465300  0.2091196 0.3202353 2772.767 1.000581
+bc  -0.05581578 0.83629719 -1.3776226 1.2967834 2829.078 1.001508
+bpc  0.03911738 0.09182396 -0.1097606 0.1854774 2818.539 1.001505</code></pre>
+<p>The estimates and intervals are the same as before. However, if we look at the pairs plot</p>
+<pre class="r"><code>pairs(m10.10stan)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10b_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p>we see that there is a very high correlation between the parameters <code>a</code> and <code>bp</code> and between <code>bc</code> and <code>bpc</code>. Hamiltonian Monte Carlo can handle these correlations, however, it would still be better to avoid them. We can center the predictors to reduce the correlation:</p>
+<pre class="r"><code>d$log_pop_c &lt;- d$log_pop - mean(d$log_pop)
+
+m10.10stan.c &lt;- map2stan(
+  alist(
+    total_tools ~ dpois( lambda ),
+    log(lambda) &lt;- a + bp*log_pop_c + bc*contact_high +
+                    bcp*log_pop_c*contact_high,
+    a ~ dnorm(0, 10),
+    bp ~ dnorm(0, 1),
+    bc ~ dnorm(0, 1),
+    bcp ~ dnorm(0, 1)
+  ), 
+  data=d, iter=3000, warmup=1000, chains=4
+)</code></pre>
+<pre class="r"><code>precis(m10.10stan.c)</code></pre>
+<pre><code>          mean         sd       5.5%     94.5%    n_eff    Rhat4
+a   3.31111052 0.08947352  3.1662595 3.4513361 3125.337 1.000006
+bp  0.26293969 0.03536224  0.2064752 0.3178471 4180.867 1.000242
+bc  0.28465594 0.11631564  0.1027015 0.4715916 3104.969 1.000206
+bcp 0.06439732 0.16930297 -0.2090300 0.3341787 5641.334 1.000161</code></pre>
+<p>The estimates look different because of the centering, but the predictions remain the same.
+If we look at the pairs plot now, we see that the strong correlations are gone:</p>
+<pre class="r"><code>pairs(m10.10stan.c)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10b_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+<p>The Markov Chain has also become more efficient which we can see at the increased number of effective samples.</p>
+</div>
+<div id="examples-with-different-exposure-time" class="section level3">
+<h3>Examples with different exposure Time</h3>
+<p>When the length of observation varies, the counts we observe also vary. We can handle this by adding an <em>offset</em> to the linear model.</p>
+<p>As in the previous example, we have a monastery that completes about 1.5 manuscripts per day, that is <span class="math inline">\(\lambda=1.5\)</span>.</p>
+<pre class="r"><code>num_days &lt;- 30
+y &lt;- rpois( num_days, 1.5)</code></pre>
+<p>Now <code>y</code> holds 30 days of simulated counts of completed manuscripts.
+Next, we consider to buy another monastery which unfortunately doesn’t keep daily records but weekly records instead.
+Let’s assume this monastery has a real daily rate of <span class="math inline">\(\lambda = 0.5\)</span>. To simulate data on a weekly basis, we just multiply this average by 7, the exposure:</p>
+<pre class="r"><code>num_weeks &lt;- 4
+y_new &lt;- rpois( num_weeks, 0.5*7 )</code></pre>
+<p>So <code>y_new</code> holds four weeks of counts of completed manuscripts.</p>
+<pre class="r"><code>y_all &lt;- c(y, y_new)
+exposure &lt;- c( rep(1, 30), rep(7, 4) )
+monastery &lt;- c(rep(0, 30), rep(1, 4))
+d &lt;- data.frame(y=y_all, days=exposure, monastery=monastery)
+knitr::kable( head(d) )</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">y</th>
+<th align="right">days</th>
+<th align="right">monastery</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<p>Next, we fit a model to estimate the rate of manuscript production at each monastery.</p>
+<pre class="r"><code>d$log_days &lt;- log(d$days)
+
+m10.15 &lt;- map(
+  alist(
+    y ~ dpois( lambda ),
+    log(lambda) &lt;- log_days + a + b*monastery,
+    a ~ dnorm(0, 100),
+    b ~ dnorm(0, 1)
+  ), data=d
+)</code></pre>
+<pre class="r"><code>post &lt;- extract.samples(m10.15 )
+lambda_old &lt;- exp( post$a )
+lambda_new &lt;- exp( post$a + post$b)
+precis( data.frame( lambda_old, lambda_new))</code></pre>
+<pre><code>                mean        sd      5.5%     94.5%    histogram
+lambda_old 1.4860864 0.2249403 1.1611448 1.8703609  ▁▂▇▇▃▂▁▁▁▁▁
+lambda_new 0.5549236 0.1418438 0.3607128 0.8019058 ▁▂▇▇▅▂▁▁▁▁▁▁</code></pre>
+<p>The estimates are indeed very close to the real values.</p>
+</div>
+</div>
