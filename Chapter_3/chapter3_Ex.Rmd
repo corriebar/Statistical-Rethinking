@@ -1,18 +1,30 @@
 ---
 title: "Chapter 3 - Exercises"
-output: 
-  github_document:
-    pandoc_args: --webtex=http://chart.apis.google.com/chart?cht=tx&chl=
+author: Corrie
+date: "2020-04-09"
+slug: chp3-ex
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(printr)
 ```
 
-These are my solutions to the practice questions of chapter 3, Sampling the Imaginary, of the book "Statistical Rethinking" (version 2) by Richard McElreath.
+These are my solutions to the practice questions of chapter 3, _Sampling the Imaginary_, of the book "Statistical Rethinking" (version 2) by Richard McElreath.
 
 ## Easy.
-The Easy problems use the samples from the globe tossing example:
+The Easy problems use the samples from the globe tossing example: 
 ```{r}
 p_grid <- seq( from=0, to=1, length.out=1000 )
 prior <- rep( 1, 1000 )
@@ -69,7 +81,7 @@ PI( samples, prob = 0.66 )
 ```
 
 66% of the posterior probability is between 0.50 and 0.77. The percentile interval is basically identical to the HPDI interval above, implying that the  posterior is highly symmetric:
-```{r}
+```{r, echo=F}
 dens( samples )
 ```
 
@@ -104,7 +116,7 @@ head(w)
 ```
 
 `w` is then a vector containing simulated predictions of 15 globe tosses, averaged over the posterior probability
-```{r}
+```{r, echo=F}
 simplehist(w)
 ```
 
@@ -139,7 +151,7 @@ new_posterior <- new_posterior / sum(posterior )
 new_samples <- sample( p_grid, prob=new_posterior, size=1e4, replace=TRUE)
 ```
 
-```{r}
+```{r, echo=F}
 par(mfrow=c(1,2))
 dens(samples)
 mtext("Posterior with flat prior")
@@ -247,13 +259,15 @@ __3H2.__
 Using the `sample()` function, draw 10,000 random parameter values from the posterior distribution and estimate the 50%, 89%, and 97% HPDIs.
 ```{r}
 samples <- sample(p_grid, prob=posterior, size=1e5, replace = TRUE)
-HPDI(samples, c(0.1, 0.5, 0.89, 0.97))
+HPDI(samples, c(0.5, 0.89, 0.97))
 ```
 
 __3H3.__
 Use `rbinom()` to simulate 10,000 replicates of 200 births. Compare the distribution of predicted numbers of boys to the actual count in the data.
 ```{r}
 pred_births <- rbinom(1e4, size=200, prob = samples)
+```
+```{r, echo=F}
 pred_freqs <- table(pred_births)
 simplehist(pred_births)
 lines(as.table(pred_freqs[names(pred_freqs) == boys]), col="deepskyblue", lwd=3)
@@ -265,6 +279,8 @@ Our observed number of boys (in blue) is very much in the center of predicted nu
 __3H4.__ Now compare 10,000 counts of boys from 100 simulated first borns only to the number of boys in the first births, `births1`. How does the model look in this light?
 ```{r}
 pred_births <- rbinom(1e4, size=100, prob = samples)
+``` 
+```{r, echo=F}
 pred_freqs <- table(pred_births)
 simplehist(pred_births)
 lines(as.table(pred_freqs[names(pred_freqs) == sum(birth1)]), col="deepskyblue", lwd=3)
@@ -277,6 +293,8 @@ __3H5.__ The model assumes that sex of first and second births are independent. 
 ```{r}
 followed_a_girl <- birth2[birth1 == 0]
 pred_births <- rbinom(1e4, size=length(followed_a_girl), prob = samples)
+``` 
+```{r, echo=F}
 pred_freqs <- table(pred_births)
 simplehist(pred_births)
 lines(as.table(pred_freqs[names(pred_freqs) == sum(followed_a_girl)]), col="deepskyblue", lwd=3)
@@ -284,3 +302,6 @@ mtext("Posterior predictive distribution: Number of boys in 49 births")
 ```
 
 Our observed number of boys that followed a first-born girl (here in blue) is with 39 out of 49 births much higher than what is predicted by our model. According to our model, only a bit more than half of these births would be a boy but the observed data suggests that if the first-born is a girl, the chance of the second child being a boy is much much higher. It seems there is some biological mechanism in which the sex of the first child influences the sex of the second child. Since our model assumes complete independece between all births, the model fails to capthure this.
+
+
+<small>[Full code.](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_3/chapter3_Ex.Rmd)<small>

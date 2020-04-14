@@ -1,8 +1,10 @@
 Chapter 3 - Exercises
 ================
+Corrie
+2020-04-09
 
-These are my solutions to the practice questions of chapter 3, Sampling
-the Imaginary, of the book “Statistical Rethinking” (version 2) by
+These are my solutions to the practice questions of chapter 3, *Sampling
+the Imaginary*, of the book “Statistical Rethinking” (version 2) by
 Richard McElreath.
 
 ## Easy.
@@ -21,8 +23,7 @@ set.seed(100)
 samples <- sample( p_grid, prob=posterior, size=1e4, replace=TRUE )
 ```
 
-**3E1.** How much posterior probability lies below
-![p=0.2](http://chart.apis.google.com/chart?cht=tx&chl=p%3D0.2 "p=0.2")?
+**3E1.** How much posterior probability lies below \(p=0.2\)?
 
 ``` r
 mean( samples < 0.2 )
@@ -30,8 +31,7 @@ mean( samples < 0.2 )
 
     ## [1] 4e-04
 
-**3E2.** How much posterior probability lies above
-![p=0.8](http://chart.apis.google.com/chart?cht=tx&chl=p%3D0.8 "p=0.8")?
+**3E2.** How much posterior probability lies above \(p=0.8\)?
 
 ``` r
 mean( samples > 0.8 )
@@ -39,10 +39,8 @@ mean( samples > 0.8 )
 
     ## [1] 0.1116
 
-**3E3.** How much posterior probability lies between
-![p=0.2](http://chart.apis.google.com/chart?cht=tx&chl=p%3D0.2 "p=0.2")
-and ![p=0.8](http://chart.apis.google.com/chart?cht=tx&chl=p%3D0.8
-"p=0.8")?
+**3E3.** How much posterior probability lies between \(p=0.2\) and
+\(p=0.8\)?
 
 ``` r
 mean( samples > 0.2 & samples < 0.8 )
@@ -51,7 +49,7 @@ mean( samples > 0.2 & samples < 0.8 )
     ## [1] 0.888
 
 **3E4.** 20% of the posterior probability lies below which value of
-![p](http://chart.apis.google.com/chart?cht=tx&chl=p "p")?
+\(p\)?
 
 ``` r
 quantile( samples, probs = 0.2 )
@@ -63,7 +61,7 @@ quantile( samples, probs = 0.2 )
 20% of the posterior probability is below 0.52.
 
 **3E5.** 20% of the posterior probability lies above which value of
-![p](http://chart.apis.google.com/chart?cht=tx&chl=p "p")?
+\(p\)?
 
 ``` r
 quantile( samples, probs = 0.8 )
@@ -74,9 +72,8 @@ quantile( samples, probs = 0.8 )
 
 20% of the posterior probability is above 0.76.
 
-**3E6.** Which values of
-![p](http://chart.apis.google.com/chart?cht=tx&chl=p "p") contain the
-narrowest interval equal to 66% of the posterior probability?
+**3E6.** Which values of \(p\) contain the narrowest interval equal to
+66% of the posterior probability?
 
 ``` r
 library(rethinking)
@@ -88,10 +85,8 @@ HPDI( samples, prob = 0.66 )
 
 66% of the posterior probability is between 0.51 and 0.77.
 
-**3E7.** Which values of
-![p](http://chart.apis.google.com/chart?cht=tx&chl=p "p") contain 66% of
-the posterior probability, assuming equal posterior probability both
-below and above the interval?
+**3E7.** Which values of \(p\) contain 66% of the posterior probability,
+assuming equal posterior probability both below and above the interval?
 
 ``` r
 PI( samples, prob = 0.66 )
@@ -103,11 +98,6 @@ PI( samples, prob = 0.66 )
 66% of the posterior probability is between 0.50 and 0.77. The
 percentile interval is basically identical to the HPDI interval above,
 implying that the posterior is highly symmetric:
-
-``` r
-dens( samples )
-```
-
 ![](chapter3_Ex_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 ## Medium.
@@ -126,8 +116,7 @@ posterior <- posterior / sum(posterior)
 ```
 
 **3M2.** Draw 10,000 sample from the grid approximation from above and
-use the samples to calculate the 90% HPDI for
-![p](http://chart.apis.google.com/chart?cht=tx&chl=p "p").
+use the samples to calculate the 90% HPDI for \(p\).
 
 We can use the same code from above:
 
@@ -142,8 +131,7 @@ HPDI(samples, prob = 0.9 )
 **3M3.** Construct a posterior predictive check for this model and data.
 
   - Simulate the distribution of samples, averaging over the posterior
-    uncertatinty in ![p](http://chart.apis.google.com/chart?cht=tx&chl=p
-    "p").
+    uncertatinty in \(p\).
 
 To compute the posterior predictive distribution, we generate samples
 using the `rbinom()` function and the posterior samples:
@@ -157,11 +145,6 @@ head(w)
 
 `w` is then a vector containing simulated predictions of 15 globe
 tosses, averaged over the posterior probability
-
-``` r
-simplehist(w)
-```
-
 ![](chapter3_Ex_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
   - What is the probability of observing 8 water in 15 tosses?
@@ -194,14 +177,11 @@ The probability to observe 6 water in 9 tosses (given the new data) is
 around 18%.
 
 **3M5.** Start over at **3M1**, but now use a prior that is zero below
-![p=0.5](http://chart.apis.google.com/chart?cht=tx&chl=p%3D0.5 "p=0.5")
-and a constant above
-![p=0.5](http://chart.apis.google.com/chart?cht=tx&chl=p%3D0.5 "p=0.5").
-This corresponds to prior information that a majority of the Earth’s
-surface is water. Repeat each problem above and compare the inferences.
-What difference does the prior make? If it helps, compare inferences
-(using both priors) to the true value
-![p=0.7](http://chart.apis.google.com/chart?cht=tx&chl=p%3D0.7 "p=0.7").
+\(p=0.5\) and a constant above \(p=0.5\). This corresponds to prior
+information that a majority of the Earth’s surface is water. Repeat each
+problem above and compare the inferences. What difference does the prior
+make? If it helps, compare inferences (using both priors) to the true
+value \(p=0.7\).
 
 ``` r
 # I use 2, so the prior integrates to 1, 
@@ -212,15 +192,6 @@ new_posterior <- likelihood * informed_prior
 new_posterior <- new_posterior / sum(posterior )
 
 new_samples <- sample( p_grid, prob=new_posterior, size=1e4, replace=TRUE)
-```
-
-``` r
-par(mfrow=c(1,2))
-dens(samples)
-mtext("Posterior with flat prior")
-
-dens(new_samples, xlim=c(0,1))
-mtext("Posterior with informed prior")
 ```
 
 ![](chapter3_Ex_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
@@ -255,15 +226,12 @@ this interval containing the true value.
 
 **3M6.** Suppose yu want to estimate the Earth’s proportion of water
 very precisely. Specifically, you want the 99% percentile interval of
-the posterior distribution of
-![p](http://chart.apis.google.com/chart?cht=tx&chl=p "p") to be only
-0.05 wide. This means, the distance between the upper and lower bound of
-the interval should be 0.05. How many times will you have to toss the
-globe to do this?
+the posterior distribution of \(p\) to be only 0.05 wide. This means,
+the distance between the upper and lower bound of the interval should be
+0.05. How many times will you have to toss the globe to do this?
 
-We can just try some values. I am using here the true value of
-![p](http://chart.apis.google.com/chart?cht=tx&chl=p "p") for the
-proportion of water to generate some “observed” data.
+We can just try some values. I am using here the true value of \(p\) for
+the proportion of water to generate some “observed” data.
 
 ``` r
 compute_pi_width <- function(N, true_p) {
@@ -302,9 +270,7 @@ compute_pi_width(N, true_p)
     ## [1] 0.07407908
 
 With 1000 observations, we’re getting quite close to an PI of 0.05
-width. With ![N
-= 2200](http://chart.apis.google.com/chart?cht=tx&chl=N%20%3D%202200
-"N = 2200") we then get a 95%-interval that is 0.05 wide.
+width. With \(N = 2200\) we then get a 95%-interval that is 0.05 wide.
 
 ``` r
 N <- 2200
@@ -313,12 +279,10 @@ compute_pi_width(N, true_p)
 
     ## [1] 0.05105105
 
-Note however that is depends on the true value of
-![p](http://chart.apis.google.com/chart?cht=tx&chl=p "p"). If for
-example the true value of
-![p](http://chart.apis.google.com/chart?cht=tx&chl=p "p") would be
-heavily biased, such as 0.995 (almost all of Earth is water), then we’d
-only need 150 tosses to get such a small interval.
+Note however that is depends on the true value of \(p\). If for example
+the true value of \(p\) would be heavily biased, such as 0.995 (almost
+all of Earth is water), then we’d only need 150 tosses to get such a
+small interval.
 
 ``` r
 N <- 150
@@ -387,11 +351,11 @@ values from the posterior distribution and estimate the 50%, 89%, and
 
 ``` r
 samples <- sample(p_grid, prob=posterior, size=1e5, replace = TRUE)
-HPDI(samples, c(0.1, 0.5, 0.89, 0.97))
+HPDI(samples, c(0.5, 0.89, 0.97))
 ```
 
-    ##     |0.97     |0.89      |0.5      |0.1      0.1|      0.5|     0.89|     0.97| 
-    ## 0.4795480 0.4993499 0.5299530 0.5469547 0.5557556 0.5770577 0.6107611 0.6299630
+    ##     |0.97     |0.89      |0.5      0.5|     0.89|     0.97| 
+    ## 0.4795480 0.4993499 0.5299530 0.5770577 0.6107611 0.6299630
 
 **3H3.** Use `rbinom()` to simulate 10,000 replicates of 200 births.
 Compare the distribution of predicted numbers of boys to the actual
@@ -399,13 +363,9 @@ count in the data.
 
 ``` r
 pred_births <- rbinom(1e4, size=200, prob = samples)
-pred_freqs <- table(pred_births)
-simplehist(pred_births)
-lines(as.table(pred_freqs[names(pred_freqs) == boys]), col="deepskyblue", lwd=3)
-mtext("Posterior predictive distribution: Number of boys in 200 births")
 ```
 
-![](chapter3_Ex_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
+![](chapter3_Ex_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
 
 Our observed number of boys (in blue) is very much in the center of
 predicted numbers of boys. Based on this check, we would say that our
@@ -417,13 +377,9 @@ does the model look in this light?
 
 ``` r
 pred_births <- rbinom(1e4, size=100, prob = samples)
-pred_freqs <- table(pred_births)
-simplehist(pred_births)
-lines(as.table(pred_freqs[names(pred_freqs) == sum(birth1)]), col="deepskyblue", lwd=3)
-mtext("Posterior predictive distribution: Number of boys in 100 births")
 ```
 
-![](chapter3_Ex_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
+![](chapter3_Ex_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
 
 Our observed number of boys in the first borns is slightly less central
 in the posterior predictive distribution. However, it still seems to be
@@ -440,13 +396,9 @@ on in these data?
 ``` r
 followed_a_girl <- birth2[birth1 == 0]
 pred_births <- rbinom(1e4, size=length(followed_a_girl), prob = samples)
-pred_freqs <- table(pred_births)
-simplehist(pred_births)
-lines(as.table(pred_freqs[names(pred_freqs) == sum(followed_a_girl)]), col="deepskyblue", lwd=3)
-mtext("Posterior predictive distribution: Number of boys in 49 births")
 ```
 
-![](chapter3_Ex_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
+![](chapter3_Ex_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
 
 Our observed number of boys that followed a first-born girl (here in
 blue) is with 39 out of 49 births much higher than what is predicted by
@@ -457,3 +409,6 @@ much higher. It seems there is some biological mechanism in which the
 sex of the first child influences the sex of the second child. Since our
 model assumes complete independece between all births, the model fails
 to capthure this.
+
+<small>[Full
+code.](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_3/chapter3_Ex.Rmd)<small>

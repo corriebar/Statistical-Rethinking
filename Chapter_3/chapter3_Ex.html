@@ -1,13 +1,24 @@
 ---
 title: "Chapter 3 - Exercises"
-output: 
-  github_document:
-    pandoc_args: --webtex=http://chart.apis.google.com/chart?cht=tx&chl=
+author: Corrie
+date: "2020-04-09"
+slug: chp3-ex
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
+output: github_document
 ---
 
 
 
-<p>These are my solutions to the practice questions of chapter 3, Sampling the Imaginary, of the book “Statistical Rethinking” (version 2) by Richard McElreath.</p>
+<p>These are my solutions to the practice questions of chapter 3, <em>Sampling the Imaginary</em>, of the book “Statistical Rethinking” (version 2) by Richard McElreath.</p>
 <div id="easy." class="section level2">
 <h2>Easy.</h2>
 <p>The Easy problems use the samples from the globe tossing example:</p>
@@ -49,9 +60,8 @@ HPDI( samples, prob = 0.66 )</code></pre>
 <pre class="r"><code>PI( samples, prob = 0.66 )</code></pre>
 <pre><code>##       17%       83% 
 ## 0.5025025 0.7697698</code></pre>
-<p>66% of the posterior probability is between 0.50 and 0.77. The percentile interval is basically identical to the HPDI interval above, implying that the posterior is highly symmetric:</p>
-<pre class="r"><code>dens( samples )</code></pre>
-<p><img src="/projects/Statistical-Rethinking/Chapter_3/chapter3_Ex_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>66% of the posterior probability is between 0.50 and 0.77. The percentile interval is basically identical to the HPDI interval above, implying that the posterior is highly symmetric:
+<img src="/projects/Statistical-Rethinking/Chapter_3/chapter3_Ex_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 </div>
 <div id="medium." class="section level2">
 <h2>Medium.</h2>
@@ -74,9 +84,8 @@ HPDI(samples, prob = 0.9 )</code></pre>
 <pre class="r"><code>w &lt;- rbinom( 1e4, size = 15, prob=samples )
 head(w)</code></pre>
 <pre><code>## [1]  3 13  6  8  7 10</code></pre>
-<p><code>w</code> is then a vector containing simulated predictions of 15 globe tosses, averaged over the posterior probability</p>
-<pre class="r"><code>simplehist(w)</code></pre>
-<p><img src="/projects/Statistical-Rethinking/Chapter_3/chapter3_Ex_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p><code>w</code> is then a vector containing simulated predictions of 15 globe tosses, averaged over the posterior probability
+<img src="/projects/Statistical-Rethinking/Chapter_3/chapter3_Ex_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
 <ul>
 <li>What is the probability of observing 8 water in 15 tosses?</li>
 </ul>
@@ -100,12 +109,6 @@ new_posterior &lt;- likelihood * informed_prior
 new_posterior &lt;- new_posterior / sum(posterior )
 
 new_samples &lt;- sample( p_grid, prob=new_posterior, size=1e4, replace=TRUE)</code></pre>
-<pre class="r"><code>par(mfrow=c(1,2))
-dens(samples)
-mtext(&quot;Posterior with flat prior&quot;)
-
-dens(new_samples, xlim=c(0,1))
-mtext(&quot;Posterior with informed prior&quot;)</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_3/chapter3_Ex_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
 <p>With the new, informed prior, the probability mass below 0.5 is zero. The posterior with the flat prior still puts quite a bit of probability mass below 0.5:</p>
 <pre class="r"><code>mean( samples &lt; 0.5 )</code></pre>
@@ -177,33 +180,22 @@ posterior &lt;- posterior / sum(posterior )</code></pre>
 <p><strong>3H2.</strong>
 Using the <code>sample()</code> function, draw 10,000 random parameter values from the posterior distribution and estimate the 50%, 89%, and 97% HPDIs.</p>
 <pre class="r"><code>samples &lt;- sample(p_grid, prob=posterior, size=1e5, replace = TRUE)
-HPDI(samples, c(0.1, 0.5, 0.89, 0.97))</code></pre>
-<pre><code>##     |0.97     |0.89      |0.5      |0.1      0.1|      0.5|     0.89|     0.97| 
-## 0.4795480 0.4993499 0.5299530 0.5469547 0.5557556 0.5770577 0.6107611 0.6299630</code></pre>
+HPDI(samples, c(0.5, 0.89, 0.97))</code></pre>
+<pre><code>##     |0.97     |0.89      |0.5      0.5|     0.89|     0.97| 
+## 0.4795480 0.4993499 0.5299530 0.5770577 0.6107611 0.6299630</code></pre>
 <p><strong>3H3.</strong>
 Use <code>rbinom()</code> to simulate 10,000 replicates of 200 births. Compare the distribution of predicted numbers of boys to the actual count in the data.</p>
-<pre class="r"><code>pred_births &lt;- rbinom(1e4, size=200, prob = samples)
-pred_freqs &lt;- table(pred_births)
-simplehist(pred_births)
-lines(as.table(pred_freqs[names(pred_freqs) == boys]), col=&quot;deepskyblue&quot;, lwd=3)
-mtext(&quot;Posterior predictive distribution: Number of boys in 200 births&quot;)</code></pre>
-<p><img src="/projects/Statistical-Rethinking/Chapter_3/chapter3_Ex_files/figure-html/unnamed-chunk-31-1.png" width="672" /></p>
+<pre class="r"><code>pred_births &lt;- rbinom(1e4, size=200, prob = samples)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_3/chapter3_Ex_files/figure-html/unnamed-chunk-32-1.png" width="672" /></p>
 <p>Our observed number of boys (in blue) is very much in the center of predicted numbers of boys. Based on this check, we would say that our model represents the observed data quite well.</p>
 <p><strong>3H4.</strong> Now compare 10,000 counts of boys from 100 simulated first borns only to the number of boys in the first births, <code>births1</code>. How does the model look in this light?</p>
-<pre class="r"><code>pred_births &lt;- rbinom(1e4, size=100, prob = samples)
-pred_freqs &lt;- table(pred_births)
-simplehist(pred_births)
-lines(as.table(pred_freqs[names(pred_freqs) == sum(birth1)]), col=&quot;deepskyblue&quot;, lwd=3)
-mtext(&quot;Posterior predictive distribution: Number of boys in 100 births&quot;)</code></pre>
-<p><img src="/projects/Statistical-Rethinking/Chapter_3/chapter3_Ex_files/figure-html/unnamed-chunk-32-1.png" width="672" /></p>
+<pre class="r"><code>pred_births &lt;- rbinom(1e4, size=100, prob = samples)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_3/chapter3_Ex_files/figure-html/unnamed-chunk-34-1.png" width="672" /></p>
 <p>Our observed number of boys in the first borns is slightly less central in the posterior predictive distribution. However, it still seems to be a fairly likely outcome.</p>
 <p><strong>3H5.</strong> The model assumes that sex of first and second births are independent. To check this assumption, focus now on second births that followed female first borns. Compare 10,000 simulated counts of boys to only those second births that followed girls. Compare the counts of boys in your simulations to the actual observed count of boys following girls. How does the model look in this light? Any guesses what is going on in these data?</p>
 <pre class="r"><code>followed_a_girl &lt;- birth2[birth1 == 0]
-pred_births &lt;- rbinom(1e4, size=length(followed_a_girl), prob = samples)
-pred_freqs &lt;- table(pred_births)
-simplehist(pred_births)
-lines(as.table(pred_freqs[names(pred_freqs) == sum(followed_a_girl)]), col=&quot;deepskyblue&quot;, lwd=3)
-mtext(&quot;Posterior predictive distribution: Number of boys in 49 births&quot;)</code></pre>
-<p><img src="/projects/Statistical-Rethinking/Chapter_3/chapter3_Ex_files/figure-html/unnamed-chunk-33-1.png" width="672" /></p>
+pred_births &lt;- rbinom(1e4, size=length(followed_a_girl), prob = samples)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_3/chapter3_Ex_files/figure-html/unnamed-chunk-36-1.png" width="672" /></p>
 <p>Our observed number of boys that followed a first-born girl (here in blue) is with 39 out of 49 births much higher than what is predicted by our model. According to our model, only a bit more than half of these births would be a boy but the observed data suggests that if the first-born is a girl, the chance of the second child being a boy is much much higher. It seems there is some biological mechanism in which the sex of the first child influences the sex of the second child. Since our model assumes complete independece between all births, the model fails to capthure this.</p>
+<p><small><a href="https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_3/chapter3_Ex.Rmd">Full code.</a><small></p>
 </div>
