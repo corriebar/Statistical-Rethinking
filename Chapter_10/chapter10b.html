@@ -1,10 +1,18 @@
 ---
 title: "Poisson Regression"
-author: "Corrie"
-date: "October 28, 2018"
-output: 
-  github_document:
-    pandoc_args: --webtex 
+author: Corrie
+date: "2018-10-28"
+slug: chp10-part-two
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
 ---
 
 
@@ -16,7 +24,7 @@ output:
 <p>A binomial distriution with many trials (that is <span class="math inline">\(n\)</span> large) and a small probability of an event (<span class="math inline">\(p\)</span> small) approaches a Poisson distribution where both the mean and the variance are equal:</p>
 <pre class="r"><code>y &lt;- rbinom(1e5, 1000, 1/1000)
 c(mean(y), var(y))</code></pre>
-<pre><code>[1] 1.00005 1.00184</code></pre>
+<pre><code>[1] 0.996960 1.000841</code></pre>
 <p>A Poisson model allows us to model binomial events for which the number of trials <span class="math inline">\(n\)</span> is unknown.</p>
 <p>We work with the <code>Kline</code> data, a dataset about Oceanic societies and the number of found tools. We will analyse the number of found tools in dependance of the population size and contact rate. The hypothesis is, that a society with a large population has a larger number of tools and further that a high contact rate to other societies increases the effect of population size.</p>
 <pre class="r"><code>library(rethinking)
@@ -130,10 +138,10 @@ where <span class="math inline">\(P\)</span> is <code>population</code>, <span c
 )
 precis(m10.10, corr=TRUE)</code></pre>
 <pre><code>           mean         sd       5.5%     94.5%
-a    0.94406885 0.36008763  0.3685793 1.5195584
-bp   0.26403303 0.03466728  0.2086280 0.3194380
-bc  -0.09018609 0.84140064 -1.4349068 1.2545346
-bpc  0.04256259 0.09227121 -0.1049046 0.1900298</code></pre>
+a    0.94422292 0.36008794  0.3687328 1.5197130
+bp   0.26401583 0.03466759  0.2086103 0.3194213
+bc  -0.09002292 0.84140405 -1.4347491 1.2547033
+bpc  0.04254207 0.09227171 -0.1049259 0.1900101</code></pre>
 <pre class="r"><code>plot( precis( m10.10 ))</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10b_files/figure-html/unnamed-chunk-5-1.png" width="576" /></p>
 <p>It appears as if the contact rate, as well as its interaction with population, has no influence on the number of tools.
@@ -143,7 +151,7 @@ lambda_high &lt;- exp( post$a + post$bc + (post$bp + post$bpc)*8 )
 lambda_low &lt;- exp( post$a + post$bp*8 )
 diff &lt;- lambda_high - lambda_low
 sum(diff &gt; 0) / length(diff)</code></pre>
-<pre><code>[1] 0.9543</code></pre>
+<pre><code>[1] 0.9532</code></pre>
 <p>There is a 95% probability that the high-contact island has more tools than the island with low-contact.</p>
 <pre class="r"><code>par(mfrow=c(1,2))
 dens( diff , col=&quot;steelblue&quot;, lwd=2, 
@@ -202,12 +210,12 @@ m10.14 &lt;- map(
 )</code></pre>
 <p>We compare all models using WAIC:</p>
 <pre class="r"><code>( islands.compare &lt;- compare( m10.10, m10.11, m10.12, m10.13, m10.14, n=1e4) )</code></pre>
-<pre><code>            WAIC        SE     dWAIC       dSE     pWAIC       weight
-m10.11  79.08059 11.231130  0.000000        NA  4.228401 6.101048e-01
-m10.10  80.21065 11.341891  1.130066  1.264173  4.900114 3.467477e-01
-m10.12  84.37860  8.861656  5.298010  8.432156  3.733238 4.314755e-02
-m10.14 141.49895 31.485852 62.418365 34.334893  8.321843 1.703840e-14
-m10.13 148.83144 42.929543 69.750855 44.817591 16.892930 4.357112e-16</code></pre>
+<pre><code>            WAIC        SE      dWAIC       dSE     pWAIC       weight
+m10.11  79.22960 11.185306  0.0000000        NA  4.290270 5.805228e-01
+m10.10  80.09441 11.382020  0.8648086  1.191099  4.822664 3.767285e-01
+m10.12  84.44679  8.819275  5.2171839  8.306973  3.757409 4.274863e-02
+m10.14 141.30179 31.414794 62.0721813 34.262213  8.212397 1.927598e-14
+m10.13 150.67501 44.862135 71.4454091 46.903474 16.906044 1.776830e-16</code></pre>
 <pre class="r"><code>plot( islands.compare )</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10b_files/figure-html/unnamed-chunk-12-1.png" width="768" /></p>
 <p>The top two models include both predictors but the top model excludes the interaction. However, a lot of model weight is assigned to both models. This suggests that the interactionis probably overfit but the model set is decent evidence that contact rate matters.</p>
@@ -252,10 +260,10 @@ shade( lambda.PI, log_pop.seq, col=col.alpha(&quot;black&quot;, 0.1 ))</code></p
 <pre class="r"><code>m10.10stan &lt;- map2stan( m10.10, iter=3000, warmup=1000, chains=4)</code></pre>
 <pre class="r"><code>precis( m10.10stan)</code></pre>
 <pre><code>           mean         sd       5.5%     94.5%    n_eff    Rhat4
-a    0.92946915 0.35973934  0.3426740 1.5006825 2831.914 1.000376
-bp   0.26488980 0.03465300  0.2091196 0.3202353 2772.767 1.000581
-bc  -0.05581578 0.83629719 -1.3776226 1.2967834 2829.078 1.001508
-bpc  0.03911738 0.09182396 -0.1097606 0.1854774 2818.539 1.001505</code></pre>
+a    0.94146861 0.36526139  0.3440976 1.5085371 2722.643 1.001720
+bp   0.26359976 0.03523350  0.2091810 0.3204490 2713.974 1.001768
+bc  -0.08922339 0.84032207 -1.4562229 1.2267930 2786.084 1.001813
+bpc  0.04271506 0.09228461 -0.1012971 0.1929941 2842.538 1.001923</code></pre>
 <p>The estimates and intervals are the same as before. However, if we look at the pairs plot</p>
 <pre class="r"><code>pairs(m10.10stan)</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10b_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
@@ -276,10 +284,10 @@ m10.10stan.c &lt;- map2stan(
 )</code></pre>
 <pre class="r"><code>precis(m10.10stan.c)</code></pre>
 <pre><code>          mean         sd       5.5%     94.5%    n_eff    Rhat4
-a   3.31111052 0.08947352  3.1662595 3.4513361 3125.337 1.000006
-bp  0.26293969 0.03536224  0.2064752 0.3178471 4180.867 1.000242
-bc  0.28465594 0.11631564  0.1027015 0.4715916 3104.969 1.000206
-bcp 0.06439732 0.16930297 -0.2090300 0.3341787 5641.334 1.000161</code></pre>
+a   3.30922186 0.08957579  3.1615992 3.4495053 3510.400 1.000697
+bp  0.26316573 0.03504921  0.2083146 0.3200965 4450.243 1.000443
+bc  0.28669798 0.11713837  0.0971141 0.4766120 3667.258 1.000495
+bcp 0.06443262 0.17111533 -0.2113402 0.3405277 5206.212 1.000072</code></pre>
 <p>The estimates look different because of the centering, but the predictions remain the same.
 If we look at the pairs plot now, we see that the strong correlations are gone:</p>
 <pre class="r"><code>pairs(m10.10stan.c)</code></pre>
@@ -318,27 +326,27 @@ knitr::kable( head(d) )</code></pre>
 <td align="right">0</td>
 </tr>
 <tr class="even">
-<td align="right">0</td>
+<td align="right">1</td>
 <td align="right">1</td>
 <td align="right">0</td>
 </tr>
 <tr class="odd">
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
 <td align="right">3</td>
 <td align="right">1</td>
 <td align="right">0</td>
 </tr>
-<tr class="even">
-<td align="right">0</td>
-<td align="right">1</td>
-<td align="right">0</td>
-</tr>
 <tr class="odd">
-<td align="right">1</td>
+<td align="right">2</td>
 <td align="right">1</td>
 <td align="right">0</td>
 </tr>
 <tr class="even">
-<td align="right">0</td>
+<td align="right">2</td>
 <td align="right">1</td>
 <td align="right">0</td>
 </tr>
@@ -360,8 +368,8 @@ lambda_old &lt;- exp( post$a )
 lambda_new &lt;- exp( post$a + post$b)
 precis( data.frame( lambda_old, lambda_new))</code></pre>
 <pre><code>                mean        sd      5.5%     94.5%    histogram
-lambda_old 1.4860864 0.2249403 1.1611448 1.8703609  ▁▂▇▇▃▂▁▁▁▁▁
-lambda_new 0.5549236 0.1418438 0.3607128 0.8019058 ▁▂▇▇▅▂▁▁▁▁▁▁</code></pre>
+lambda_old 1.8471127 0.2495663 1.4672893 2.2651459  ▁▁▁▃▇▇▃▂▁▁▁
+lambda_new 0.5934118 0.1447132 0.3898765 0.8506193 ▁▂▅▇▅▃▁▁▁▁▁▁</code></pre>
 <p>The estimates are indeed very close to the real values.</p>
 </div>
 </div>

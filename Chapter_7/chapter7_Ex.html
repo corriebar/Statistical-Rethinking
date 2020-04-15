@@ -1,10 +1,18 @@
 ---
 title: "Chapter 7 - Exercises"
-author: "Corrie"
-date: "August 17, 2018"
-output: 
-  github_document:
-    pandoc_args: --webtex 
+author: Corrie
+date: "2018-08-17"
+slug: chp7-ex
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
 ---
 
 
@@ -140,14 +148,14 @@ m7.1 &lt;- map(
 )
 precis( m7.1 , depth = 2)</code></pre>
 <pre><code>##                mean        sd       5.5%      94.5%
-## a        128.992004  9.877024 113.206613 144.777396
-## a_bed[1] -10.743232  9.026258 -25.168936   3.682471
-## a_bed[2]   4.601234  8.836610  -9.521376  18.723844
-## a_bed[3]   6.184717  8.871049  -7.992933  20.362368
-## bW        75.692170  9.888165  59.888973  91.495368
-## bS       -41.542682  9.888131 -57.345825 -25.739540
-## bWS      -52.839553 12.110411 -72.194329 -33.484777
-## sigma     41.951725  5.974618  32.403132  51.500318</code></pre>
+## a        128.992784  9.873985 113.212249 144.773319
+## a_bed[1] -10.810962  9.024662 -25.234115   3.612191
+## a_bed[2]   4.595552  8.835632  -9.525494  18.716598
+## a_bed[3]   6.176542  8.870045  -7.999503  20.352588
+## bW        75.840329  9.883481  60.044617  91.636041
+## bS       -41.623997  9.883474 -57.419697 -25.828297
+## bWS      -52.845615 12.104729 -72.191310 -33.499919
+## sigma     41.932029  5.968944  32.392504  51.471555</code></pre>
 <p><strong>7H2.</strong> Compare the model above with one that omits <code>bed</code> using WAIC. What do you infer from this comparison? Can you reconcile the WAIC results with the posterior distribution of the bed coefficients?</p>
 <pre class="r"><code>m7.2 &lt;- map(
   alist(
@@ -172,9 +180,9 @@ precis(m7.2)</code></pre>
 <p>Estimates for all parameters are pretty much the same for the parameters included in both models.
 The index variables for the <code>bed</code> variable are all very close to zero.</p>
 <pre class="r"><code>compare( m7.1, m7.2 )</code></pre>
-<pre><code>##          WAIC        SE    dWAIC      dSE    pWAIC       weight
-## m7.1 293.9353 10.229241  0.00000       NA 7.608252 9.999881e-01
-## m7.2 316.6150  8.888837 22.67973 12.45336 3.153066 1.188924e-05</code></pre>
+<pre><code>##          WAIC       SE    dWAIC      dSE    pWAIC       weight
+## m7.1 293.5248 9.829747  0.00000       NA 7.339620 9.999941e-01
+## m7.2 317.6119 9.300594 24.08708 12.61297 3.476401 5.882390e-06</code></pre>
 <p>The two models have almost the same WAIC and similar weights. Indeed, running the function a few times gives sometimes the first model as having the lower WAIC and sometimes the second model as having lower WAIC. Also, both models have more or less the same number of parameters estimated by WAIC and similar amounts of weight.</p>
 <pre class="r"><code>plot( compare( m7.1, m7.2 ))</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
@@ -227,11 +235,11 @@ m7.1 &lt;- map(
 )
 precis(m7.1)</code></pre>
 <pre><code>##             mean         sd        5.5%       94.5%
-## a      9.1861140 0.13536065  8.96978151  9.40244644
-## bA    -1.7845603 0.21911312 -2.13474542 -1.43437523
-## bR    -0.1856806 0.07510124 -0.30570693 -0.06565435
-## bAR    0.2524989 0.13542676  0.03606079  0.46893702
-## sigma  0.9258750 0.05041309  0.84530513  1.00644482</code></pre>
+## a      9.1861341 0.13536208  8.96979937  9.40246887
+## bA    -1.7846408 0.21911507 -2.13482901 -1.43445262
+## bR    -0.1856855 0.07510206 -0.30571308 -0.06565789
+## bAR    0.2525065 0.13542819  0.03606609  0.46894691
+## sigma  0.9258854 0.05041449  0.84531330  1.00645747</code></pre>
 <pre class="r"><code>plot( precis( m7.1 ))</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
 <p>Compare with the model on the full data:</p>
@@ -248,11 +256,11 @@ precis(m7.1)</code></pre>
 )
 precis(m7.2)</code></pre>
 <pre><code>##             mean         sd       5.5%       94.5%
-## a      9.1835830 0.13641572  8.9655644  9.40160169
-## bA    -1.8461054 0.21848066 -2.1952797 -1.49693108
-## bR    -0.1843459 0.07568746 -0.3053091 -0.06338269
-## bAR    0.3483124 0.12749928  0.1445440  0.55208091
-## sigma  0.9332495 0.05067060  0.8522681  1.01423094</code></pre>
+## a      9.1835843 0.13641603  8.9655652  9.40160350
+## bA    -1.8460985 0.21848119 -2.1952736 -1.49692333
+## bR    -0.1843466 0.07568764 -0.3053101 -0.06338318
+## bAR    0.3483123 0.12749957  0.1445434  0.55208126
+## sigma  0.9332518 0.05067091  0.8522699  1.01423366</code></pre>
 <pre class="r"><code>plot( coeftab( m7.1, m7.2 ), pars=c(&quot;bA&quot;, &quot;bR&quot;, &quot;bAR&quot;))</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <p>Most of the coefficients are still very close to each other, we can see some small change though for the parameter for the Africa dummy-variable and for the interaction between ruggedness and Africa. The parameter <span class="math inline">\(\beta_{\text{Africa}}\)</span> decreased, meaning removing the Seychelles decreased the mean for GDP for Africa. The interaction coefficient <span class="math inline">\(\beta_{AR}\)</span> decreased a bit and thus shrank a bit closer to zero.
@@ -262,10 +270,10 @@ gamma.Africa &lt;- post$bR + post$bAR*1
 gamma.notAfrica &lt;- post$bR + post$bAR*0
 
 mean(gamma.Africa)</code></pre>
-<pre><code>## [1] 0.06640391</code></pre>
+<pre><code>## [1] 0.06514005</code></pre>
 <p>Before, this was about 0.16.</p>
 <pre class="r"><code>mean(gamma.notAfrica)</code></pre>
-<pre><code>## [1] -0.1856139</code></pre>
+<pre><code>## [1] -0.1858315</code></pre>
 <p>Comparing the distributions:</p>
 <pre class="r"><code>dens( gamma.Africa, xlim=c(-0.5, 0.6), ylim=c(0, 5.5),
       xlab=&quot;gamma&quot;, col=&quot;steelblue&quot; )
@@ -276,7 +284,7 @@ legend(&quot;topright&quot;, col=c(&quot;black&quot;, &quot;steelblue&quot;), bt
 <p>There is now much more overlap between the two distributions than before and the distribution of the Africa parameter has more density mass around 0 than before.</p>
 <pre class="r"><code>diff &lt;- gamma.Africa - gamma.notAfrica
 mean(diff &lt; 0)</code></pre>
-<pre><code>## [1] 0.0299</code></pre>
+<pre><code>## [1] 0.0314</code></pre>
 <p>The probability that the parameter for Africa is smaller than the parameter for Not Africa is still very low though.</p>
 <p>Compare with the model including the Seychelles:</p>
 <pre class="r"><code>post1 &lt;- extract.samples(m7.2)
@@ -284,9 +292,9 @@ gamma.Africa1 &lt;- post1$bR + post1$bAR*1
 gamma.notAfrica1 &lt;- post1$bR + post1$bAR*0
 
 mean(gamma.Africa1)</code></pre>
-<pre><code>## [1] 0.1643866</code></pre>
+<pre><code>## [1] 0.1648578</code></pre>
 <pre class="r"><code>mean(gamma.notAfrica1)</code></pre>
-<pre><code>## [1] -0.1838824</code></pre>
+<pre><code>## [1] -0.1850169</code></pre>
 <pre class="r"><code>dens( gamma.Africa1, xlim=c(-0.5, 0.6), ylim=c(0, 5.5),
       xlab=&quot;gamma&quot;, col=&quot;steelblue&quot; )
 dens( gamma.notAfrica1, add=TRUE )
@@ -399,9 +407,9 @@ m7.5 &lt;- map(
 
 compare(m7.3, m7.4, m7.5)</code></pre>
 <pre><code>##          WAIC       SE     dWAIC       dSE    pWAIC       weight
-## m7.5 463.5010 15.12417  0.000000        NA 4.687922 7.799901e-01
-## m7.4 466.0322 14.24932  2.531218  3.486042 3.896289 2.200099e-01
-## m7.3 536.0149 13.39854 72.513971 15.246376 2.597069 1.399202e-16</code></pre>
+## m7.5 463.6569 15.01667  0.000000        NA 4.751412 8.108037e-01
+## m7.4 466.5673 14.30913  2.910482  3.266012 4.170341 1.891963e-01
+## m7.3 536.2232 13.33145 72.566308 15.215589 2.715443 1.416909e-16</code></pre>
 <p>Now, most of the weight is on the model with the interaction. It also has the lowest WAIC. Including the Africa variable as a dummy variable gives a lower WAIC than only using ruggedness as predictor variable.</p>
 <pre class="r"><code>plot( compare( m7.3, m7.4, m7.5))</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
@@ -493,8 +501,8 @@ coeftab(m7.1, m7.2 )</code></pre>
 <p>The parameter for area has a huge uncertainty, so seems to not have a influence on our target variable. Including area leads to a slight decrease in the parameter for the mean length of growing season. For both models, the mean length of growing season is positively associated with the number of languages per capita.</p>
 <pre class="r"><code>compare( m7.1, m7.2)</code></pre>
 <pre><code>##          WAIC       SE    dWAIC      dSE    pWAIC    weight
-## m7.1 267.6969 15.05209 0.000000       NA 3.567583 0.6378318
-## m7.2 268.8288 16.04058 1.131932 3.552312 5.279668 0.3621682</code></pre>
+## m7.1 268.0574 15.28187 0.000000       NA 3.775017 0.5274689
+## m7.2 268.2774 15.90176 0.219973 3.563293 4.991405 0.4725311</code></pre>
 <pre class="r"><code>plot( compare( m7.1, m7.2 ))</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
 <p>WAIC does not favor any of the two models, so adding the area doesn’t seem to bring big improvements to the model.</p>
@@ -547,9 +555,9 @@ coeftab(m7.3, m7.4)</code></pre>
 <p>There seems to be some collinearity between standard deviation of growing season and the area. This makes sense if the length of the growing season can also vary quite a bit inside a country if the country is large (consider for example Brazil or Australia, both having area that ranges through different climate zones, like desert and rain forests).</p>
 <p>Without the area, the standard deviation of length of growing season has a negative impact on language diversity.</p>
 <pre class="r"><code>compare(m7.3, m7.4)</code></pre>
-<pre><code>##          WAIC       SE      dWAIC      dSE    pWAIC    weight
-## m7.4 273.6346 17.00118 0.00000000       NA 5.242443 0.5074984
-## m7.3 273.6946 17.09992 0.05999204 3.790376 4.005921 0.4925016</code></pre>
+<pre><code>##          WAIC       SE    dWAIC      dSE    pWAIC    weight
+## m7.3 273.4698 17.06259 0.000000       NA 3.921488 0.5608678
+## m7.4 273.9592 16.98494 0.489369 4.005409 5.394698 0.4391322</code></pre>
 <pre class="r"><code>plot(compare( m7.3, m7.4))</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-35-1.png" width="672" /></p>
 <p>Again, both models have almost identical WAIC and both get half of the weight.</p>
@@ -581,11 +589,11 @@ shade(mu.PI, sd.g.s.seq)</code></pre>
 )
 precis(m7.5)</code></pre>
 <pre><code>##             mean         sd        5.5%       94.5%
-## a     -5.4488211 0.15191752 -5.69161463 -5.20602757
-## bM     0.1143023 0.05544759  0.02568631  0.20291821
-## bS    -0.3373365 0.14254033 -0.56514348 -0.10952953
-## bMS   -0.1089685 0.04699723 -0.18407914 -0.03385783
-## sigma  1.3066827 0.10741265  1.13501652  1.47834885</code></pre>
+## a     -5.4487842 0.15192210 -5.69158502 -5.20598331
+## bM     0.1142996 0.05544925  0.02568103  0.20291826
+## bS    -0.3372972 0.14254459 -0.56511097 -0.10948341
+## bMS   -0.1089475 0.04699864 -0.18406043 -0.03383461
+## sigma  1.3067221 0.10742077  1.13504297  1.47840124</code></pre>
 <pre class="r"><code>plot( coeftab( m7.1, m7.3, m7.5), pars=c(&quot;bM&quot;, &quot;bS&quot;, &quot;bMS&quot;))</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_Ex_files/figure-html/unnamed-chunk-38-1.png" width="672" /></p>
 <p>Plotting the interaction. Since we don’t have discrete values as in the example in the chapter before, I only pick a subset of values for which to make a (counterfactual) plot.</p>

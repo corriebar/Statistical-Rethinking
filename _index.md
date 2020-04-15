@@ -31,8 +31,8 @@ I started going through the book in spring 2018. As part of the [Berlin Bayesian
 
 #### Chapter 6
 - [Overfitting](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_6/chapter6a.R)
-- [Information Theory and Model Performance](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_6/chapter6b.R)
-- [Using Information Criteria](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_6/chapter6c.R)
+- [Information Theory and Model Performance]( {{< relref "Chapter_6/chapter6b.html" >}} )
+- [Using Information Criteria]({{< relref "Chapter_6/chapter6c.html" >}} )
 - [Exercises]({{< relref "Chapter_6/chapter6_Ex.html" >}} )
 
 #### Chapter 7

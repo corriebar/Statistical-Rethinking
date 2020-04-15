@@ -1,10 +1,19 @@
 ---
-title: "Chapter 12 - Of Monsters and Mixtures"
-author: "Corrie"
-date: "April 14, 2019"
-output: html_document
+title: "Of Monsters and Mixtures"
+author: Corrie
+date: "2019-04-14"
+slug: chp12-part-one
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
 ---
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, comment = NA)
 ```

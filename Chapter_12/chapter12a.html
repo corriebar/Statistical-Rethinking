@@ -1,8 +1,18 @@
 ---
-title: "Chapter 12 - Of Monsters and Mixtures"
-author: "Corrie"
-date: "April 14, 2019"
-output: html_document
+title: "Of Monsters and Mixtures"
+author: Corrie
+date: "2019-04-14"
+slug: chp12-part-one
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
 ---
 
 
@@ -46,11 +56,11 @@ m12.1 &lt;- ulam(
 <pre class="r"><code>post &lt;- extract.samples(m12.1 )
 post$da &lt;- post$a[,1] - post$a[,2]
 precis( post, depth=2)</code></pre>
-<pre><code>            mean        sd      5.5%     94.5% histogram
-a[1]  -0.4243989 0.4287432 -1.101579 0.2651418   ▁▁▇▇▂▁▁
-a[2]  -0.3064596 0.4190245 -0.972423 0.3425375   ▁▁▃▇▃▁▁
-theta  2.6867026 0.9140994  1.466974 4.2371226  ▁▃▇▃▁▁▁▁
-da    -0.1179393 0.5872812 -1.069286 0.7958973 ▁▁▃▇▇▂▁▁▁</code></pre>
+<pre><code>            mean        sd       5.5%     94.5%  histogram
+a[1]  -0.4170432 0.4327273 -1.1055429 0.2583752    ▁▂▇▇▂▁▁
+a[2]  -0.3063994 0.4285321 -0.9805098 0.4067581    ▁▁▅▇▃▁▁
+theta  2.6763961 0.9493179  1.3789576 4.2942542  ▁▃▇▃▁▁▁▁▁
+da    -0.1106438 0.5862838 -1.0271344 0.8384815 ▁▁▁▃▇▇▂▁▁▁</code></pre>
 <p><code>a[1]</code> is the log-odds of admission for male applicants which is lower than <code>a[2]</code>, the log-odds for female applicants. This might suggest there is a diffenrece in admission rates by gender, but the posterior difference <code>da</code> is highly uncertain with probability mass both above and below zero.</p>
 <p>We can visualize the posterior Beta-distribution:</p>
 <pre class="r"><code>gid &lt;- 2
@@ -199,8 +209,8 @@ dens(p)</code></pre>
   ), data=list(y=as.integer(y)), chains=4)</code></pre>
 <pre class="r"><code>precis(m12.4)</code></pre>
 <pre><code>          mean         sd       5.5%      94.5%    n_eff    Rhat4
-ap -1.27745113 0.35273256 -1.9108478 -0.8127438 630.3806 1.006131
-al  0.01231046 0.08845856 -0.1346697  0.1481182 747.3890 1.007138</code></pre>
+ap -1.27943087 0.37228853 -1.9347033 -0.7735818 584.0565 1.003241
+al  0.01190568 0.09243819 -0.1376475  0.1624185 649.3856 1.009246</code></pre>
 <p>On the natural scale, those estimates are:</p>
 <pre class="r"><code>inv_logit(-1.28)</code></pre>
 <pre><code>[1] 0.2175502</code></pre>
@@ -239,9 +249,9 @@ al  0.01231046 0.08845856 -0.1346697  0.1481182 747.3890 1.007138</code></pre>
 )</code></pre>
 <p>This gives us the same estimates as <code>m12.4</code>:</p>
 <pre class="r"><code>precis(m12.4_alt)</code></pre>
-<pre><code>           mean         sd       5.5%      94.5%    n_eff    Rhat4
-ap -1.302780811 0.40040745 -2.0075045 -0.7831734 405.2881 1.011022
-al  0.006900763 0.09340619 -0.1423415  0.1556727 474.0397 1.009218</code></pre>
+<pre><code>          mean         sd       5.5%      94.5%    n_eff     Rhat4
+ap -1.26899142 0.34561667 -1.8757107 -0.8064936 605.9883 1.0004240
+al  0.01130696 0.08613438 -0.1257928  0.1483133 601.1485 0.9994628</code></pre>
 <p>It’s also helps to look at the stan code of the model:</p>
 <pre class="r"><code>stancode(m12.4_alt)</code></pre>
 <pre><code>data{

@@ -1,10 +1,18 @@
 ---
 title: "Chapter 5 - Exercises"
-author: "Corrie"
-date: "June 3, 2018"
-output: 
-  github_document:
-    pandoc_args: --webtex
+author: Corrie
+date: "2018-06-03"
+slug: chp5-ex
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
 ---
 
 ```{r setup, include=FALSE}

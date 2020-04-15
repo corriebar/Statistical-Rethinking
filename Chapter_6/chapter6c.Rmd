@@ -1,12 +1,19 @@
 ---
-title: "Using Information Critera"
-author: "Corrie"
-date: "July 4, 2018"
-output: 
-  github_document:
-    pandoc_args: --webtex
+title: "Using Information Criteria"
+author: Corrie
+date: "2018-07-04"
+slug: chp6-part-three
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
 ---
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
 ```

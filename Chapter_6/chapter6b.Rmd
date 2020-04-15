@@ -1,12 +1,19 @@
 ---
 title: "Information Theory and Model Performance"
-author: "Corrie"
-date: "July 2, 2018"
-output: 
-  github_document:
-    pandoc_args: --webtex
+author: Corrie
+date: "2018-07-02"
+slug: chp6-part-two
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
 ---
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
 ```

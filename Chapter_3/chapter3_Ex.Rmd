@@ -14,7 +14,6 @@ comments: yes
 image: 'images/tea_with_books.jpg'
 share: yes
 ---
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(printr)

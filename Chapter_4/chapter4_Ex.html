@@ -1,20 +1,25 @@
 ---
-title: "Chapter 4 - Exercise"
-author: "Corrie"
-date: "May 21, 2018"
-output: 
-  github_document:
-    pandoc_args: --webtex
-
+title: "Chapter 4 - Exercises"
+author: Corrie
+date: "2018-05-21"
+slug: chp4-ex
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
 ---
 
 
 
-<div id="chapter-4---exercises" class="section level1">
-<h1>Chapter 4 - Exercises</h1>
 <p>These are my solutions to the practice questions of chapter 4, Linear Models, of the book “Statistical Rethinking” by Richard McElreath.</p>
-<div id="easy-questions." class="section level2">
-<h2>Easy Questions.</h2>
+<div id="easy." class="section level2">
+<h2>Easy.</h2>
 <p><strong>4E1.</strong> In the model definition below, which line is the likelihood:
 <span class="math display">\[
 \begin{align*}
@@ -46,8 +51,8 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \\
 <p><strong>4E5.</strong> In the model definition just above, how many parameters are in the posterior distribution?</p>
 <p>There are <strong>3</strong> parameters in the posterior distribution, <span class="math inline">\(\alpha\)</span>, <span class="math inline">\(\beta\)</span>, and <span class="math inline">\(\sigma\)</span>.</p>
 </div>
-<div id="medium-questions." class="section level2">
-<h2>Medium questions.</h2>
+<div id="medium." class="section level2">
+<h2>Medium.</h2>
 <p><strong>4M1.</strong> For the model definition below, simulate observed heights from the prior (not the posterior).
 <span class="math display">\[\begin{align*}
 y_i &amp;\sim \text{Normal}(\mu, \sigma) \\
@@ -100,8 +105,8 @@ I adjusted the mean for the average height accordingly and changed <span class="
 <p><strong>4M6.</strong> Now suppose, the variance among heights for students of the same age is never more than 64cm. I thus change my priors as follows:
 <span class="math display">\[\sigma \sim \text{Uniform}(0, 64).\]</span></p>
 </div>
-<div id="hard-question." class="section level2">
-<h2>Hard question.</h2>
+<div id="hard." class="section level2">
+<h2>Hard.</h2>
 <p><strong>4H1.</strong> !Kung census data: Provide predicted heights and 89% intervals (either HPDI or PI) for the following weights of individuals.</p>
 <pre class="r"><code>weights &lt;- c(46.95, 43.72, 64.78, 32.59, 54.63)</code></pre>
 <p>For this, we first load the !Kung data from the <code>Howell1</code> data set and set up a model. I will use a linear model with priors as in the model definition given earlier in the chapter.</p>
@@ -124,10 +129,10 @@ model &lt;- map(
 )
 
 precis( model)</code></pre>
-<pre><code>##              mean         sd        5.5%       94.5%
-## a     154.5969239 0.27033196 154.1648812 155.0289666
-## b       0.9050112 0.04192777   0.8380026   0.9720199
-## sigma   5.0718956 0.19115590   4.7663916   5.3773997</code></pre>
+<pre><code>##              mean         sd       5.5%       94.5%
+## a     154.5970966 0.27033184 154.165054 155.0291391
+## b       0.9050157 0.04192775   0.838007   0.9720243
+## sigma   5.0718934 0.19115569   4.766390   5.3773971</code></pre>
 <p>How to interpret the model: Since we centered the weights such that the mean of <code>weight.c</code> is zero, <code>a</code> corresponds to the average height. The value 0.91 for <code>b</code> means that a person 1kg heavier is expected to be 0.90cm taller. The estimate for <span class="math inline">\(\sigma\)</span>, <code>sigma</code> tells us about the width of the distribution of heights around the mean.
 Let’s now use the model to predict the heights for the weight values given above. For this, we simulate heights for each given weight value. We do this by first obtaining a sample from the posterior distribution and then use this sample to draw samples from a Gaussian distribution. Note that we also need to center the given weights now.</p>
 <pre class="r"><code>weights.c &lt;- weights - mean(d2$weight)
@@ -148,11 +153,11 @@ pred_df &lt;- data.frame(&quot;individual&quot;=1:5, &quot;weight&quot;=weights,
                       &quot;PI_89_lower&quot;=height.PI[1,], &quot;PI_89_upper&quot;=height.PI[2,])
 pred_df</code></pre>
 <pre><code>##   individual weight exptected_height PI_89_lower PI_89_upper
-## 1          1  46.95         156.4820    148.2687    164.6616
-## 2          2  43.72         153.4181    145.1454    161.5758
-## 3          3  64.78         172.5132    164.3326    180.6486
-## 4          4  32.59         143.4134    135.3042    151.4555
-## 5          5  54.63         163.2921    155.1128    171.6002</code></pre>
+## 1          1  46.95         156.3863    148.1719    164.5020
+## 2          2  43.72         153.3989    145.3461    161.4464
+## 3          3  64.78         172.4298    164.4833    180.5919
+## 4          4  32.59         143.4255    135.2173    151.5349
+## 5          5  54.63         163.2408    155.1418    171.4222</code></pre>
 <p><strong>4H2.</strong> Select the rows from the <code>Howell1</code> data with age below 18 years.</p>
 <ol style="list-style-type: lower-alpha">
 <li>Fit a linear regression to these data, using <code>map</code>.
@@ -175,9 +180,9 @@ model18 &lt;- map(
 )
 precis(model18)</code></pre>
 <pre><code>##             mean         sd       5.5%      94.5%
-## a     108.320665 0.60888121 107.347555 109.293774
-## b       2.719960 0.06829049   2.610818   2.829101
-## sigma   8.437062 0.43054886   7.748961   9.125162</code></pre>
+## a     108.320618 0.60888295 107.347506 109.293731
+## b       2.719964 0.06829069   2.610822   2.829105
+## sigma   8.437086 0.43055193   7.748981   9.125191</code></pre>
 <p>As above, since we centered the weights, the intercept <code>a</code> corresponds to the average height, which is here 108.3. This is much lower than in the model above (but expected since the individuals in this data set are younger). The slope <code>b</code> is interpreted such that for every 10kg heavier, an individual is expected to be 27cm taller. The standard deviation <code>sigma</code> in this model is higher than in the one above, suggesting a higher uncertainty in the predictions.</p>
 <ol start="2" style="list-style-type: lower-alpha">
 <li>Plot the raw data and superimpose the MAP regression line and 89% HPDI for the mean and for the predicted height.
@@ -241,9 +246,9 @@ model.l &lt;- map(
 )
 precis(model.l)</code></pre>
 <pre><code>##             mean        sd       5.5%      94.5%
-## a     -23.783347 1.3350891 -25.917078 -21.649617
-## b      47.074967 0.3825376  46.463598  47.686336
-## sigma   5.134596 0.1556603   4.885821   5.383371</code></pre>
+## a     -23.777282 1.3348136 -25.910572 -21.643992
+## b      47.072576 0.3824587  46.461333  47.683819
+## sigma   5.133533 0.1555797   4.884886   5.382179</code></pre>
 <p>Interpreting these results is a bit more difficult since we transformed the weights using the logarithm. Furthermore, the data is not centralized as before, so the intercept <code>a</code> corresponds to the average height of someone whose log weight is zero, i.e. whose weight is 1kg.
 How to interpret the <code>b</code> value?
 If we raise the weight by one unit, we get the following expression for mu:
@@ -293,5 +298,4 @@ shade(mu.HPDI, weight.seq)
 shade( height.HPDI, weight.seq)</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
 <p>Given the last two plots, I’d say the colleague was right: The logarithm of body weight scales very well with height.</p>
-</div>
 </div>

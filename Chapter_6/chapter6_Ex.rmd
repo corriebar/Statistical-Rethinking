@@ -1,12 +1,19 @@
 ---
-title: "Chpter 6 - Exercies"
-author: "Corrie"
-date: "July 8, 2018"
-output: 
-  github_document:
-    pandoc_args: --webtex 
+title: "Chapter 6 - Exercises"
+author: Corrie
+date: "2018-07-08"
+slug: chp6-ex
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
 ---
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
 ```

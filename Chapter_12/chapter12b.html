@@ -1,8 +1,18 @@
 ---
 title: "Ordered Categories"
-author: "Corrie Bartelheimer"
-date: "7/28/2019"
-output: html_document
+author: Corrie
+date: "2019-07-28"
+slug: chp12-part-two
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
 ---
 
 
@@ -84,16 +94,16 @@ p_K &amp;= 1 - q_{k-1} &amp; \\
 <p>The posterior distribution:</p>
 <pre class="r"><code>precis( m12.5 , depth=2) </code></pre>
 <pre><code>                   mean         sd       5.5%      94.5%    n_eff     Rhat4
-cutpoints[1] -1.9152956 0.02986955 -1.9653220 -1.8677189 1425.082 1.0019587
-cutpoints[2] -1.2658430 0.02414678 -1.3039722 -1.2270808 1888.412 1.0004048
-cutpoints[3] -0.7178283 0.02205700 -0.7533525 -0.6829486 1912.703 1.0000404
-cutpoints[4]  0.2479454 0.02066604  0.2145945  0.2805406 2397.700 0.9992327
-cutpoints[5]  0.8903127 0.02207788  0.8555331  0.9261639 2414.448 0.9998843
-cutpoints[6]  1.7701138 0.02779872  1.7271487  1.8146334 2441.267 0.9997551</code></pre>
+cutpoints[1] -1.9160333 0.03061587 -1.9652723 -1.8673509 1398.757 1.0028701
+cutpoints[2] -1.2657203 0.02439893 -1.3040607 -1.2260394 1903.602 1.0028004
+cutpoints[3] -0.7177779 0.02191545 -0.7529061 -0.6819212 2224.825 1.0008826
+cutpoints[4]  0.2481206 0.02053067  0.2159976  0.2818062 2922.036 0.9988227
+cutpoints[5]  0.8902924 0.02196657  0.8538981  0.9243229 2343.677 0.9994340
+cutpoints[6]  1.7702364 0.02839789  1.7244130  1.8152051 2277.799 0.9990671</code></pre>
 <p>Note that these values are on the log-cumulative-odds scale. We transform them to the cumulative probabilities by using the inverse logit:</p>
 <pre class="r"><code>inv_logit( coef(m12.5))</code></pre>
 <pre><code>cutpoints[1] cutpoints[2] cutpoints[3] cutpoints[4] cutpoints[5] cutpoints[6] 
-   0.1283871    0.2199697    0.3278714    0.5616707    0.7089547    0.8544718 </code></pre>
+   0.1283046    0.2199907    0.3278825    0.5617139    0.7089505    0.8544871 </code></pre>
 <p>Compare this with the cumulative probabilities we computed earlier:</p>
 <pre class="r"><code>cum_pr_k</code></pre>
 <pre><code>        1         2         3         4         5         6         7 
@@ -110,16 +120,16 @@ cutpoints[6]  1.7701138 0.02779872  1.7271487  1.8146334 2441.267 0.9997551</cod
 Why is the linear model <span class="math inline">\(\phi\)</span> subtracted from each intercept? Because if we decrease the log-cumulative-odds of every outcome value <span class="math inline">\(k\)</span> below the maximum, this necessarily shifts probability mass upwards towards higher outcome values.
 For example, suppose we take the posterior means from <code>m12.5</code> and subtract 0.5 from each:</p>
 <pre class="r"><code>( pk &lt;- dordlogit( 1:7, 0, coef(m12.5) ) )</code></pre>
-<pre><code>[1] 0.12838709 0.09158261 0.10790169 0.23379932 0.14728398 0.14551713 0.14552817</code></pre>
+<pre><code>[1] 0.12830456 0.09168619 0.10789175 0.23383136 0.14723666 0.14553655 0.14551294</code></pre>
 <p>These probabilities imply an average outcome value of:</p>
 <pre class="r"><code>sum( pk * (1:7) )</code></pre>
-<pre><code>[1] 4.198675</code></pre>
+<pre><code>[1] 4.198671</code></pre>
 <p>And now subtracting 0.5 from each:</p>
 <pre class="r"><code>( pk &lt;- dordlogit( 1:7, 0, coef(m12.5) - 0.5 ) )</code></pre>
-<pre><code>[1] 0.08201375 0.06404631 0.08225880 0.20899898 0.15904012 0.18440427 0.21923777</code></pre>
+<pre><code>[1] 0.08195822 0.06411714 0.08225238 0.20903322 0.15899213 0.18443011 0.21921679</code></pre>
 <p>Now values on the left have decreased while values on the right have increased. The expected value is now:</p>
 <pre class="r"><code>sum( pk * (1:7) )</code></pre>
-<pre><code>[1] 4.729169</code></pre>
+<pre><code>[1] 4.729141</code></pre>
 <p>That’s why we subtract <span class="math inline">\(\phi\)</span>, the linear model, from each intercept. This way, a positive <span class="math inline">\(\beta\)</span> value indicates that an increase in the predictor variable <span class="math inline">\(x\)</span> results in an increase in the average response.</p>
 <p>Going back to the trolley data, we will use <code>action</code>, <code>intention</code>, and <code>contact</code> as predictor variables.
 Since the influence of intention may depend upon the simultaneous presence of action or contact, we include an interaction. This gives us the following log-cumulative-odds:
@@ -145,12 +155,12 @@ m12.6 &lt;- ulam(
     cutpoints ~ dnorm( 0, 1.5)
   ), data=dat, chains=4, cores=4, refresh=0 )</code></pre>
 <pre class="r"><code>precis(m12.6)</code></pre>
-<pre><code>          mean         sd       5.5%      94.5%     n_eff     Rhat4
-bIC -1.2365300 0.09496729 -1.3849625 -1.0799594  982.6996 1.0017679
-bIA -0.4346207 0.07996495 -0.5602196 -0.3037298 1074.3663 0.9993524
-bC  -0.3412614 0.06790192 -0.4505585 -0.2307503  982.6267 1.0011808
-bI  -0.2892398 0.05639973 -0.3785348 -0.1987840  880.1645 0.9997308
-bA  -0.4714955 0.05447431 -0.5596216 -0.3866160 1053.2116 0.9987697</code></pre>
+<pre><code>          mean         sd       5.5%      94.5%    n_eff    Rhat4
+bIC -1.2375365 0.09506630 -1.3867936 -1.0847873 1188.208 1.000377
+bIA -0.4355137 0.07818393 -0.5647729 -0.3071681 1148.478 1.001882
+bC  -0.3412000 0.06714190 -0.4497271 -0.2353824 1103.074 1.001444
+bI  -0.2902317 0.05712674 -0.3842900 -0.1991619 1008.461 1.003361
+bA  -0.4716408 0.05228266 -0.5536497 -0.3877824 1037.580 1.001588</code></pre>
 <pre class="r"><code>plot( precis(m12.6), xlim=c(-1.4, 0))</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_12/chapter12b_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
 <p>The combination of contact and intention is the worst. Interestingly, neither contanct nor intention by itself have a large impact on ratings.</p>

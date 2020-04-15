@@ -1,12 +1,19 @@
 ---
-title: "Interactions"
-author: "Corrie"
-date: "August 14, 2018"
-output: 
-  github_document:
-    pandoc_args: --webtex 
+title: "Interaction"
+author: Corrie
+date: "2018-08-14"
+slug: chp7-part-one
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
 ---
-
 ```{r setup, include=FALSE, cache = F}
 knitr::opts_chunk$set(echo = TRUE,
                       error = TRUE)

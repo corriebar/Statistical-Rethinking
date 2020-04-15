@@ -1,10 +1,18 @@
 ---
-title: "Interactions"
-author: "Corrie"
-date: "August 14, 2018"
-output: 
-  github_document:
-    pandoc_args: --webtex 
+title: "Interaction"
+author: Corrie
+date: "2018-08-14"
+slug: chp7-part-one
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
 ---
 
 
@@ -91,9 +99,9 @@ How can we capture the reversed slopes in a single model using all data?</p>
 )</code></pre>
 <p>Compare the two models:</p>
 <pre class="r"><code>compare( m7.3, m7.4)</code></pre>
-<pre><code>##          WAIC       SE    dWAIC      dSE    pWAIC       weight
-## m7.4 476.3781 15.40597  0.00000       NA 4.412373 1.000000e+00
-## m7.3 539.8512 13.32939 63.47314 15.12418 2.817129 1.648096e-14</code></pre>
+<pre><code>##          WAIC       SE   dWAIC      dSE    pWAIC       weight
+## m7.4 476.4369 15.30824  0.0000       NA 4.430565 1.000000e+00
+## m7.3 539.6087 13.26703 63.1718 15.05826 2.704404 1.916095e-14</code></pre>
 <pre class="r"><code>plot( compare( m7.3, m7.4 ))</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <p>The model with the dummy-variable does perform better than without.
@@ -138,10 +146,10 @@ text(4.5, 9.25, &quot;not Africa&quot;)</code></pre>
 )
 
 compare( m7.3, m7.4, m7.5 )</code></pre>
-<pre><code>##          WAIC       SE     dWAIC       dSE    pWAIC       weight
-## m7.5 469.6916 15.08419  0.000000        NA 5.367398 9.663058e-01
-## m7.4 476.4039 15.32582  6.712311  6.364808 4.430297 3.369417e-02
-## m7.3 539.8972 13.26782 70.205606 15.220536 2.848713 5.497447e-16</code></pre>
+<pre><code>##          WAIC       SE     dWAIC      dSE    pWAIC       weight
+## m7.5 469.9787 15.19990  0.000000       NA 5.507534 9.625579e-01
+## m7.4 476.4723 15.38920  6.493594  6.33570 4.441759 3.744215e-02
+## m7.3 539.5198 13.18796 69.541095 15.20289 2.672832 7.634312e-16</code></pre>
 <pre class="r"><code>plot( compare( m7.3, m7.4, m7.5))</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
 <p>The interaction model performs better than the other two, though it only performs slightly better than the dummy variable: Since there are few countries in Africa, the data are sparse.</p>
@@ -196,9 +204,9 @@ gamma.Africa &lt;- post$bR + post$bAR*1
 gamma.notAfrica &lt;- post$bR + post$bAR*0
 
 mean( gamma.Africa )</code></pre>
-<pre><code>## [1] 0.1659071</code></pre>
+<pre><code>## [1] 0.1646931</code></pre>
 <pre class="r"><code>mean( gamma.notAfrica )</code></pre>
-<pre><code>## [1] -0.1835084</code></pre>
+<pre><code>## [1] -0.1843582</code></pre>
 <p>How do the distributions compare?</p>
 <pre class="r"><code>dens( gamma.Africa, xlim=c(-0.5, 0.6), ylim=c(0, 5.5),
       xlab=&quot;gamma&quot;, col=&quot;steelblue&quot; )
@@ -208,7 +216,7 @@ legend(&quot;topright&quot;, col=c(&quot;black&quot;, &quot;steelblue&quot;), bt
 <p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
 <pre class="r"><code>diff &lt;- gamma.Africa - gamma.notAfrica
 sum( diff &lt; 0 ) / length( diff )</code></pre>
-<pre><code>## [1] 0.0034</code></pre>
+<pre><code>## [1] 0.0033</code></pre>
 <p>So there is a very low probability that the African slope is less than the Non-African slope.</p>
 </div>
 </div>
@@ -283,15 +291,8 @@ str(d)</code></pre>
     sigma ~ dunif( 0, 100)
   ), data=d
 )</code></pre>
-<pre><code>## Error in map(alist(blooms ~ dnorm(mu, sigma), mu &lt;- a + bW * water + bS * : non-finite finite-difference value [4]
-## Start values for parameters may be too far from MAP.
-## Try better priors or use explicit start values.
-## If you sampled random start values, just trying again may work.
-## Start values used in this attempt:
-## a = 58.2856784186492
-## bW = -28.6386112286791
-## bS = -1.69223744085149
-## sigma = 80.0392973003909</code></pre>
+<pre><code>## Caution, model may not have converged.</code></pre>
+<pre><code>## Code 1: Maximum iterations reached.</code></pre>
 <pre class="r"><code>m7.7 &lt;- map(
   alist(
     blooms ~ dnorm( mu, sigma),
@@ -308,11 +309,11 @@ str(d)</code></pre>
 ## Try better priors or use explicit start values.
 ## If you sampled random start values, just trying again may work.
 ## Start values used in this attempt:
-## a = -65.7131587461438
-## bW = 186.855859227364
-## bS = -53.6572959015913
-## bWS = 139.909189010882
-## sigma = 96.2640689685941</code></pre>
+## a = 62.5704792195615
+## bW = 0.71488832064561
+## bS = 12.1726842940726
+## bWS = -36.680326642862
+## sigma = 97.0881580375135</code></pre>
 <p>Fitting this code very likely produces errors: The flat priors make it hard for the optimizer to find good start values that converge. We can fix this problem different ways:</p>
 <ul>
 <li>use another optimizer</li>
@@ -332,9 +333,17 @@ str(d)</code></pre>
   data=d,
   method=&quot;Nelder-Mead&quot;,
   control=list(maxit=1e4)
-)
-
-m7.7 &lt;- map(
+)</code></pre>
+<pre><code>## Error in map(alist(blooms ~ dnorm(mu, sigma), mu &lt;- a + bW * water + bS * : non-finite finite-difference value [4]
+## Start values for parameters may be too far from MAP.
+## Try better priors or use explicit start values.
+## If you sampled random start values, just trying again may work.
+## Start values used in this attempt:
+## a = -38.8981859721942
+## bW = -105.492743759584
+## bS = -73.4617528737223
+## sigma = 25.7715692277998</code></pre>
+<pre class="r"><code>m7.7 &lt;- map(
   alist(
     blooms ~ dnorm( mu, sigma),
     mu &lt;- a + bW*water + bS*shade + bWS*water*shade,
@@ -350,22 +359,30 @@ m7.7 &lt;- map(
 )</code></pre>
 <p>No more warnings this time.</p>
 <pre class="r"><code>coeftab(m7.6, m7.7)</code></pre>
+<pre><code>## Caution, model may not have converged.</code></pre>
+<pre><code>## Code 1: Maximum iterations reached.</code></pre>
+<pre><code>## Caution, model may not have converged.</code></pre>
+<pre><code>## Code 1: Maximum iterations reached.</code></pre>
 <pre><code>##       m7.6    m7.7   
-## a       53.46  -84.37
-## bW      76.36  151.06
-## bS     -38.92   35.00
-## sigma   57.38   46.26
-## bWS        NA  -39.52
+## a       55.10 -203.32
+## bW      75.96  201.88
+## bS     -39.32   90.47
+## sigma   57.28   55.04
+## bWS        NA   -63.2
 ## nobs       27      27</code></pre>
 <pre class="r"><code>plot( coeftab( m7.6, m7.7 ) )</code></pre>
+<pre><code>## Caution, model may not have converged.</code></pre>
+<pre><code>## Code 1: Maximum iterations reached.</code></pre>
+<pre><code>## Caution, model may not have converged.</code></pre>
+<pre><code>## Code 1: Maximum iterations reached.</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_7/chapter7_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
 <p>The estimates are all over the place…
 The intercept changes from positive to negative in the second model. In the first model, both the water and shade coefficient are as expected: more water, more blooms and more shade less blooms. For shade, the influence actually becomes positive in the second model.
 The estimates are not that easy to understand and shouldn’t be taken at face value.</p>
 <pre class="r"><code>compare( m7.6, m7.7 )</code></pre>
-<pre><code>##          WAIC       SE    dWAIC      dSE    pWAIC      weight
-## m7.7 296.3745 9.969884 0.000000       NA 6.271265 0.991632131
-## m7.6 305.9245 9.018187 9.549906 6.198311 5.308270 0.008367869</code></pre>
+<pre><code>##          WAIC       SE    dWAIC      dSE    pWAIC     weight
+## m7.7 300.2630 9.482958 0.000000       NA 7.155731 0.96084845
+## m7.6 306.6638 9.347944 6.400753 9.429719 5.696026 0.03915155</code></pre>
 <p>Pretty much all weight is on the second model with interaction term, so it seems to be a better model than without interaction term.</p>
 <div id="center-and-re-estimate" class="section level3">
 <h3>Center and re-estimate</h3>

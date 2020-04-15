@@ -1,13 +1,18 @@
 ---
 title: "Binomial Regression"
-author: "Corrie"
-date: "October 4, 2018"
-output: 
-  html_document:
-    toc: true
-    toc_float: true
-  github_document:
-    pandoc_args: --webtex 
+author: Corrie
+date: "2018-10-04"
+slug: chp10-part-one
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
 ---
 
 
@@ -37,8 +42,8 @@ L_i &amp;\sim \text{Binomial}(1, p_i)\\
   data=d
 )
 precis(m10.1)</code></pre>
-<pre><code>       mean         sd     5.5%     94.5%
-a 0.3201415 0.09022718 0.175941 0.4643419</code></pre>
+<pre><code>       mean         sd      5.5%     94.5%
+a 0.3201396 0.09022716 0.1759392 0.4643401</code></pre>
 <p>This implies a MAP probability of pulling the left lever of</p>
 <pre class="r"><code>logistic(0.32)</code></pre>
 <pre><code>[1] 0.5793243</code></pre>
@@ -67,10 +72,10 @@ m10.3 &lt;- map(
 )
 
 (cp &lt;- compare(m10.1, m10.2, m10.3) )</code></pre>
-<pre><code>          WAIC       SE    dWAIC       dSE    pWAIC     weight
-m10.2 680.5384 9.253663 0.000000        NA 2.020256 0.70166499
-m10.3 682.3666 9.330073 1.828221 0.9156754 3.009858 0.28127863
-m10.1 687.9722 7.105368 7.433864 6.1334050 1.016019 0.01705637</code></pre>
+<pre><code>          WAIC       SE   dWAIC       dSE     pWAIC     weight
+m10.2 680.3582 9.291860 0.00000        NA 1.9295498 0.74351153
+m10.3 682.6265 9.351031 2.26827 0.9406816 3.1399595 0.23918790
+m10.1 687.8795 7.104503 7.52129 6.0599007 0.9696539 0.01730057</code></pre>
 <p>The model without the interaction seems to fare better even though the third model best reflects the structure of the experiment.</p>
 <pre class="r"><code>plot( cp )#, </code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10a_files/figure-html/unnamed-chunk-6-1.png" width="768" /></p>
@@ -80,9 +85,9 @@ m10.1 687.9722 7.105368 7.433864 6.1334050 1.016019 0.01705637</code></pre>
 <p>Let’s have a look at the third model to understand why it performs poorly compared with the second one:</p>
 <pre class="r"><code>precis(m10.3)</code></pre>
 <pre><code>           mean        sd       5.5%     94.5%
-a    0.04770348 0.1260040 -0.1536753 0.2490822
-bp   0.60971850 0.2261470  0.2482919 0.9711451
-bpC -0.10398939 0.2635913 -0.5252592 0.3172804</code></pre>
+a    0.04771732 0.1260040 -0.1536614 0.2490961
+bp   0.60967124 0.2261462  0.2482460 0.9710965
+bpC -0.10396772 0.2635904 -0.5252361 0.3173006</code></pre>
 <pre class="r"><code>plot( precis(m10.3) )</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10a_files/figure-html/unnamed-chunk-8-1.png" width="768" /></p>
 <p>The interaction variable has a rather wide posterior.
@@ -135,9 +140,9 @@ m10.3stan &lt;- map2stan(m10.3, data=d2, iter=1e4, warmup=1000 )
 precis(m10.3stan)</code></pre>
 <pre class="r"><code>precis(m10.3stan)</code></pre>
 <pre><code>           mean        sd       5.5%     94.5%    n_eff     Rhat4
-a    0.05063956 0.1253442 -0.1466587 0.2535746 4832.785 1.0000571
-bp   0.60909241 0.2253974  0.2525596 0.9732595 4171.547 0.9999050
-bpC -0.10152022 0.2665539 -0.5258567 0.3245502 4393.468 0.9998918</code></pre>
+a    0.04976441 0.1266306 -0.1511708 0.2539383 3559.198 1.0001457
+bp   0.61370030 0.2267254  0.2533023 0.9833270 3753.186 0.9999456
+bpC -0.10605270 0.2616654 -0.5241493 0.3043651 4520.750 0.9998897</code></pre>
 <p>The numbers are almost identical with the MAP model and we can check the pairs plot to see that the posterior is indeed well approximated by a quadratic.</p>
 <pre class="r"><code>pairs(m10.3stan)</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10a_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
@@ -166,22 +171,22 @@ We fit this with MCMC since it will turn out to have some skew in its posterior 
 <pre><code>[1] 1 2 3 4 5 6 7</code></pre>
 <pre class="r"><code>precis(m10.4, depth=2)</code></pre>
 <pre><code>           mean        sd       5.5%      94.5%    n_eff     Rhat4
-a[1] -0.7430094 0.2722710 -1.1844461 -0.3065746 3644.481 1.0008288
-a[2] 11.1110158 5.4369195  4.6743364 21.4631269 1977.246 1.0011757
-a[3] -1.0587065 0.2829557 -1.5276684 -0.6243400 3703.506 0.9998681
-a[4] -1.0549979 0.2851375 -1.5194521 -0.5949534 2992.954 1.0020444
-a[5] -0.7478554 0.2728858 -1.1811437 -0.3123281 4198.502 1.0005778
-a[6]  0.2113113 0.2676306 -0.2210728  0.6336893 3698.776 1.0003385
-a[7]  1.8031784 0.3991891  1.1990170  2.4707487 4511.980 1.0002131
-bp    0.8436144 0.2648247  0.4153247  1.2656743 2197.847 1.0010277
-bpC  -0.1373488 0.2960272 -0.6124452  0.3296532 2742.691 1.0005659</code></pre>
+a[1] -0.7372494 0.2733713 -1.1801419 -0.2989464 3385.652 0.9999264
+a[2] 11.1671670 5.5847759  4.4760880 21.5769946 1538.708 1.0011169
+a[3] -1.0449858 0.2842466 -1.5009679 -0.5915931 3010.162 1.0003971
+a[4] -1.0529235 0.2849536 -1.5239104 -0.6186618 2700.352 1.0010756
+a[5] -0.7408384 0.2757588 -1.1794213 -0.3045947 3284.742 1.0002464
+a[6]  0.2126457 0.2746675 -0.2234805  0.6527248 3253.037 0.9999860
+a[7]  1.8111885 0.3937085  1.1984526  2.4777007 3128.548 1.0007682
+bp    0.8336768 0.2644557  0.4241267  1.2629726 1933.664 1.0024212
+bpC  -0.1312570 0.3055201 -0.6221536  0.3646840 2741.259 0.9999453</code></pre>
 <p>This posterior is not entirely Gaussian:</p>
 <pre class="r"><code>post &lt;- extract.samples( m10.4)
 str(post)</code></pre>
 <pre><code>List of 3
- $ a  : num [1:4000, 1:7] -0.801 -0.7 -0.812 -0.565 -0.657 ...
- $ bp : num [1:4000(1d)] 0.489 0.998 0.987 0.667 1.308 ...
- $ bpC: num [1:4000(1d)] -0.00164 -0.42957 -0.11204 -0.34127 -0.23503 ...</code></pre>
+ $ a  : num [1:4000, 1:7] -0.67 -0.599 -0.744 -0.479 -0.576 ...
+ $ bp : num [1:4000(1d)] 0.891 0.403 0.903 0.404 0.935 ...
+ $ bpC: num [1:4000(1d)] 0.30347 -0.16452 -0.13246 0.12195 -0.00634 ...</code></pre>
 <pre class="r"><code>dens(post$a[,2])</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10a_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
 <p>Plotting the predictions for each actor:</p>
@@ -298,15 +303,15 @@ knitr::kable( head(d.aggregated,  8) )</code></pre>
 )
 precis(m10.5)</code></pre>
 <pre><code>           mean        sd       5.5%     94.5%
-a    0.04771759 0.1260040 -0.1536612 0.2490964
-bp   0.60966987 0.2261462  0.2482446 0.9710951
-bpC -0.10396505 0.2635904 -0.5252334 0.3173033</code></pre>
+a    0.04771725 0.1260040 -0.1536615 0.2490960
+bp   0.60967148 0.2261462  0.2482462 0.9710968
+bpC -0.10396791 0.2635904 -0.5252363 0.3173004</code></pre>
 <p>Compare with the same model with non-aggregated data:</p>
 <pre class="r"><code>precis(m10.3stan)</code></pre>
 <pre><code>           mean        sd       5.5%     94.5%    n_eff     Rhat4
-a    0.05063956 0.1253442 -0.1466587 0.2535746 4832.785 1.0000571
-bp   0.60909241 0.2253974  0.2525596 0.9732595 4171.547 0.9999050
-bpC -0.10152022 0.2665539 -0.5258567 0.3245502 4393.468 0.9998918</code></pre>
+a    0.04976441 0.1266306 -0.1511708 0.2539383 3559.198 1.0001457
+bp   0.61370030 0.2267254  0.2533023 0.9833270 3753.186 0.9999456
+bpC -0.10605270 0.2616654 -0.5241493 0.3043651 4520.750 0.9998897</code></pre>
 <p>We get the same estimates.</p>
 </div>
 <div id="graduate-school-admissions" class="section level3">
@@ -436,8 +441,8 @@ m10.7 &lt;- map(
 )</code></pre>
 <pre class="r"><code>(cp &lt;- compare( m10.6, m10.7 ) )</code></pre>
 <pre><code>           WAIC       SE    dWAIC      dSE     pWAIC       weight
-m10.6  984.2015 311.2806  0.00000       NA 102.58582 1.000000e+00
-m10.7 1047.7249 314.3372 63.52339 166.2807  85.11608 1.607205e-14</code></pre>
+m10.6  977.7285 306.6545  0.00000       NA 105.18299 1.000000e+00
+m10.7 1045.9614 313.3881 68.23294 163.0158  87.29271 1.525476e-15</code></pre>
 <p>The model using male as a predictor performs better than without. The comparison suggests that gender actually matters a lot:</p>
 <pre class="r"><code>plot( cp)# , </code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10a_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
@@ -446,8 +451,8 @@ m10.7 1047.7249 314.3372 63.52339 166.2807  85.11608 1.607205e-14</code></pre>
 <p>In which way does it matter?</p>
 <pre class="r"><code>precis( m10.6 )</code></pre>
 <pre><code>         mean         sd       5.5%      94.5%
-a  -0.8304494 0.05077041 -0.9115903 -0.7493085
-bm  0.6103062 0.06389095  0.5081962  0.7124163</code></pre>
+a  -0.8304494 0.05077041 -0.9115904 -0.7493085
+bm  0.6103063 0.06389095  0.5081962  0.7124164</code></pre>
 <p>Being male does improve the chances of being admitted.
 The relative difference is <code>exp(0.61) =</code> 1.8404314. This means that a male applicant’s odds are 184% of a female applicant.
 Let’s get the absolute scale, which is more important:</p>
@@ -459,7 +464,7 @@ diff.admit &lt;- p.admit.male - p.admit.female
 
 quantile( diff.admit, c(0.025, 0.5, 0.975 ))</code></pre>
 <pre><code>     2.5%       50%     97.5% 
-0.1130675 0.1413372 0.1690985 </code></pre>
+0.1132664 0.1415654 0.1702002 </code></pre>
 <p>Thus the median estimate of the male advantage is about 14%.</p>
 <pre class="r"><code>dens( diff.admit )</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10a_files/figure-html/unnamed-chunk-32-1.png" width="672" /></p>
@@ -504,10 +509,10 @@ m10.9 &lt;- map(
 <p>We then compare all three models:</p>
 <pre class="r"><code>(cp &lt;- compare( m10.6, m10.7, m10.8, m10.9 ) )</code></pre>
 <pre><code>           WAIC        SE      dWAIC        dSE      pWAIC        weight
-m10.8  104.9527  17.02849   0.000000         NA   6.434406  9.072928e-01
-m10.9  109.5148  15.58673   4.562039   3.796352   9.952036  9.270718e-02
-m10.6  998.0261 315.56249 893.073389 326.423590 113.857322 1.069855e-194
-m10.7 1044.2402 312.91308 939.287442 324.498596  82.354394 9.864409e-205</code></pre>
+m10.8  104.7375  17.08848   0.000000         NA   6.307905  8.946839e-01
+m10.9  109.0165  16.14685   4.279009   3.141234   9.717673  1.053161e-01
+m10.6 1004.2497 318.52333 899.512183 329.661575 116.904700 4.217751e-196
+m10.7 1038.3364 310.98958 933.598934 322.554303  81.271416 1.672003e-203</code></pre>
 <p>As a plot:</p>
 <pre class="r"><code>plot( cp )#, </code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_10/chapter10a_files/figure-html/unnamed-chunk-36-1.png" width="672" /></p>
@@ -517,13 +522,13 @@ m10.7 1044.2402 312.91308 939.287442 324.498596  82.354394 9.864409e-205</code><
 <p>So how does gender now affect admission?</p>
 <pre class="r"><code>precis( m10.9, depth=2 )</code></pre>
 <pre><code>            mean         sd       5.5%       94.5%
-a[1]  0.68193888 0.09910200  0.5235548  0.84032302
-a[2]  0.63852994 0.11556510  0.4538346  0.82322529
-a[3] -0.58062952 0.07465092 -0.6999361 -0.46132294
-a[4] -0.61262173 0.08596001 -0.7500024 -0.47524102
-a[5] -1.05727066 0.09872297 -1.2150490 -0.89949228
-a[6] -2.62392120 0.15766770 -2.8759046 -2.37193777
-bm   -0.09992562 0.08083548 -0.2291163  0.02926509</code></pre>
+a[1]  0.68193889 0.09910200  0.5235548  0.84032303
+a[2]  0.63852985 0.11556510  0.4538345  0.82322521
+a[3] -0.58062940 0.07465092 -0.6999360 -0.46132281
+a[4] -0.61262184 0.08596001 -0.7500025 -0.47524113
+a[5] -1.05727073 0.09872297 -1.2150491 -0.89949235
+a[6] -2.62392132 0.15766770 -2.8759048 -2.37193787
+bm   -0.09992558 0.08083548 -0.2291163  0.02926513</code></pre>
 <p>The estimate for <code>bm</code> has changed direction, meaning it now estimates that being male is a disadvantage! The estimate becomes <code>exp(-0.1) =</code> 0.9048374. So a male has about 90% the odds of admission as a female.</p>
 <p>Let’s do the posterior check again as before:</p>
 <pre class="r"><code>postcheck( m10.9, n=1e4 , col=&quot;royalblue4&quot;)
@@ -567,14 +572,14 @@ deptE       -1.73930574 0.12611350 -1.9408595 -1.53775201
 deptF       -3.30648006 0.16998181 -3.5781438 -3.03481630</code></pre>
 <p>Compare with the <code>map()</code> model:</p>
 <pre class="r"><code>precis(m10.9stan, depth=2)</code></pre>
-<pre><code>           mean         sd       5.5%       94.5%    n_eff     Rhat4
-a[1]  0.6863076 0.09691269  0.5322626  0.83932302 2263.496 0.9999579
-a[2]  0.6417298 0.11545820  0.4553979  0.82881994 2360.370 1.0003822
-a[3] -0.5808673 0.07352865 -0.7003331 -0.46132209 3235.067 0.9998488
-a[4] -0.6104369 0.08724276 -0.7511097 -0.47465331 2591.656 0.9996333
-a[5] -1.0607945 0.09930062 -1.2174470 -0.90071297 3168.278 0.9998268
-a[6] -2.6314324 0.15796026 -2.8908603 -2.38479805 3238.932 1.0008285
-bm   -0.1019495 0.08037660 -0.2306159  0.02743101 1984.762 0.9999576</code></pre>
+<pre><code>            mean         sd       5.5%       94.5%    n_eff     Rhat4
+a[1]  0.68246617 0.09905564  0.5201021  0.83810520 2420.895 0.9995347
+a[2]  0.63745932 0.11432391  0.4524364  0.82390122 2554.566 0.9999047
+a[3] -0.58261668 0.07439702 -0.7025880 -0.46510662 3464.430 0.9995155
+a[4] -0.61495490 0.08741428 -0.7562219 -0.47655593 2946.395 1.0000812
+a[5] -1.05793749 0.09926122 -1.2166197 -0.89944976 3232.371 1.0002706
+a[6] -2.63357331 0.15116106 -2.8788143 -2.39495133 3287.971 0.9999513
+bm   -0.09868678 0.08056245 -0.2286651  0.02687807 2063.772 0.9995024</code></pre>
 <p>Note that the departments are coded differently: the intercept in the <code>glm</code> model corresponds to <code>a[1]</code> in the Stan model and <code>deptB</code> in the <code>glm</code> model corresponds to the difference from department A to B, that is <code>a[2]-a[1]</code> in the Stan model.</p>
 <p>To use <code>glm()</code> for a non-aggregated model:</p>
 <pre class="r"><code>m10.4glm &lt;- glm(
@@ -626,8 +631,8 @@ x           11.434327 2955.062 -4711.325 4734.194</code></pre>
 )
 precis(m.good)</code></pre>
 <pre><code>       mean       sd       5.5%    94.5%
-a -1.726593 2.775005 -6.1615867 2.708401
-b  4.016908 2.775005 -0.4180857 8.451902</code></pre>
+a -1.727022 2.776206 -6.1639353 2.709892
+b  4.017533 2.776206 -0.4193806 8.454447</code></pre>
 <p>Since the uncertainty is not symmetric in this case, the quadratic assumption is misleading. Even better would be MCMC samples:</p>
 <pre class="r"><code>m.better &lt;- map2stan( m.good)
 pairs(m.better)</code></pre>

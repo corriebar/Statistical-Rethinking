@@ -1,13 +1,18 @@
 ---
 title: "Binomial Regression"
-author: "Corrie"
-date: "October 4, 2018"
-output: 
-  html_document:
-    toc: true
-    toc_float: true
-  github_document:
-    pandoc_args: --webtex 
+author: Corrie
+date: "2018-10-04"
+slug: chp10-part-one
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
 ---
 
 ```{r setup, include=FALSE}

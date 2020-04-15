@@ -1,22 +1,26 @@
 ---
-title: "Chapter 4 - Exercise"
-author: "Corrie"
-date: "May 21, 2018"
-output: 
-  github_document:
-    pandoc_args: --webtex
-
+title: "Chapter 4 - Exercises"
+author: Corrie
+date: "2018-05-21"
+slug: chp4-ex
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
 ---
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Chapter 4 - Exercises
-
 These are my solutions to the practice questions of chapter 4, Linear Models, of the book "Statistical Rethinking" by Richard McElreath.
 
-## Easy Questions.
+## Easy.
 __4E1.__ In the model definition below, which line is the likelihood:
 $$
 \begin{align*}
@@ -55,7 +59,7 @@ __4E5.__ In the model definition just above, how many parameters are in the post
 
 There are __3__ parameters in the posterior distribution, $\alpha$, $\beta$, and $\sigma$.
 
-## Medium questions.
+## Medium.
 __4M1.__ For the model definition below, simulate observed heights from the prior (not the posterior).
 $$\begin{align*}
 y_i &\sim \text{Normal}(\mu, \sigma) \\
@@ -119,7 +123,7 @@ I adjusted the mean for the average height accordingly and changed $\beta$ to a 
 __4M6.__ Now suppose, the variance among heights for students of the same age is  never more than 64cm. I thus change my priors as follows:
 $$\sigma \sim \text{Uniform}(0, 64).$$
 
-## Hard question.
+## Hard.
 __4H1.__ !Kung census data: Provide predicted heights and 89% intervals (either HPDI or PI) for the following weights of individuals.
 ```{r}
 weights <- c(46.95, 43.72, 64.78, 32.59, 54.63)
