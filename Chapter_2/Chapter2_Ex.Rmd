@@ -135,7 +135,7 @@ We can compute the probability by simply simulating a bunch of tosses:
 - Generate a vector with the corresponding probabilities for Earth and Mars.
 - Use this probability vector to sample some tosses.
 - Restricting to tosses that landed on "land", how many came from the Earth globe?
-```{r}
+```{r, eval=F}
 trials <- 100000
 earth <- rbinom(trials, size=1, p=0.5)
 water_prob <- ifelse(earth == 1, 0.7, 0)
@@ -146,6 +146,19 @@ df %>%
   filter(water == 0) %>%
   summarize(prob_earth = mean(earth))
 ```
+```{r, echo=F}
+trials <- 100000
+earth <- rbinom(trials, size=1, p=0.5)
+water_prob <- ifelse(earth == 1, 0.7, 0)
+water <- rbinom(trials, size=1, p=water_prob)
+df <- data.frame( earth = earth,
+                  water = water )
+df %>%
+  filter(water == 0) %>%
+  summarize(prob_earth = mean(earth)) %>%
+  knitr::kable("html") %>% kableExtra::kable_styling()
+```
+
 
 __2M4.__ Suppose you hae a deck with only three cards. Each card has two sides, and each side is either black or white. One card has two black sides, the second card has one black, one white side and the third card has two white sides. Now these cards are shuffled in a bag, one is drawn and placed flat on a table. A black side is showing up. What is the color of the other side?
 
@@ -155,7 +168,7 @@ The exercise asks to use the counting method, as used in the chapter, but I will
 - Depending on the card, the probability that the top facing side is black is either 1, 0.5 or 0.
 - Sample some draws.
 - Restricting to draws where the top side is black, how many of them where from card 1 (the card with two black sides)?
-```{r}
+```{r, eval=F}
 trials <- 10000
 card <- sample(1:3, size=trials, replace = TRUE )
 black_prob <- case_when(card == 1 ~ 1,
@@ -169,13 +182,28 @@ df %>%
   filter( black == 1) %>%
   summarize( prob_other_side_black = mean( card == 1))
 ```
+```{r, echo=F}
+trials <- 10000
+card <- sample(1:3, size=trials, replace = TRUE )
+black_prob <- case_when(card == 1 ~ 1,
+                     card == 2 ~ 0.5,
+                     card == 3 ~ 0)
+black <- rbinom(trials, size=1, prob=black_prob)
+df <- data.frame( card = card,
+                  black = black )
+
+df %>%
+  filter( black == 1) %>%
+  summarize( prob_other_side_black = mean( card == 1)) %>%
+  knitr::kable("html") %>% kableExtra::kable_styling()
+```
 
 The probability that the other side is also black is 2/3 (~66%).
 
 __2M5.__ Now suppose there are four cards: B/B, B/W, W/W, and another B/B. Again, a card is drawn from the back and a black side appears. What is the probability that the other side is black?
 
 I'm using a simulation approach again by adding another card with a probability of 1 to have a black side.
-```{r}
+```{r, eval=F}
 trials <- 10000
 card <- sample(1:4, size=trials, replace = TRUE )
 black_prob <- case_when(card == 1 ~ 1,
@@ -190,6 +218,22 @@ df %>%
   filter( black == 1) %>%
   summarize( prob_other_side_black = mean( card %in% c(1, 4) ))
 ```
+```{r, echo=F}
+trials <- 10000
+card <- sample(1:4, size=trials, replace = TRUE )
+black_prob <- case_when(card == 1 ~ 1,
+                     card == 2 ~ 0.5,
+                     card == 3 ~ 0,
+                     card == 4 ~ 1)
+black <- rbinom(trials, size=1, prob=black_prob)
+df <- data.frame( card = card,
+                  black = black )
+
+df %>%
+  filter( black == 1) %>%
+  summarize( prob_other_side_black = mean( card %in% c(1, 4) )) %>%
+  knitr::kable("html") %>% kableExtra::kable_styling()
+```
 
 The probability that the other side is also black is ~80%.
 
@@ -198,7 +242,7 @@ Assume again there are three cards: B/B, B/W, and W/W and assume that for every 
 Again, a card is pulled and a black side appears face up. What is the probability that the other side is black?
 
 Using the simulation approach again, we now have to adjust how we sample from the three cards:
-```{r}
+```{r, eval=F}
 trials <- 10000
 sample_prob <- c(1, 2, 3)
 sample_prob <- sample_prob / sum(sample_prob)
@@ -214,6 +258,23 @@ df %>%
   filter( black == 1) %>%
   summarize( prob_other_side_black = mean( card == 1))
 ```
+```{r, echo=F}
+trials <- 10000
+sample_prob <- c(1, 2, 3)
+sample_prob <- sample_prob / sum(sample_prob)
+card <- sample(1:3, size=trials, replace = TRUE, prob = sample_prob )
+black_prob <- case_when(card == 1 ~ 1,
+                     card == 2 ~ 0.5,
+                     card == 3 ~ 0)
+black <- rbinom(trials, size=1, prob=black_prob)
+df <- data.frame( card = card,
+                  black = black )
+
+df %>%
+  filter( black == 1) %>%
+  summarize( prob_other_side_black = mean( card == 1)) %>%
+  knitr::kable("html") %>% kableExtra::kable_styling()
+```
 
 Now, the probability that the other side is also black is around 50%.
 
@@ -223,7 +284,7 @@ What is the probability that the first card is black on the other side?
 This simulation is a bit more complex, since we need to draw two cards. To do so, I list all card combos that can appear when drawing two cards (each combo is equally likely) and sample from these card combos. 
 For each card combo, I then compute the probability that the first card is facing up black and that the second card is facing up white. 
 Then I restrict to draws where the first card is black and the second is white and count for how many of these the first card is black on both sides.
-```{r}
+```{r, eval=F}
 trials <- 100000
 card_combos <- c("12", "13", "21", "23", "31", "32")
 cards <- sample(card_combos, size=trials, replace = TRUE )
@@ -246,6 +307,30 @@ df %>%
             second_white == 1) %>%
   summarize( prob_other_side_black = mean( first_card == "1"))
 ```
+```{r, echo=F}
+trials <- 100000
+card_combos <- c("12", "13", "21", "23", "31", "32")
+cards <- sample(card_combos, size=trials, replace = TRUE )
+black_prob <- case_when(str_starts(cards, "1") ~ 1,
+                     str_starts(cards, "2") ~ 0.5,
+                     str_starts(cards, "3") ~ 0)
+
+white_prob <- case_when(str_ends(cards, "1") ~ 0,
+                     str_ends(cards, "2") ~ 0.5,
+                     str_ends(cards, "3") ~ 1)
+first_black <- rbinom(trials, size=1, prob=black_prob)
+second_white <- rbinom(trials, size=1, prob=white_prob)
+df <- data.frame( first_card = substr(cards, 1, 1) ,
+                  second_card = substr(cards, 2, 2),
+                  first_black = first_black,
+                  second_white = second_white)
+
+df %>%
+  filter( first_black == 1 &
+            second_white == 1) %>%
+  summarize( prob_other_side_black = mean( first_card == "1")) %>%
+  knitr::kable("html") %>% kableExtra::kable_styling()
+```
 
 The probability that the first card is black on both sides is then 75%.
 
@@ -260,7 +345,7 @@ Let's simulate:
 - Then we sample the first births, 
 - and the second births.
 - Last, we take the proportions of twins in the second births, given that the first one is twins.
-```{r}
+```{r, eval=F}
 n <- 1e6
 species <- sample( c("A", "B"), size=n, replace = TRUE)
 twin_prob <- ifelse(species == "A", 0.1, 0.2 )
@@ -274,26 +359,55 @@ df <- data.frame(species = species,
 df %>% filter( birth1 == 1 ) %>%
   summarise(prob_next_birth_twins = mean( birth2 ))
 ```
+```{r, echo=F}
+n <- 1e6
+species <- sample( c("A", "B"), size=n, replace = TRUE)
+twin_prob <- ifelse(species == "A", 0.1, 0.2 )
+birth1 <- rbinom(n, size=1, prob=twin_prob)
+birth2 <- rbinom(n, size=1, prob=twin_prob)
+
+df <- data.frame(species = species,
+                 birth1 = birth1,
+                 birth2 = birth2)
+
+df %>% filter( birth1 == 1 ) %>%
+  summarise(prob_next_birth_twins = mean( birth2 )) %>%
+  knitr::kable("html") %>% kableExtra::kable_styling()
+```
 
 The probability that the next birth will be twins again is around 16%. Note that this is not in any way making a statement about the probability which species it is. But since the probability is either 10% or 20% for species A and B respectively, we expect the posterior probability to lie between these two values. Furthermore, since we already observed one twin birth, it makes sense that the posterior probability is closer to 20% (implying that it is more likely that this panda is from species A).
 
 __2H2.__ Now compute the probability that the panda we have is from species A, given that we observed one twin birth.
 
 We can use the data generated above to answer this question:
-```{r}
+```{r, eval=F}
 df %>%
   filter( birth1 == 1 ) %>%
   summarise( prob_species_A = mean( species == "A"))
 ```
+```{r, echo=F}
+df %>%
+  filter( birth1 == 1 ) %>%
+  summarise( prob_species_A = mean( species == "A")) %>%
+  knitr::kable("html") %>% kableExtra::kable_styling()
+```
+
 
 The probability the panda is from species A, having observed one twin birth, is around 33%. Since we already observed one twin birth, the probability that the panda is from species B increased.
 
 __2H3.__ Suppose the same panda mother has a second birth, this time to a singleton infant. What is the probability that this pandas is from species A?
-```{r}
+```{r, eval=F}
 df %>%
   filter( birth1 == 1 &
             birth2 == 0 ) %>%
   summarise( prob_species_A = mean( species == "A"))
+```
+```{r, echo=F}
+df %>%
+  filter( birth1 == 1 &
+            birth2 == 0 ) %>%
+  summarise( prob_species_A = mean( species == "A")) %>%
+  knitr::kable("html") %>% kableExtra::kable_styling()
 ```
 
 The probability increased slightly to ~35%. Since single births are the more common event, it doesn't change the probability as much. 
@@ -305,7 +419,7 @@ __2H4.__ Suppose now, there is a new genetic test that can identify the species 
   
 The test for our mother panda is positive for species A. 
 Ignoring the information from the births, what is the probability our panda is species A?
-```{r}
+```{r, eval=F}
 test_A_prob <- ifelse(species == "A", 0.8, 1 - 0.65)
 test_A <- rbinom(n, size=1, prob=test_A_prob)
 df <- df %>%
@@ -315,18 +429,37 @@ df %>%
   filter(test_A == 1 ) %>%
   summarise(prob_species_A = mean( species == "A"))
 ```
+```{r, echo=F}
+test_A_prob <- ifelse(species == "A", 0.8, 1 - 0.65)
+test_A <- rbinom(n, size=1, prob=test_A_prob)
+df <- df %>%
+  mutate(test_A = test_A) 
+
+df %>%
+  filter(test_A == 1 ) %>%
+  summarise(prob_species_A = mean( species == "A")) %>%
+  knitr::kable("html") %>% kableExtra::kable_styling()
+```
+
 
 Without considering the births, the probability our panda is species A after testing positive for species A is around 69%.
 
 What is the probability she is species A considering both the births and the test result?
-```{r}
+```{r, eval=F}
 df %>%
   filter(birth1 == 1 &
            birth2 == 0 &
            test_A == 1 ) %>%
   summarise(prob_species_A = mean( species == "A" ))
 ```
-
+```{r, echo=F}
+df %>%
+  filter(birth1 == 1 &
+           birth2 == 0 &
+           test_A == 1 ) %>%
+  summarise(prob_species_A = mean( species == "A" )) %>%
+  knitr::kable("html") %>% kableExtra::kable_styling()
+```
 The probability our panda is species A considering both the test and the births is around 56%.
 
 <small>[Full code.](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_2/Chapter2_Ex.Rmd)<small>

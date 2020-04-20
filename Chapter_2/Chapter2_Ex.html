@@ -16,6 +16,7 @@ share: yes
 output: github_document
 ---
 
+<script src="/rmarkdown-libs/kePrint/kePrint.js"></script>
 
 
 <p>These are my solutions to the practice questions of chapter 2, <em>Small Words and Large Worlds</em>, of the book “Statistical Rethinking” (version 2) by Richard McElreath.</p>
@@ -101,15 +102,19 @@ df &lt;- data.frame( earth = earth,
 df %&gt;%
   filter(water == 0) %&gt;%
   summarize(prob_earth = mean(earth))</code></pre>
-<table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
 <thead>
-<tr class="header">
-<th align="right">prob_earth</th>
+<tr>
+<th style="text-align:right;">
+prob_earth
+</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td align="right">0.2330995</td>
+<tr>
+<td style="text-align:right;">
+0.2328269
+</td>
 </tr>
 </tbody>
 </table>
@@ -133,15 +138,19 @@ df &lt;- data.frame( card = card,
 df %&gt;%
   filter( black == 1) %&gt;%
   summarize( prob_other_side_black = mean( card == 1))</code></pre>
-<table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
 <thead>
-<tr class="header">
-<th align="right">prob_other_side_black</th>
+<tr>
+<th style="text-align:right;">
+prob_other_side_black
+</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td align="right">0.6660707</td>
+<tr>
+<td style="text-align:right;">
+0.6682427
+</td>
 </tr>
 </tbody>
 </table>
@@ -161,15 +170,19 @@ df &lt;- data.frame( card = card,
 df %&gt;%
   filter( black == 1) %&gt;%
   summarize( prob_other_side_black = mean( card %in% c(1, 4) ))</code></pre>
-<table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
 <thead>
-<tr class="header">
-<th align="right">prob_other_side_black</th>
+<tr>
+<th style="text-align:right;">
+prob_other_side_black
+</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td align="right">0.801534</td>
+<tr>
+<td style="text-align:right;">
+0.8015353
+</td>
 </tr>
 </tbody>
 </table>
@@ -192,15 +205,19 @@ df &lt;- data.frame( card = card,
 df %&gt;%
   filter( black == 1) %&gt;%
   summarize( prob_other_side_black = mean( card == 1))</code></pre>
-<table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
 <thead>
-<tr class="header">
-<th align="right">prob_other_side_black</th>
+<tr>
+<th style="text-align:right;">
+prob_other_side_black
+</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td align="right">0.4974421</td>
+<tr>
+<td style="text-align:right;">
+0.5197067
+</td>
 </tr>
 </tbody>
 </table>
@@ -231,15 +248,19 @@ df %&gt;%
   filter( first_black == 1 &amp;
             second_white == 1) %&gt;%
   summarize( prob_other_side_black = mean( first_card == &quot;1&quot;))</code></pre>
-<table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
 <thead>
-<tr class="header">
-<th align="right">prob_other_side_black</th>
+<tr>
+<th style="text-align:right;">
+prob_other_side_black
+</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td align="right">0.747358</td>
+<tr>
+<td style="text-align:right;">
+0.748074
+</td>
 </tr>
 </tbody>
 </table>
@@ -268,15 +289,19 @@ df &lt;- data.frame(species = species,
 
 df %&gt;% filter( birth1 == 1 ) %&gt;%
   summarise(prob_next_birth_twins = mean( birth2 ))</code></pre>
-<table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
 <thead>
-<tr class="header">
-<th align="right">prob_next_birth_twins</th>
+<tr>
+<th style="text-align:right;">
+prob_next_birth_twins
+</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td align="right">0.1656307</td>
+<tr>
+<td style="text-align:right;">
+0.1662251
+</td>
 </tr>
 </tbody>
 </table>
@@ -286,15 +311,19 @@ df %&gt;% filter( birth1 == 1 ) %&gt;%
 <pre class="r"><code>df %&gt;%
   filter( birth1 == 1 ) %&gt;%
   summarise( prob_species_A = mean( species == &quot;A&quot;))</code></pre>
-<table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
 <thead>
-<tr class="header">
-<th align="right">prob_species_A</th>
+<tr>
+<th style="text-align:right;">
+prob_species_A
+</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td align="right">0.334386</td>
+<tr>
+<td style="text-align:right;">
+0.3336484
+</td>
 </tr>
 </tbody>
 </table>
@@ -304,23 +333,29 @@ df %&gt;% filter( birth1 == 1 ) %&gt;%
   filter( birth1 == 1 &amp;
             birth2 == 0 ) %&gt;%
   summarise( prob_species_A = mean( species == &quot;A&quot;))</code></pre>
-<table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
 <thead>
-<tr class="header">
-<th align="right">prob_species_A</th>
+<tr>
+<th style="text-align:right;">
+prob_species_A
+</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td align="right">0.359779</td>
+<tr>
+<td style="text-align:right;">
+0.360579
+</td>
 </tr>
 </tbody>
 </table>
 <p>The probability increased slightly to ~35%. Since single births are the more common event, it doesn’t change the probability as much.</p>
 <p><strong>2H4.</strong> Suppose now, there is a new genetic test that can identify the species of our mother panda. The test is imperfect though:</p>
 <ul>
-<li>The probability it correctly identifies a species A panda is 0.8.</li>
+<li>The probability it correctly identifies a species A panda is 0.8.
+<ul>
 <li>The probability it correctly identifies a species B panda is 0.65.</li>
+</ul></li>
 </ul>
 <p>The test for our mother panda is positive for species A.
 Ignoring the information from the births, what is the probability our panda is species A?</p>
@@ -332,15 +367,19 @@ df &lt;- df %&gt;%
 df %&gt;%
   filter(test_A == 1 ) %&gt;%
   summarise(prob_species_A = mean( species == &quot;A&quot;))</code></pre>
-<table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
 <thead>
-<tr class="header">
-<th align="right">prob_species_A</th>
+<tr>
+<th style="text-align:right;">
+prob_species_A
+</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td align="right">0.6958204</td>
+<tr>
+<td style="text-align:right;">
+0.6955013
+</td>
 </tr>
 </tbody>
 </table>
@@ -351,15 +390,19 @@ df %&gt;%
            birth2 == 0 &amp;
            test_A == 1 ) %&gt;%
   summarise(prob_species_A = mean( species == &quot;A&quot; ))</code></pre>
-<table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
 <thead>
-<tr class="header">
-<th align="right">prob_species_A</th>
+<tr>
+<th style="text-align:right;">
+prob_species_A
+</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td align="right">0.5607445</td>
+<tr>
+<td style="text-align:right;">
+0.5629665
+</td>
 </tr>
 </tbody>
 </table>
