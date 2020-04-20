@@ -415,7 +415,7 @@ The probability increased slightly to ~35%. Since single births are the more com
 __2H4.__ Suppose now, there is a new genetic test that can identify the species of our mother panda. The test is imperfect though:
 
   - The probability it correctly identifies a species A panda is 0.8.
-  - The probability it correctly identifies a species B panda is 0.65.
+- The probability it correctly identifies a species B panda is 0.65.
   
 The test for our mother panda is positive for species A. 
 Ignoring the information from the births, what is the probability our panda is species A?
