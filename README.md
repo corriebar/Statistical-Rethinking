@@ -3,6 +3,9 @@ These are code snippets, plots and my solutions to some of the exercises of the 
 
 I am currently updating code snippets and exercise solution to follow the second version of the book. Solutions to old exercises can still be found on another [branch](https://github.com/corriebar/Statistical-Rethinking/tree/StatRethinking_v1). 
 
+## Chapter 2
+- [Exercises](Chapter_2/Chapter2_Ex.md)
+
 ## Chapter 3
 - [Exercises](Chapter_3/chapter3_Ex.Rmd)
 
