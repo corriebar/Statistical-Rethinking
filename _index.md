@@ -12,7 +12,7 @@ These are code snippets, plots and my solutions to some of the exercises of the 
 
 I started going through the book in spring 2018. As part of the [Berlin Bayesian's reading group](https://www.meetup.com/de-DE/BerlinBayesians/), I am currently in the process of updating the code and exercise solutions to the newest, second edition.
 
-## Chapter 2
+#### Chapter 2
 - [Exercises]( {{< relref "Chapter_2/Chapter2_Ex.html" >}} )
 
 #### Chapter 3
