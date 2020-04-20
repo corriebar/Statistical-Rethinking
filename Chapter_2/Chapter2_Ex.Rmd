@@ -156,7 +156,7 @@ df <- data.frame( earth = earth,
 df %>%
   filter(water == 0) %>%
   summarize(prob_earth = mean(earth)) %>%
-  knitr::kable("html") %>% kableExtra::kable_styling()
+  knitr::kable("html") %>% kableExtra::kable_styling(full_width = F, position = "left")
 ```
 
 
@@ -195,7 +195,7 @@ df <- data.frame( card = card,
 df %>%
   filter( black == 1) %>%
   summarize( prob_other_side_black = mean( card == 1)) %>%
-  knitr::kable("html") %>% kableExtra::kable_styling()
+  knitr::kable("html") %>% kableExtra::kable_styling(full_width = F, position = "left")
 ```
 
 The probability that the other side is also black is 2/3 (~66%).
@@ -232,7 +232,7 @@ df <- data.frame( card = card,
 df %>%
   filter( black == 1) %>%
   summarize( prob_other_side_black = mean( card %in% c(1, 4) )) %>%
-  knitr::kable("html") %>% kableExtra::kable_styling()
+  knitr::kable("html") %>% kableExtra::kable_styling(full_width = F, position = "left")
 ```
 
 The probability that the other side is also black is ~80%.
@@ -273,7 +273,7 @@ df <- data.frame( card = card,
 df %>%
   filter( black == 1) %>%
   summarize( prob_other_side_black = mean( card == 1)) %>%
-  knitr::kable("html") %>% kableExtra::kable_styling()
+  knitr::kable("html") %>% kableExtra::kable_styling(full_width = F, position = "left")
 ```
 
 Now, the probability that the other side is also black is around 50%.
@@ -329,7 +329,7 @@ df %>%
   filter( first_black == 1 &
             second_white == 1) %>%
   summarize( prob_other_side_black = mean( first_card == "1")) %>%
-  knitr::kable("html") %>% kableExtra::kable_styling()
+  knitr::kable("html") %>% kableExtra::kable_styling(full_width = F, position = "left")
 ```
 
 The probability that the first card is black on both sides is then 75%.
@@ -372,7 +372,7 @@ df <- data.frame(species = species,
 
 df %>% filter( birth1 == 1 ) %>%
   summarise(prob_next_birth_twins = mean( birth2 )) %>%
-  knitr::kable("html") %>% kableExtra::kable_styling()
+  knitr::kable("html") %>% kableExtra::kable_styling(full_width = F, position = "left")
 ```
 
 The probability that the next birth will be twins again is around 16%. Note that this is not in any way making a statement about the probability which species it is. But since the probability is either 10% or 20% for species A and B respectively, we expect the posterior probability to lie between these two values. Furthermore, since we already observed one twin birth, it makes sense that the posterior probability is closer to 20% (implying that it is more likely that this panda is from species A).
@@ -389,7 +389,7 @@ df %>%
 df %>%
   filter( birth1 == 1 ) %>%
   summarise( prob_species_A = mean( species == "A")) %>%
-  knitr::kable("html") %>% kableExtra::kable_styling()
+  knitr::kable("html") %>% kableExtra::kable_styling(full_width = F, position = "left")
 ```
 
 
@@ -407,7 +407,7 @@ df %>%
   filter( birth1 == 1 &
             birth2 == 0 ) %>%
   summarise( prob_species_A = mean( species == "A")) %>%
-  knitr::kable("html") %>% kableExtra::kable_styling()
+  knitr::kable("html") %>% kableExtra::kable_styling(full_width = F, position = "left")
 ```
 
 The probability increased slightly to ~35%. Since single births are the more common event, it doesn't change the probability as much. 
@@ -438,7 +438,7 @@ df <- df %>%
 df %>%
   filter(test_A == 1 ) %>%
   summarise(prob_species_A = mean( species == "A")) %>%
-  knitr::kable("html") %>% kableExtra::kable_styling()
+  knitr::kable("html") %>% kableExtra::kable_styling(full_width = F, position = "left")
 ```
 
 
@@ -458,7 +458,7 @@ df %>%
            birth2 == 0 &
            test_A == 1 ) %>%
   summarise(prob_species_A = mean( species == "A" )) %>%
-  knitr::kable("html") %>% kableExtra::kable_styling()
+  knitr::kable("html") %>% kableExtra::kable_styling(full_width = F, position = "left")
 ```
 The probability our panda is species A considering both the test and the births is around 56%.
 
