@@ -2,7 +2,7 @@
 title: "Chapter 2 - Exercises"
 author: Corrie
 date: "2020-04-20"
-slug: chp3-ex
+slug: chp2-ex
 layout: "single-projects"
 categories:
   - R
