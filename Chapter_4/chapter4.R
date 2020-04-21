@@ -1,3 +1,24 @@
+---
+  title: "Why so normal"
+author: Corrie
+date: "2020-04-21"
+slug: chp4-part-one
+layout: "single-projects"
+categories:
+  - R
+- Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+- Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(printr)
+```
+
 library(rethinking)
 # how normality can arise from ultiplication
 growth <- replicate(1000, prod(1 + runif(12, 0, 0.1)))
