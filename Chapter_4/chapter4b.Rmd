@@ -76,7 +76,7 @@ abline( h = 0, lty=2 )
 abline( h=272, lty = 1, lwd=0.5)
 mtext("b ~ dnorm(0, 10)")
 xbar <- mean(d2$weight)
-for (i in 1:N) curve( a[i] + b[i]*(x - xbar),
+for (i in 1:N) curve( a[i] + b[i] * (x - xbar),
                       from=min(d2$weight), to=max(d2$weight), add  = TRUE,
                       col=col.alpha("black", 0.2))
 ```
@@ -102,7 +102,7 @@ abline( h = 0, lty=2 )
 abline( h=272, lty = 1, lwd=0.5)
 mtext("log(b) ~ dnorm(0, 10)")
 xbar <- mean(d2$weight)
-for (i in 1:N) curve( a[i] + b[i]*(x - xbar),
+for (i in 1:N) curve( a[i] + b[i] * (x - xbar),
                       from=min(d2$weight), to=max(d2$weight), add  = TRUE,
                       col=col.alpha("black", 0.2))
 text(31, 283, "World's tallest person (272cm)", adj=c(0,0), cex=0.8)
@@ -119,12 +119,12 @@ h_i &\sim \text{Normal}(\mu_i, \sigma)\\
 \end{align*}$$
 
 ### Running the Model in R
-Now let's translate the model to R, using `quap()` from the `{rethinking}` package:
+Now let's translate the model to R, using `quap()` from the `{{rethinking}}` package:
 ```{r, eval=F}
 m4.3 <- quap(
         alist(
           height ~ dnorm( mu, sigma),
-          mu <- a + b*( weight - xbar ) ,
+          mu <- a + b * ( weight - xbar ) ,
           a ~ dnorm( 156, 100),
           b ~ dlnorm( 0, 1),
           sigma ~ dunif(0, 50)
@@ -141,7 +141,7 @@ precis( m4.3 )
 m4.3 <- quap(
         alist(
           height ~ dnorm( mu, sigma),
-          mu <- a + b*( weight - xbar ) ,
+          mu <- a + b * ( weight - xbar ) ,
           a ~ dnorm( 156, 100),
           b ~ dlnorm( 0, 1),
           sigma ~ dunif(0, 50)
@@ -172,14 +172,14 @@ pairs( m4.3 )
 There is very little covariation between the parameters. This actually has to do with the fact that we centralized  our predictor variable height.
 
 ### Visualize our Model
-Let's visualize the model to get a better understanding of its results. We start with plotting the raw data and the posterior mean of $\alpha$ and $\beta$ as a kind of "mean line":
+Let's visualize the model to get a better understanding of its results. We start with plotting the raw data and the posterior mean of $\alpha$ and $\beta$ as a kind of "mean line" (or more officially, the MAP line):
 
 ```{r, echo=F}
 plot( height ~ weight, data=d2, col=rangi2)
 post <- extract.samples( m4.3 )
 a_map <- mean(post$a)
 b_map <- mean(post$b)
-curve( a_map + b_map*(x-xbar), add = T)
+curve( a_map + b_map * (x-xbar), add = T)
 ```
 
 This is a nice line but it does not visualize the uncertainty in the two parameters. One approach to visualize this uncertainty is to plot a few random lines sampled from the posterior, similarly to how we did for the prior predictive plots.
@@ -205,7 +205,7 @@ for (N in Ns){
   mN <- quap(
           alist(
             height ~ dnorm(mu, sigma) ,
-            mu <- a + b*( weight - mean(weight)) ,
+            mu <- a + b * ( weight - mean(weight)) ,
             a ~ dnorm(178, 20) ,
             b ~ dlnorm(0, 1) ,
             sigma ~ dunif(0, 50) 
@@ -221,7 +221,7 @@ for (N in Ns){
   
   # plot the lines with transparency
   for (i in 1:20) 
-    curve( post$a[i] +post$b[i]*(x-mean(dN$weight)),
+    curve( post$a[i] +post$b[i]* (x-mean(dN$weight)),
            col=col.alpha("black", 0.3), add =T)
 }
 ```
@@ -244,7 +244,7 @@ mu <- link(m4.3)
 str(mu)
 ```
 
-Instead of computing the $mu$-values for the observed weight values, we can provide new data, e.g. all weight values in the range of reasonable weight values:
+Instead of computing the $\mu$-values for the observed weight values, we can provide new data, e.g. all weight values in the range of reasonable weight values:
 ```{r}
 weight.seq <- seq( from=25, to=70, by=1)
 
@@ -286,11 +286,14 @@ str(sim.height)
 ```
 
 For each weight, we can then get a compatibility interval of predicted heights:
-```{r}
+```{r, eval=F}
 height.PI <- apply(sim.height, 2, PI, prob=0.89)
 height.PI[,1:5]
 ```
-
+```{r, echo=F}
+height.PI <- apply(sim.height, 2, PI, prob=0.89)
+height.PI[,1:5] %>% prettify()
+```
 And visualize both the uncertainty in $\mu$ and the uncertainty in the prediction:
 ```{r}
 # plot everything together
@@ -299,7 +302,7 @@ plot( height ~ weight, d2, col=col.alpha(rangi2, 0.5))
 # draw a MAP line
 lines(weight.seq, mu.mean)
 
-# draw HPDI region for line
+# draw PI region for line
 shade(mu.PI, weight.seq)
 
 # draw PI region for simulated heights
@@ -321,7 +324,7 @@ for (b in bds) {
   # draw a MAP line
   lines(weight.seq, mu.mean)
   
-  # draw HPDI region for line
+  # draw PI region for line
   shade(mu.PI, weight.seq)
   
   # draw PI region for simulated heights
@@ -329,7 +332,7 @@ for (b in bds) {
 }
 ```
 
-We could also simulate the heights manually. Remember, to manually compute $\mu$ (instead of using `link()`), we can use the following:
+We could also simulate the heights manually. Remember, to manually compute $\mu$ (instead of using `link()`), we use the following:
 ```{r}
 post <- extract.samples(m4.3)
 weight.seq <- 25:70
@@ -341,7 +344,7 @@ To generate height observations, we also compute $\mu$ but pluck it straight int
 sim.height <- sapply( weight.seq, function(weight)
   rnorm(
     n=nrow(post),
-    mean=post$a + post$b*( weight - xbar ),
+    mean=post$a + post$b * ( weight - xbar ),
     sd=post$sigma
   ))
 ```

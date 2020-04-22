@@ -249,7 +249,7 @@ sample.sigma &lt;- post$sigma[ sample.rows]</code></pre>
 154 155 </code></pre>
 <pre class="r"><code>PI( sample.sigma)</code></pre>
 <pre><code>  5%  94% 
-7.32 8.26 </code></pre>
+7.31 8.25 </code></pre>
 <div id="short-note-on-why-the-standard-deviation-is-less-normal" class="section level5">
 <h5>Short note on why the standard deviation is less normal:</h5>
 <p>Posterior of <span class="math inline">\(\sigma\)</span> tend to have a long-right hand tail. The reasons? Complex! But an intuition is that, because the standard deviation has to be positive, there is less uncertainty how small it is (it is bounded by 0 after all) and more uncertainty about how big it is.
@@ -262,7 +262,7 @@ If we repeat the example from above on a small subset of the data, this tail in 
 <div id="quadratic-approximation-and-prior-predictive-checks" class="section level3">
 <h3>Quadratic Approximation and Prior Predictive Checks</h3>
 <p>Since grid approximation becomes unfeasible with more complex models, we now start using quadratic approximation. As we’ve seen above, the posterior approaches a normal distribution with enough data, so we can use that to approximate the posterior. The quadratic approximation, <code>quap()</code>, first climbs the posterior distribution to find the mode, i.e. the MAP (Maximum A Posteriori) and then estimates the quadratic curvature.</p>
-<p>To use <code>quap()</code>, we place our model into a formula list (<code>flist()</code> in R):</p>
+<p>To use <code>quap()</code>, we place our model into a formula list (<code>alist()</code> in R):</p>
 <pre class="r"><code>flist &lt;- alist(
   height ~ dnorm( mu, sigma) ,
   mu ~ dnorm( 178, 20),
@@ -333,7 +333,7 @@ sigma
 154 155 </code></pre>
 <pre class="r"><code>PI( sample.sigma )</code></pre>
 <pre><code>  5%  94% 
-7.32 8.26 </code></pre>
+7.31 8.25 </code></pre>
 <p>Let’s see what happens if we use a very narrow prior on <span class="math inline">\(\mu\)</span> instead:</p>
 <pre class="r"><code>m4.2 &lt;- quap( 
           alist(
@@ -500,26 +500,10 @@ sigma
 <tbody>
 <tr>
 <td style="text-align:right;">
-155
-</td>
-<td style="text-align:right;">
-8.13
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
 154
 </td>
 <td style="text-align:right;">
-7.86
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-154
-</td>
-<td style="text-align:right;">
-7.61
+8.02
 </td>
 </tr>
 <tr>
@@ -527,15 +511,7 @@ sigma
 155
 </td>
 <td style="text-align:right;">
-8.12
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-156
-</td>
-<td style="text-align:right;">
-7.89
+7.49
 </td>
 </tr>
 <tr>
@@ -543,7 +519,31 @@ sigma
 154
 </td>
 <td style="text-align:right;">
-7.68
+7.27
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+154
+</td>
+<td style="text-align:right;">
+7.96
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+154
+</td>
+<td style="text-align:right;">
+7.90
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+155
+</td>
+<td style="text-align:right;">
+7.40
 </td>
 </tr>
 </tbody>
@@ -586,10 +586,10 @@ mu
 153.96
 </td>
 <td style="text-align:right;">
-155.28
+155.27
 </td>
 <td style="text-align:left;">
-▁▁▇▇▂▁▁
+▁▁▁▅▇▂▁▁
 </td>
 </tr>
 <tr>
@@ -597,16 +597,16 @@ mu
 sigma
 </td>
 <td style="text-align:right;">
-7.74
+7.73
 </td>
 <td style="text-align:right;">
 0.29
 </td>
 <td style="text-align:right;">
-7.26
+7.27
 </td>
 <td style="text-align:right;">
-8.21
+8.19
 </td>
 <td style="text-align:left;">
 ▁▁▁▂▅▇▇▃▁▁▁▁

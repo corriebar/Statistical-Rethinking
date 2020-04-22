@@ -20,7 +20,7 @@ I started going through the book in spring 2018. As part of the [Berlin Bayesian
 
 #### Chapter 4
 - [Why everything so normal]( {{< relref "Chapter_4/chapter4.html" >}} )
-- [Linear Models](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_4/chapter4b.R)
+- [First Linear Predictions]( {{< relref "Chapter_4/chapter4b.html" >}} )
 - [Polynomial Regression](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_4/chapter4c.R)
 - [Exercises]( {{< relref "Chapter_4/chapter4_Ex.html" >}})
 
