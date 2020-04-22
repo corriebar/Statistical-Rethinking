@@ -1,0 +1,350 @@
+---
+title: "First Linear Predictions"
+author: Corrie
+date: "2020-04-22"
+slug: chp4-part-two
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, dev="svglite", 
+                      warning = F, message = F, 
+                      fig.height = 5,
+                      fig.width = 5,
+                      comment=NA)
+options( digits = 3)
+library(printr)
+library(rethinking)
+library(tidyverse)
+
+pretty_precis <- function(object) {
+  precis(object, digits=2) %>% 
+  as_tibble(rownames = "rowname") %>%
+  column_to_rownames() %>%
+  knitr::kable("html", digits = 2) %>% kableExtra::kable_styling(full_width = F, position = "center")
+
+}
+prettify <- function(object, rownames = NA) {knitr::kable(object, "html", 
+                                                          digits = 2,
+                                                          row.names = rownames) %>% 
+    kableExtra::kable_styling(full_width = F, position = "center")}
+```
+These are code snippets and notes for the fourth chapter, _Geocentric Models_, , sections 4, of the book "Statistical Rethinking" (version 2) by Richard McElreath.
+
+In this section, we work with our first prediction model where we use the weight to predict the height of a person. We again use the !Kung data and restrict to adults above 18.
+```{r}
+library(rethinking)
+data("Howell1")
+d <- Howell1
+d2 <- d[ d$age >= 18, ]
+plot(height ~ weight, data=d2)
+```
+
+It looks like there is a nice, clear linear relationship between the weight and height of a person.
+
+We use the following model to capture this relationship:
+$$\begin{align*}
+h_i &\sim \text{Normal}(\mu_i, \sigma)\\
+\mu_i &= \alpha + \beta(x_i - \bar{x}) \\
+\alpha &\sim \text{Normal}(178, 20) \\
+\beta &\sim \text{Normal}(0, 10) \\
+\sigma &\sim \text{Uniform}(0, 50)
+\end{align*}$$
+
+### Prior Predictive Checks
+Before we start modelling this with R, let's have a look at the priors and their implications for the model. For this, we'll sample from the prior for $\alpha$ and $\beta$ and plot the resulting lines.
+```{r}
+set.seed(2971)
+N <- 100
+a <- rnorm( N, 178, 20 )
+b <- rnorm( N, 0, 10 )
+```
+Let's plot the lines resulting from these values:
+
+```{r, echo=F}
+plot( NULL, xlim=range(d2$weight), ylim=c(-100, 400),
+      xlab="weight", ylab="height")
+abline( h = 0, lty=2 )
+abline( h=272, lty = 1, lwd=0.5)
+mtext("b ~ dnorm(0, 10)")
+xbar <- mean(d2$weight)
+for (i in 1:N) curve( a[i] + b[i]*(x - xbar),
+                      from=min(d2$weight), to=max(d2$weight), add  = TRUE,
+                      col=col.alpha("black", 0.2))
+```
+
+This looks like a rather unreasonable model for height. There are many lines with a negative slope, meaning the heavier you are, the smaller you are. But even the lines with a positive slope have extremely steep slopes that seem rather unrealistic. Many lines go below the dashed line of zero height and above the line at 272cm representing the height of the tallest person.
+
+Since we already know that the relationship between weight and height is positive, we can model the slope $\beta$ with a strictly positive distribution such as the log-normal:
+```{r, fig.height=4, fig.width=4}
+b <- rlnorm( 1e4, 0 , 1 )
+dens(b, xlim=c(0,5), adj=0.1)
+```
+
+Let's plot the prior lines again, this time using the log-normal prior for $\beta$:
+```{r, echo=F}
+set.seed(2971)
+N <- 100
+a <- rnorm( N, 178, 20 )
+b <- rlnorm( N, 0, 1 )
+
+plot( NULL, xlim=range(d2$weight), ylim=c(-100, 400),
+      xlab="weight", ylab="height")
+abline( h = 0, lty=2 )
+abline( h=272, lty = 1, lwd=0.5)
+mtext("log(b) ~ dnorm(0, 10)")
+xbar <- mean(d2$weight)
+for (i in 1:N) curve( a[i] + b[i]*(x - xbar),
+                      from=min(d2$weight), to=max(d2$weight), add  = TRUE,
+                      col=col.alpha("black", 0.2))
+text(31, 283, "World's tallest person (272cm)", adj=c(0,0), cex=0.8)
+text(31, -20, "Embryo", adj=c(0,0), cex=0.8)
+```
+
+The log-normal prior for $\beta$ seems a much more reasonable choice for this model. Our new model then looks like this:
+$$\begin{align*}
+h_i &\sim \text{Normal}(\mu_i, \sigma)\\
+\mu_i &= \alpha + \beta(x_i - \bar{x}) \\
+\alpha &\sim \text{Normal}(178, 20) \\
+\beta &\sim \text{Log-Normal}(0, 10) \\
+\sigma &\sim \text{Uniform}(0, 50)
+\end{align*}$$
+
+### Running the Model in R
+Now let's translate the model to R, using `quap()` from the `{rethinking}` package:
+```{r, eval=F}
+m4.3 <- quap(
+        alist(
+          height ~ dnorm( mu, sigma),
+          mu <- a + b*( weight - xbar ) ,
+          a ~ dnorm( 156, 100),
+          b ~ dlnorm( 0, 1),
+          sigma ~ dunif(0, 50)
+        ) ,
+        data = d2
+)
+```
+
+The results:
+```{r, eval=F}
+precis( m4.3 )
+```
+```{r, echo=F}
+m4.3 <- quap(
+        alist(
+          height ~ dnorm( mu, sigma),
+          mu <- a + b*( weight - xbar ) ,
+          a ~ dnorm( 156, 100),
+          b ~ dlnorm( 0, 1),
+          sigma ~ dunif(0, 50)
+        ) ,
+        data = d2
+)
+
+pretty_precis( m4.3 )
+```
+
+How do we interpret these values? So $\alpha$ is the (average) predicted height when $ x - \bar{x} = 0$ that is, when $x$ is the mean height. So $\alpha$ is close to what we had for $\mu$ in our model without the linear part.
+$\beta$ represents the increase in height if a person weighs one kg more.
+
+We can check the covariances among the parameters:
+```{r, eval=F}
+vcov( m4.3)
+```
+```{r, echo=F}
+vcov( m4.3) %>% prettify()
+```
+
+Or as a `pairs()` plot:
+
+```{r, fig.height=6, fig.width=6, echo=F}
+pairs( m4.3 )
+```
+
+There is very little covariation between the parameters. This actually has to do with the fact that we centralized  our predictor variable height.
+
+### Visualize our Model
+Let's visualize the model to get a better understanding of its results. We start with plotting the raw data and the posterior mean of $\alpha$ and $\beta$ as a kind of "mean line":
+
+```{r, echo=F}
+plot( height ~ weight, data=d2, col=rangi2)
+post <- extract.samples( m4.3 )
+a_map <- mean(post$a)
+b_map <- mean(post$b)
+curve( a_map + b_map*(x-xbar), add = T)
+```
+
+This is a nice line but it does not visualize the uncertainty in the two parameters. One approach to visualize this uncertainty is to plot a few random lines sampled from the posterior, similarly to how we did for the prior predictive plots.
+```{r, eval=F}
+post <- extract.samples( m4.3 )
+head(post)
+```
+```{r, echo=F}
+post <- extract.samples( m4.3 )
+head(post, 4) %>% prettify()
+```
+
+To be able to better see the difference in uncertainty, we refit the model again on a subset of the data. This way, we can observe how the uncertainty decreases when we add more data:
+```{r, fig.height=7, fig.width=7, echo=F}
+post <- extract.samples(m4.3)
+
+# lets try out the influence of adding more points to the model
+Ns <- c(10, 50, 150, 352)
+par(mfrow=c(2,2))
+for (N in Ns){
+  #N <- 10
+  dN <- d2[1:N,]
+  mN <- quap(
+          alist(
+            height ~ dnorm(mu, sigma) ,
+            mu <- a + b*( weight - mean(weight)) ,
+            a ~ dnorm(178, 20) ,
+            b ~ dlnorm(0, 1) ,
+            sigma ~ dunif(0, 50) 
+          ), data=dN
+  )
+  # extract 20 samples from the posterior
+  post <- extract.samples(mN, n=20)
+
+# display raw data and sample size
+  plot(dN$weight, dN$height, col=rangi2, xlab="weight", ylab="height",
+       xlim=range(d2$weight), ylim=range(d2$height))
+  mtext(concat("N = ",N))
+  
+  # plot the lines with transparency
+  for (i in 1:20) 
+    curve( post$a[i] +post$b[i]*(x-mean(dN$weight)),
+           col=col.alpha("black", 0.3), add =T)
+}
+```
+
+How do we compute compatibility intervals? For a single weight value, say 50 kilograms, proceed as follows:
+```{r}
+post <- extract.samples(m4.3)
+mu_at_50 <- post$a + post$b * ( 50 - xbar )
+```
+
+
+```{r}
+dens( mu_at_50, col=rangi2, lwd=2, xlab="mu | weight=50")
+PI(mu_at_50, prob=0.89)
+```
+
+Using the `link()` function, we can compute the distribution of $\mu$ for each value of observed weight.
+```{r}
+mu <- link(m4.3)
+str(mu)
+```
+
+Instead of computing the $mu$-values for the observed weight values, we can provide new data, e.g. all weight values in the range of reasonable weight values:
+```{r}
+weight.seq <- seq( from=25, to=70, by=1)
+
+mu <- link(m4.3, data = data.frame( weight=weight.seq ) )
+str(mu)
+```
+
+We can plot all 1000 x 146 values for $\mu$:
+```{r}
+plot(height ~ weight, d2, type="n")
+
+for (i in 1:100)
+  points(weight.seq, mu[i,], pch=16, col=col.alpha(rangi2, 0.1))
+```
+
+Or we can summarize the values for each weight and compute the mean and a compatibility interval:
+```{r}
+mu.mean <- apply(mu, 2, mean)
+mu.PI <- apply(mu, 2, PI, prob=0.89)
+```
+
+
+```{r}
+# plot raw data
+plot(height ~ weight, data=d2, col=col.alpha(rangi2, 0.5))
+
+# plot the MAP line
+lines(weight.seq, mu.mean)
+
+# plot a shaded region for 89% PI
+shade( mu.PI, weight.seq)
+```
+
+### All the Uncertainty
+So far, we've only worked with $\mu$ and its uncertainty. If we want to generate new observations (i.e. predictions) we also have to account for the uncertainty in the standard deviation $\sigma$. To simulate new heights, we pluck the values for $\mu$ together with the values for $\sigma$ into a normal distribution. Or simply use the function `sim()`:
+```{r}
+sim.height <- sim( m4.3, data=list(weight=weight.seq))
+str(sim.height)
+```
+
+For each weight, we can then get a compatibility interval of predicted heights:
+```{r}
+height.PI <- apply(sim.height, 2, PI, prob=0.89)
+height.PI[,1:5]
+```
+
+And visualize both the uncertainty in $\mu$ and the uncertainty in the prediction:
+```{r}
+# plot everything together
+plot( height ~ weight, d2, col=col.alpha(rangi2, 0.5))
+
+# draw a MAP line
+lines(weight.seq, mu.mean)
+
+# draw HPDI region for line
+shade(mu.PI, weight.seq)
+
+# draw PI region for simulated heights
+shade(height.PI, weight.seq )
+```
+
+Our model suggests that 89% of observed data points should be within these boundaries.
+We can also visualize different boundaries:
+```{r, echo=F, fig.height=7, fig.width=7}
+# plot different boundaries
+bds <- c(0.67, 0.89, 0.95, 0.97)
+par(mfrow=c(2,2))
+for (b in bds) {
+  height.PI <- apply(sim.height, 2, PI, prob=b)
+  
+  # plot everything together
+  plot( height ~ weight, d2, col=col.alpha(rangi2, 0.5), main=b)
+  
+  # draw a MAP line
+  lines(weight.seq, mu.mean)
+  
+  # draw HPDI region for line
+  shade(mu.PI, weight.seq)
+  
+  # draw PI region for simulated heights
+  shade(height.PI, weight.seq )
+}
+```
+
+We could also simulate the heights manually. Remember, to manually compute $\mu$ (instead of using `link()`), we can use the following:
+```{r}
+post <- extract.samples(m4.3)
+weight.seq <- 25:70
+mu <- sapply(weight.seq, function(weight) post$a + post$b * ( weight - xbar ) )
+```
+
+To generate height observations, we also compute $\mu$ but pluck it straight into the normal distribution `rnorm()` to sample from it:
+```{r}
+sim.height <- sapply( weight.seq, function(weight)
+  rnorm(
+    n=nrow(post),
+    mean=post$a + post$b*( weight - xbar ),
+    sd=post$sigma
+  ))
+```
+
+
+<small>[Full code.](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_4/chapter4b.Rmd)<small>

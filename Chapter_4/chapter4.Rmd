@@ -144,7 +144,7 @@ sample_mu <- rnorm(1e4, mean=178, sd=100)
 prior_height <- rnorm(1e4, mean=sample_mu, sd=sample_sigma)
 dens(prior_height)
 abline(v=0, lty=2)
-abline(v=272)
+abline(v=272, lwd = 0.5)
 ```
 
 The flat prior thinks people could have negative height (to the left of the dashed line) or be extremely tall (the right line indicates the height of one of the tallest persons ever recorded). Not very sensible.
@@ -265,7 +265,7 @@ mtext("Marginal posterior of sigma")
 ### Quadratic Approximation and Prior Predictive Checks
 Since grid approximation becomes unfeasible with more complex models, we now start using quadratic approximation. As we've seen above, the posterior approaches a normal distribution with enough data, so we can use that to approximate the posterior. The quadratic approximation, `quap()`, first climbs the posterior distribution to find the mode, i.e. the MAP (Maximum A Posteriori) and then estimates the quadratic curvature.
 
-To use `quap()`, we place our model into a formula list (`flist()` in R):
+To use `quap()`, we place our model into a formula list (`alist()` in R):
 ```{r, eval=F}
 flist <- alist(
   height ~ dnorm( mu, sigma) ,
