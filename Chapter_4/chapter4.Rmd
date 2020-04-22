@@ -15,10 +15,18 @@ image: 'images/tea_with_books.jpg'
 share: yes
 ---
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, dev="svglite")
+knitr::opts_chunk$set(echo = TRUE, dev="svglite", warning = F, message = F, comment=NA)
 library(printr)
 library(rethinking)
 library(tidyverse)
+
+pretty_precis <- function(object) {
+  precis(object) %>% 
+  as_tibble(rownames = "rowname") %>%
+  column_to_rownames() %>%
+  knitr::kable("html") %>% kableExtra::kable_styling(full_width = F, position = "center")
+
+}
 ```
 These are code snippets and a short summary of the fourth chapter, _Geocentric Models_, of the book "Statistical Rethinking" (version 2) by Richard McElreath.
 
@@ -79,9 +87,8 @@ str(d )
 ```{r, eval=F}
 precis(d)
 ```
-```{r, echo=F}
-precis(d) %>%
-  knitr::kable("html") %>% kableExtra::kable_styling(full_width = F, position = "center")
+```{r, echo=F, warning=F}
+pretty_precis(d)
 ```
 Since height strongly correlates with age before adulthood, we'll only use adults for the following analysis:
 ```{r,  fig.height = 5, fig.width = 5}
@@ -275,8 +282,7 @@ flist <- alist(
 )
 
 m4.1 <- quap( flist, data=d2 )
-precis( m4.1 ) %>%
-  knitr::kable("html") %>% kableExtra::kable_styling(full_width = F, position = "center")
+pretty_precis( m4.1 ) 
 ```
 
 Comparing this with the compatibility intervals from the grid approximation model before, we that they're nearly identical:
@@ -304,19 +310,26 @@ m4.2 <- quap(
             sigma ~ dunif(0, 50)
           ), 
           data=d2)
-precis(m4.2) %>% knitr::kable("html") %>% kableExtra::kable_styling(full_width = F)
+pretty_precis(m4.2) 
 ```
 
 Now the estimate for $\mu$ has hardly moved off the prior. Note however, how the posterior for $\sigma$ changed by quite a lot, even though we didn't change its prior. Since we told the model that $\mu$ is basically 178, very convincingly with this prior, it changes the estimate for $\sigma$ in return to make the data fit with the model.
 
 To sample from the quadratic approximation, note that the quadratic approximation of a posterior distribution is just a multi-dimensional Gaussian distribution. To sufficiently describe a multidimensional Gaussian distribution, we only need a list of means and a matrix of variances and covariances.
-```{r}
-vcov( m4.1 )    # variance-covariance matrix
+```{r, eval=F}
+vcov( m4.1 )
+```
+```{r, echo=F}
+vcov( m4.1 )  %>% knitr::kable("html")  %>% kableExtra::kable_styling(full_width = F)# variance-covariance matrix
 ```
 
 We can decompose the matrix of variances and covariances into a vector of variances and a correlation matrix:
-```{r}
-diag( vcov(m4.1 )) 
+```{r, eval=F}
+diag( vcov(m4.1 ))  
+cov2cor( vcov( m4.1 ))  
+```
+```{r, echo=F}
+diag( vcov(m4.1 ))  
 cov2cor( vcov( m4.1 )) 
 ```
 
@@ -334,7 +347,7 @@ head(post) %>% knitr::kable("html") %>% kableExtra::kable_styling(full_width = F
 precis(post)
 ```
 ```{r, echo=F}
-precis(post) %>% knitr::kable("html") %>% kableExtra::kable_styling(full_width = F)
+pretty_precis(post) 
 ```
 
 Equivalently, we could also get the posterior samples manually as follows:
