@@ -15,20 +15,23 @@ image: 'images/tea_with_books.jpg'
 share: yes
 ---
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, dev="svglite", warning = F, message = F, comment=NA)
+knitr::opts_chunk$set(echo = TRUE, dev="svglite", 
+                      warning = F, message = F, 
+                      comment=NA)
+options( digits = 3)
 library(printr)
 library(rethinking)
 library(tidyverse)
 
 pretty_precis <- function(object) {
-  precis(object) %>% 
+  precis(object, digits=2) %>% 
   as_tibble(rownames = "rowname") %>%
   column_to_rownames() %>%
-  knitr::kable("html") %>% kableExtra::kable_styling(full_width = F, position = "center")
+  knitr::kable("html", digits = 2) %>% kableExtra::kable_styling(full_width = F, position = "center")
 
 }
 ```
-These are code snippets and a short summary of the fourth chapter, _Geocentric Models_, of the book "Statistical Rethinking" (version 2) by Richard McElreath.
+These are code snippets and notes for the fourth chapter, _Geocentric Models_, , sections 1 to 3, of the book "Statistical Rethinking" (version 2) by Richard McElreath.
 
 ### Why normal distributions are normal
 
@@ -68,16 +71,15 @@ dens(log.big, norm.comp = T)
 ```
 
 
-There are boradly two reasons why we're using Gaussian distributions in modelling:
+There are broadly two reasons why we're using Gaussian distributions in modelling:
 (1) __ontological__: we have reason to believe the process we're modelling is actually following a Gaussian distribution, for the reasons laid out above. E.g. measurement errors follow a Gaussian since at the heart, the measurement errors arise through a process of added fluctuations.
 (2) __epistemological__: we don't really know much about our process, except that it has a mean and a variance, so we use a normal distribution because it makes the least assumptions. (If we know more, we should probably use a different distribution!)
 
-### A Gaussian model of height
+### A Gaussian Model of Height
 For the example, we'll be using the !Kung data to estimate height.
 
 A short look at the data:
 ```{r}
-# The !Kung Data
 data("Howell1")
 d <- Howell1
 str(d )
@@ -131,7 +133,7 @@ dens(prior_height)
 ```
 
 The model expects people to have a height between 100 and 250cm. Wide range, but seems reasonable.
-Compare this with the prior predictive we would get from flat priors (changing the standard deviation for the $\$mu$ prior to 100):
+Compare this with the prior predictive we would get from flat priors (changing the standard deviation for the $\mu$ prior to 100):
 ```{r, eval=F,  fig.height = 5, fig.width = 5}
 sample_mu <- rnorm(1e4, mean=178, sd=100)
 prior_height <- rnorm(1e4, mean=sample_mu, sd=sample_sigma)
@@ -145,7 +147,7 @@ abline(v=0, lty=2)
 abline(v=272)
 ```
 
-The flat prior think people could have negative height (to the left of the dashed line) or be extremely tall (the right line indicates the height of one of the tallest persons ever recorded). Not very sensible.
+The flat prior thinks people could have negative height (to the left of the dashed line) or be extremely tall (the right line indicates the height of one of the tallest persons ever recorded). Not very sensible.
 
 For educational purpose, let's do a grid approximation of our model.
 
@@ -168,7 +170,7 @@ post$LL <- sapply( 1:nrow(post), function(i) sum( dnorm(
 Since we're working with the log-likelihood, we can sum everything up instead of multiplying. This is mostly to avoid rounding errors.
 So the same way, we can add the prior densities (again on log):
 ```{r}
-post$prod <- post$LL + dnorm( post$mu, 178, 20, TRUE) +   # add log likelihood value to log prior values (corresponds to multiplying)
+post$prod <- post$LL + dnorm( post$mu, 178, 20, TRUE) +   
   dunif( post$sigma, 0, 50, TRUE)
 ```
 Finally, we return from log-scale to normal again but first scale it to avoid too small values and rounding errors.
@@ -187,11 +189,10 @@ Or a heatmap:
 image_xyz( post$mu, post$sigma, post$prob)
 ```
 
-The highest probability density for $\mu$ is somewhere around 155 with highest probality densitiy for $\sigma$ around 8.
+The highest probability density for $\mu$ is somewhere around 155 with highest probability density for $\sigma$ around 8.
 
 Instead of working with the grid posterior, we can use the grid to obtain a sample from our posterior:
 ```{r}
-# sample from posterior
 sample.rows <- sample( 1:nrow(post), size=1e4, replace=TRUE,
                        prob=post$prob)
 sample.mu <- post$mu[ sample.rows ]
@@ -203,7 +204,7 @@ And can plot this instead:
 plot(sample.mu, sample.sigma, cex=0.5, pch=16, col=col.alpha(rangi2, 0.1))
 ```
 
-In the plot, we can still the as artifacts the grid we used to approximate the posterior. One could either pick a finer grid or add a tiny bit of jitter to the samples to get rid of these artifacts.
+In the plot, we can still see the artifacts of the grid we used to approximate the posterior. One could either pick a finer grid or add a tiny bit of jitter to the samples to get rid of these artifacts.
 
 We can also look at the marginal posterior:
 ```{r, eval=F}
@@ -230,8 +231,8 @@ PI( sample.sigma)
 ```
 
 ##### Short note on why the standard deviation is less normal:
-Posterior of $\sigma$ tend to have a long-right hand tail. The reasons? Complex! But an intution is that, because the standard deviation has to be positive, there is less uncertainty how small it is (it is bounded by 0 after all) and more uncertainty about how big it is.
-If we repeat the example from above on a small subset of the data, this tail in the uncertainty  $\sigma$ becomes more pronounced:
+Posterior of $\sigma$ tend to have a long-right hand tail. The reasons? Complex! But an intuition is that, because the standard deviation has to be positive, there is less uncertainty how small it is (it is bounded by 0 after all) and more uncertainty about how big it is.
+If we repeat the example from above on a small subset of the data, this tail in the uncertainty of $\sigma$ becomes more pronounced:
 ```{r, echo=F, fig.height=5, fig.width=5}
 # repeat example with smaller sample
 d3 <- sample( d2$height, size=15)
@@ -261,7 +262,8 @@ dens( sample2.sigma, norm.comp = T)
 mtext("Marginal posterior of sigma")
 ```
 
-Since grid approximation becomes infeasible with more complex models, we now start using quadratic approximation. As we've seen above, the posterior approaches a normal distribution with enough data, so we can use that to approximate the posterior. The quadratic approximation, `quap()`, first climbs the posterior distribution to find the mode, i.e. the MAP (Maximum A Posteriori) and then estimates the quadratic curvature.
+### Quadratic Approximation and Prior Predictive Checks
+Since grid approximation becomes unfeasible with more complex models, we now start using quadratic approximation. As we've seen above, the posterior approaches a normal distribution with enough data, so we can use that to approximate the posterior. The quadratic approximation, `quap()`, first climbs the posterior distribution to find the mode, i.e. the MAP (Maximum A Posteriori) and then estimates the quadratic curvature.
 
 To use `quap()`, we place our model into a formula list (`flist()` in R):
 ```{r, eval=F}
@@ -330,7 +332,7 @@ cov2cor( vcov( m4.1 ))
 ```
 ```{r, echo=F}
 diag( vcov(m4.1 ))  
-cov2cor( vcov( m4.1 )) 
+cov2cor( vcov( m4.1 )) %>% knitr::kable("html")  %>% kableExtra::kable_styling(full_width = F)
 ```
 
 We could use the variances and correlation matrix to sample from a multi-dimensional Gaussian distribution. Or simply use the provided short-cut:

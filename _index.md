@@ -19,7 +19,7 @@ I started going through the book in spring 2018. As part of the [Berlin Bayesian
 - [Exercises]( {{< relref "Chapter_3/chapter3_Ex.html" >}} )
 
 #### Chapter 4
-- [How Normality arises](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_4/chapter4.R)
+- [Why everything so normal]( {{< relref "Chapter_4/chapter4.html" >}} )
 - [Linear Models](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_4/chapter4b.R)
 - [Polynomial Regression](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_4/chapter4c.R)
 - [Exercises]( {{< relref "Chapter_4/chapter4_Ex.html" >}})
