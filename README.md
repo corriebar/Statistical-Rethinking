@@ -10,7 +10,7 @@ I am currently updating code snippets and exercise solution to follow the second
 - [Exercises](Chapter_3/chapter3_Ex.Rmd)
 
 ## Chapter 4
-- [How Normality arises](Chapter_4/chapter4.R)
+- [Why everthing so normal](Chapter_4/chapter4.Rmd)
 - [Linear Models](Chapter_4/chapter4b.R)
 - [Polynomial Regression](Chapter_4/chapter4.c.R)
 - [Exercises](Chapter_4/chapter4_Ex.md)

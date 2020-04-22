@@ -249,7 +249,7 @@ sample.sigma &lt;- post$sigma[ sample.rows]</code></pre>
 154 155 </code></pre>
 <pre class="r"><code>PI( sample.sigma)</code></pre>
 <pre><code>  5%  94% 
-7.31 8.26 </code></pre>
+7.32 8.26 </code></pre>
 <div id="short-note-on-why-the-standard-deviation-is-less-normal" class="section level5">
 <h5>Short note on why the standard deviation is less normal:</h5>
 <p>Posterior of <span class="math inline">\(\sigma\)</span> tend to have a long-right hand tail. The reasons? Complex! But an intuition is that, because the standard deviation has to be positive, there is less uncertainty how small it is (it is bounded by 0 after all) and more uncertainty about how big it is.
@@ -333,7 +333,7 @@ sigma
 154 155 </code></pre>
 <pre class="r"><code>PI( sample.sigma )</code></pre>
 <pre><code>  5%  94% 
-7.31 8.26 </code></pre>
+7.32 8.26 </code></pre>
 <p>Let’s see what happens if we use a very narrow prior on <span class="math inline">\(\mu\)</span> instead:</p>
 <pre class="r"><code>m4.2 &lt;- quap( 
           alist(
@@ -503,7 +503,7 @@ sigma
 154
 </td>
 <td style="text-align:right;">
-7.79
+7.59
 </td>
 </tr>
 <tr>
@@ -511,7 +511,7 @@ sigma
 155
 </td>
 <td style="text-align:right;">
-7.93
+7.22
 </td>
 </tr>
 <tr>
@@ -519,7 +519,7 @@ sigma
 155
 </td>
 <td style="text-align:right;">
-7.34
+7.68
 </td>
 </tr>
 <tr>
@@ -527,15 +527,7 @@ sigma
 155
 </td>
 <td style="text-align:right;">
-7.65
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-155
-</td>
-<td style="text-align:right;">
-6.96
+7.60
 </td>
 </tr>
 <tr>
@@ -543,7 +535,15 @@ sigma
 154
 </td>
 <td style="text-align:right;">
-7.51
+7.79
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+154
+</td>
+<td style="text-align:right;">
+7.86
 </td>
 </tr>
 </tbody>
@@ -583,10 +583,10 @@ mu
 0.41
 </td>
 <td style="text-align:right;">
-153.95
+153.94
 </td>
 <td style="text-align:right;">
-155.26
+155.3
 </td>
 <td style="text-align:left;">
 ▁▁▅▇▂▁▁
@@ -603,10 +603,10 @@ sigma
 0.29
 </td>
 <td style="text-align:right;">
-7.25
+7.27
 </td>
 <td style="text-align:right;">
-8.19
+8.2
 </td>
 <td style="text-align:left;">
 ▁▁▁▂▅▇▇▃▁▁▁
