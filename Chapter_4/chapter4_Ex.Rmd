@@ -61,7 +61,7 @@ P(\mu, \sigma| y_i) &\propto \text{Likelihood } \times \text{ Prior probability}
 For the likelihood, we get the following term:
 $$\begin{align*}
 \mathcal{L}(y | \mu, \sigma ) &= \prod_i \text{Normal}(y_i|\mu, \sigma) \\
-& = \prod_i \frac{1}{\sqrt{2\pi \sigma^2} }\exp(- \frac{(y_i-\mu)^2}{2\sigma^2})
+& = \prod_i \frac{1}{\sqrt{2\pi \sigma^2} }\exp(- \frac{(y_i-\mu)^2}{2\sigma^2}).
 \end{align*}$$
 and for the two priors we have
 $$\begin{align*}
@@ -69,7 +69,7 @@ P(\mu) &= \text{Normal}(\mu| 0,10) \\
 &= \frac{1}{\sqrt{2\pi \times 10^2} }\exp(- \frac{\mu^2}{2\times 10^2}) \\
 \\
 P(\sigma) &= \text{Exponential}(\sigma|1) \\
-&= e^{-\sigma}
+&= e^{-\sigma}.
 \end{align*}$$
 Plugging everything in one equation, we get the following:
 $$\begin{align*}
@@ -79,10 +79,10 @@ P(\mu, \sigma| y_i) &= \frac{\prod_i \text{Normal}(y_i|\mu, \sigma) \times
 \text{Normal}(\mu| 0,10) \times \text{Exponential}(\sigma|1) \text{ d}\mu\text{d}\sigma} \\
 \\
 &\propto \prod_i \frac{1}{\sqrt{2\pi \sigma^2} }\exp(- \frac{(y_i-\mu)^2}{2\sigma^2}) \times 
-\frac{1}{\sqrt{2\pi \times 10^2} }\exp(- \frac{\mu^2}{2\times 10^2}) \times  e^{-\sigma}
+\frac{1}{\sqrt{2\pi \times 10^2} }\exp(- \frac{\mu^2}{2\times 10^2}) \times  e^{-\sigma}.
 \end{align*}$$
 
-This big construct in the last line is then basically one big function that takes $\mu$ and $\sigma$ as input where $y_i$, our data is given (and thus fixed).
+This big construct in the last line is then basically one big function that takes $\mu$ and $\sigma$ as input where $y_i$, our data, is given (and thus fixed).
 
 __4E4.__ In the model definition below, which line is the linear model?
 $$\begin{align*}
@@ -113,7 +113,7 @@ y_prior <- rnorm(n, mu, sigma)
 dens(y_prior)
 ```
 
-__4M2.__ Translate the model just above into a `quap` formula.
+__4M2.__ Translate the model just above into a `quap()` formula.
 ```{r eval=FALSE}
 flist <- alist(
             y ~ dnorm(mu, sigma),
@@ -170,7 +170,7 @@ text(0, 283, "World's tallest person (272cm)", adj=c(0,0), cex=0.8)
 text(0, -30, "Embryo", adj=c(0,0), cex=0.8)
 ```
 
-The model mostly stays between 0cm and 250cm. It still goes quite extrem and also has negative growth but otherwise it doesn't look to unreasonable.
+The model mostly stays between 0cm and 250cm. It still goes quite extreme and also has negative growth but otherwise it doesn't look to unreasonable.
 
 A short look at the predicted distribution of height at the first year:
 ```{r}
@@ -178,7 +178,7 @@ height_0 <- rnorm( N, a + b * 0, sigma )
 dens( height_0 )
 ```
 
-Most students at first year would be exptexted to be between 50cm and 200cm tall. 
+Most students at first year would be expected to be between 50cm and 200cm tall. 
 
 __4M5.__ Now suppose, I remind you that every student got taller each year. I will change my priors as follows:
 $$\begin{align*}
@@ -302,7 +302,7 @@ The same in visual:
 pairs( m4.3_u )
 ```
 
-What is happening here? Everytime the slope parameter increases a bit, the intercept changes in the opposite direction, i.e. decreases.
+What is happening here? Every time the slope parameter increases a bit, the intercept changes in the opposite direction, i.e. decreases.
 
 Compare the posterior predictions of both models:
 ```{r, echo=F, fig.height=6, fig.width=10}
@@ -416,7 +416,6 @@ mu <- link( model18, data = list(weight = weight.seq))
 mu.mean <- apply(mu, 2, mean)
 mu.PI <- apply(mu, 2, PI, prob=0.89)
 
-
 sim.height <- sim( model18, data = list(weight = weight.seq ))
 height.PI <- apply(sim.height, 2, PI, prob=0.89)
 ```
@@ -438,16 +437,16 @@ __4H3.__ A colleague exclaims: "Only the _logarithm_ of body weight scales with 
 (a) Use the entire `Howell1` data frame using the following model:
 $$\begin{align*}
 h_i &\sim \text{Normal}(\mu_i, \sigma) \\
-\mu_i &= \alpha + \beta (\log(w_i) - \bar{x}_l)) \\
-\alpha &\sim \text{Normal}(178, 100) \\
-\beta &\sim \text{Normal}(0, 100) \\
+\mu_i &= \alpha + \beta (\log(w_i) - \bar{x}_l) \\
+\alpha &\sim \text{Normal}(178, 20) \\
+\beta &\sim \text{Log-Normal}(0, 1) \\
 \sigma &\sim \text{Uniform}(0, 50)
 \end{align*}$$
 The value $\bar{x}_l$ is the mean of the log-weights.
 Here the model description in R:
 ```{r, eval=F}
 d <- Howell1
-xbarl <- mean( log( d$weight))
+xbarl <- mean( log( d$weight ) )
 
 model.l <- quap(
   alist(
@@ -532,3 +531,5 @@ __4H5.__
 __4H6.__
 
 __4H7.__
+
+<small>[Full code.](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_4/chapter4_Ex.Rmd)<small>
