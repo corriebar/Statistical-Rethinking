@@ -13,7 +13,7 @@ I am currently updating code snippets and exercise solution to follow the second
 - [Why everthing so normal](Chapter_4/chapter4.Rmd)
 - [First Linear Predictions](Chapter_4/chapter4b.Rmd)
 - [Polynomial Regression](Chapter_4/chapter4.c.R)
-- [Exercises](Chapter_4/chapter4_Ex.md)
+- [Exercises](Chapter_4/chapter4_Ex.Rmd)
 
 ## Chapter 5
 - [Spurious Associations](Chapter_5/chapter5a.R)

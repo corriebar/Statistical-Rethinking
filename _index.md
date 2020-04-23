@@ -22,7 +22,7 @@ I started going through the book in spring 2018. As part of the [Berlin Bayesian
 - [Why everything so normal]( {{< relref "Chapter_4/chapter4.html" >}} )
 - [First Linear Predictions]( {{< relref "Chapter_4/chapter4b.html" >}} )
 - [Polynomial Regression](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_4/chapter4c.R)
-- [Exercises]( {{< relref "Chapter_4/chapter4_Ex.html" >}})
+- [Exercises [WIP]]( {{< relref "Chapter_4/chapter4_Ex.html" >}})
 
 #### Chapter 5
 - [Spurious Associations](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_5/chapter5a.R)
