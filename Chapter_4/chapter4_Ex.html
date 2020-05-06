@@ -83,7 +83,7 @@ mu &lt;- rnorm(n, 0, 10)
 sigma &lt;- rexp(n, 2)
 y_prior &lt;- rnorm(n, mu, sigma)
 dens(y_prior)</code></pre>
-<p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-1-1.svg" width="480" /></p>
+<p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-2-1.svg" width="480" /></p>
 <p><strong>4M2.</strong> Translate the model just above into a <code>quap()</code> formula.</p>
 <pre class="r"><code>flist &lt;- alist(
             y ~ dnorm(mu, sigma),
@@ -120,12 +120,12 @@ Here, <span class="math inline">\(h_i\)</span> is the height and <span class="ma
 a &lt;- rnorm( N, 120, 20 )
 b &lt;- rnorm( N, 0, 10 )
 sigma &lt;- runif( N, 0, 50 )</code></pre>
-<p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-5-1.svg" width="480" /></p>
+<p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-6-1.svg" width="480" /></p>
 <p>The model mostly stays between 0cm and 250cm. It still goes quite extreme and also has negative growth but otherwise it doesn’t look to unreasonable.</p>
 <p>A short look at the predicted distribution of height at the first year:</p>
 <pre class="r"><code>height_0 &lt;- rnorm( N, a + b * 0, sigma )
 dens( height_0 )</code></pre>
-<p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-6-1.svg" width="480" /></p>
+<p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-7-1.svg" width="480" /></p>
 <p>Most students at first year would be expected to be between 50cm and 200cm tall.</p>
 <p><strong>4M5.</strong> Now suppose, I remind you that every student got taller each year. I will change my priors as follows:
 <span class="math display">\[\begin{align*}
@@ -134,7 +134,7 @@ dens( height_0 )</code></pre>
 \end{align*}\]</span>
 I changed <span class="math inline">\(\beta\)</span> to a log-normal distribution, so that <span class="math inline">\(\beta\)</span>, the indicator for growth per year, is greater or equal than zero.
 The resulting model lines then look as follows:
-<img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-7-1.svg" width="480" /></p>
+<img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-8-1.svg" width="480" /></p>
 <p><strong>4M6.</strong> Now suppose, the variance among heights for students of the same age is never more than 64cm. I thus change my priors as follows:
 <span class="math display">\[\sigma \sim \text{Uniform}(0, 64).\]</span>
 <strong>4M7.</strong> Refit model <code>m4.3</code> from the chapter but omit the mean weight <code>xbar</code>. Compare the new model’s posterior to that of the original model. In particular, look at the covariance among the parameters. What is different?</p>
@@ -154,7 +154,7 @@ m4.3 &lt;- quap(
         data = d2
 )
 precis(m4.3)</code></pre>
-<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
 <th style="text-align:left;">
@@ -179,13 +179,13 @@ sd
 a
 </td>
 <td style="text-align:right;">
-154.60
+154.601
 </td>
 <td style="text-align:right;">
-0.27
+0.270
 </td>
 <td style="text-align:right;">
-154.17
+154.169
 </td>
 <td style="text-align:right;">
 155.03
@@ -196,13 +196,13 @@ a
 b
 </td>
 <td style="text-align:right;">
-0.90
+0.903
 </td>
 <td style="text-align:right;">
-0.04
+0.042
 </td>
 <td style="text-align:right;">
-0.84
+0.836
 </td>
 <td style="text-align:right;">
 0.97
@@ -213,13 +213,13 @@ b
 sigma
 </td>
 <td style="text-align:right;">
-5.07
+5.072
 </td>
 <td style="text-align:right;">
-0.19
+0.191
 </td>
 <td style="text-align:right;">
-4.77
+4.766
 </td>
 <td style="text-align:right;">
 5.38
@@ -239,7 +239,7 @@ sigma
         data = d2
 )
 precis(m4.3_u)</code></pre>
-<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
 <th style="text-align:left;">
@@ -264,16 +264,16 @@ sd
 a
 </td>
 <td style="text-align:right;">
-114.53
+114.534
 </td>
 <td style="text-align:right;">
-1.90
+1.898
 </td>
 <td style="text-align:right;">
-111.50
+111.501
 </td>
 <td style="text-align:right;">
-117.57
+117.567
 </td>
 </tr>
 <tr>
@@ -281,16 +281,16 @@ a
 b
 </td>
 <td style="text-align:right;">
-0.89
+0.891
 </td>
 <td style="text-align:right;">
-0.04
+0.042
 </td>
 <td style="text-align:right;">
-0.82
+0.824
 </td>
 <td style="text-align:right;">
-0.96
+0.957
 </td>
 </tr>
 <tr>
@@ -298,16 +298,16 @@ b
 sigma
 </td>
 <td style="text-align:right;">
-5.07
+5.073
 </td>
 <td style="text-align:right;">
-0.19
+0.191
 </td>
 <td style="text-align:right;">
-4.77
+4.767
 </td>
 <td style="text-align:right;">
-5.38
+5.378
 </td>
 </tr>
 </tbody>
@@ -445,10 +445,10 @@ sigma
 </table>
 <p>Now, there’s a quite strong negative correlation between the two parameters.</p>
 <p>The same in visual:</p>
-<p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-17-1.svg" width="576" /></p>
+<p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-16-1.svg" width="576" /></p>
 <p>What is happening here? Every time the slope parameter increases a bit, the intercept changes in the opposite direction, i.e. decreases.</p>
 <p>Compare the posterior predictions of both models:
-<img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-18-1.svg" width="960" /></p>
+<img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-17-1.svg" width="960" /></p>
 <p>The posterior predictions look very much the same for both models.</p>
 <p><strong>4M8.</strong> In the chapter, we used 15 knots with the cherry blossom spline. Increase the number of knots and observe what happens to the resulting spline.
 [WIP]</p>
@@ -594,7 +594,7 @@ model18 &lt;- quap(
   data=d18
 )
 precis(model18)</code></pre>
-<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
 <th style="text-align:left;">
@@ -622,7 +622,7 @@ a
 108.36
 </td>
 <td style="text-align:right;">
-0.61
+0.609
 </td>
 <td style="text-align:right;">
 107.39
@@ -639,7 +639,7 @@ b
 2.72
 </td>
 <td style="text-align:right;">
-0.07
+0.068
 </td>
 <td style="text-align:right;">
 2.61
@@ -656,13 +656,13 @@ sigma
 8.44
 </td>
 <td style="text-align:right;">
-0.43
+0.431
 </td>
 <td style="text-align:right;">
 7.75
 </td>
 <td style="text-align:right;">
-9.13
+9.12
 </td>
 </tr>
 </tbody>
@@ -682,7 +682,7 @@ mu.PI &lt;- apply(mu, 2, PI, prob=0.89)
 
 sim.height &lt;- sim( model18, data = list(weight = weight.seq ))
 height.PI &lt;- apply(sim.height, 2, PI, prob=0.89)</code></pre>
-<p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-25-1.svg" width="480" /></p>
+<p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-23-1.svg" width="480" /></p>
 <ol start="3" style="list-style-type: lower-alpha">
 <li>What aspects of the model fit concern you?</li>
 </ol>
@@ -714,7 +714,7 @@ model.l &lt;- quap(
   data=d
 )
 precis(model.l)</code></pre>
-<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
 <th style="text-align:left;">
@@ -742,7 +742,7 @@ a
 138.27
 </td>
 <td style="text-align:right;">
-0.22
+0.220
 </td>
 <td style="text-align:right;">
 137.92
@@ -759,7 +759,7 @@ b
 47.07
 </td>
 <td style="text-align:right;">
-0.38
+0.383
 </td>
 <td style="text-align:right;">
 46.46
@@ -776,7 +776,7 @@ sigma
 5.13
 </td>
 <td style="text-align:right;">
-0.16
+0.156
 </td>
 <td style="text-align:right;">
 4.89
@@ -809,10 +809,10 @@ mu.PI &lt;- apply(mu, 2, PI, prob=0.89)
 # compute predicted height
 sim.height &lt;- sim( model.l, data = list(weight = weight.seq))
 height.PI &lt;- apply(sim.height, 2, PI, prob=0.89)</code></pre>
-<p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-29-1.svg" width="480" /></p>
+<p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-26-1.svg" width="480" /></p>
 <p>Compared to the model above fit to only the children and also compared to the models earlier in the chapter using the full data set with polynomial regression, this model seems to perform quite well on the data.</p>
 <p>We can also visualize the model on log scale:</p>
-<p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-30-1.svg" width="480" /></p>
+<p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-27-1.svg" width="480" /></p>
 <p>Given the last two plots, I’d say the colleague was right: The logarithm of body weight scales very well with height.</p>
 <p><strong>4H4.</strong> [WIP]</p>
 <p><strong>4H5.</strong></p>

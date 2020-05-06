@@ -25,6 +25,7 @@ options( digits = 3)
 library(printr)
 library(rethinking)
 library(tidyverse)
+library(knitr)
 
 pretty_precis <- function(object) {
   precis(object, digits=2) %>% 
