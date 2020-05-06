@@ -421,3 +421,4 @@ shade( mu_PI, d2$year, col=col.alpha("black", 0.3))
 abline(h=mean(post$a), lty=2, col=grau(0.5))
 ```
 
+<small>[Full code.](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_4/chapter4c.Rmd)<small>

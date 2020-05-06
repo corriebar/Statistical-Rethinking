@@ -15,10 +15,8 @@ image: 'images/tea_with_books.jpg'
 share: yes
 ---
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, dev="svglite", 
+knitr::opts_chunk$set(echo = TRUE, 
                       warning = F, message = F, 
-                      fig.height = 5,
-                      fig.width = 5,
                       comment=NA)
 knitr::opts_knit$set(global.par = T)
 options( digits = 3)
@@ -128,7 +126,7 @@ y_i &\sim \text{Normal}(\mu, \sigma) \\
 \sigma &\sim \text{Exponential}(1)
 \end{align*}$$
 
-```{r}
+```{r, fig.dim=c(5,5)}
 n <- 10000
 mu <- rnorm(n, 0, 10)
 sigma <- rexp(n, 2)
@@ -181,7 +179,7 @@ a <- rnorm( N, 120, 20 )
 b <- rnorm( N, 0, 10 )
 sigma <- runif( N, 0, 50 )
 ```
-```{r, echo=F}
+```{r, echo=F, fig.dim=c(5,5)}
 plot( NULL, xlim=range(0:3), ylim=c(-100, 400),
       xlab="year", ylab="height")
 abline( h = 0, lty=2 )
@@ -196,7 +194,7 @@ text(0, -30, "Embryo", adj=c(0,0), cex=0.8)
 The model mostly stays between 0cm and 250cm. It still goes quite extreme and also has negative growth but otherwise it doesn't look to unreasonable.
 
 A short look at the predicted distribution of height at the first year:
-```{r}
+```{r, fig.dim=c(5,5)}
 height_0 <- rnorm( N, a + b * 0, sigma )
 dens( height_0 )
 ```
@@ -210,7 +208,8 @@ $$\begin{align*}
 \end{align*}$$
 I changed $\beta$ to a log-normal distribution, so that $\beta$, the indicator for growth per year, is greater or equal than zero. 
 The resulting model lines then look as follows:
-```{r, echo=F}
+
+```{r, echo=F, fig.dim=c(5,5)}
 set.seed(2020)
 N <- 1000
 a <- rnorm( N, 120, 20 )
@@ -229,6 +228,7 @@ text(0, -20, "Embryo", adj=c(0,0), cex=0.8)
 
 __4M6.__ Now suppose, the variance among heights for students of the same age is never more than 64cm. I thus change my priors as follows:
 $$\sigma \sim \text{Uniform}(0, 64).$$
+
 __4M7.__ Refit model `m4.3` from the chapter but omit the mean weight `xbar`. Compare the new model's posterior to that of the original model. In particular, look at the covariance among the parameters. What is different?
 
 First, let's load the data and fit the `m4.3` model again:
@@ -323,14 +323,197 @@ plot_posterior(m4.3_u)
 mtext("Uncentered model")
 plot_posterior(m4.3)
 mtext("Centered model")
+par(mfrow=c(1,1))
 ```
 
 The posterior predictions look very much the same for both models.
 
 __4M8.__ In the chapter, we used 15 knots with the cherry blossom spline. Increase the number of knots and observe what happens to the resulting spline.
-[WIP]
+
+First, let's load the data:
+```{r}
+data("cherry_blossoms")
+d <- cherry_blossoms
+d2 <- d[ complete.cases(d$doy) , ]
+```
+Just to be sure to see an effect, I'm going to double the number of knots to 30:
+```{r}
+library(splines)
+num_knots <- 30
+knot_list <- quantile( d2$year, probs = seq(0, 1, length.out = num_knots ) )
+
+B <- bs(d2$year,
+        knots=knot_list[-c(1, num_knots)],
+        degree=3, intercept=TRUE)
+
+ms <- quap(
+  alist(
+    D ~ dnorm( mu, sigma ),
+    mu <- a + B %*% w,
+    a ~ dnorm( 100, 10 ),
+    w ~ dnorm( 0, 10 ),
+    sigma ~ dexp(1)
+  ), data=list(D=d2$doy, B=B) ,
+  start = list( w=rep( 0, ncol(B)))
+)
+```
+
+```{r, fig.width=10, fig.height=4, echo=F}
+post <- extract.samples( ms )
+
+
+mu <- link( ms )
+mu_PI <- apply( mu, 2, PI, 0.97 )
+mu_mean <- apply(mu, 2, mean )
+plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+     ylab  = "Day in Year", xlab = "Year")
+shade( mu_PI, d2$year, col=col.alpha("black", 0.3))
+lines(mu_mean ~ d2$year)
+abline(h=mean(post$a), lty=2, col=grau(0.5))
+mtext("30 knots")
+```
+
+Compare this with the fit we had before with 15 knots:
+```{r, fig.width=10, fig.height=4, echo=F}
+num_knots <- 15
+knot_list <- quantile( d2$year, probs = seq(0, 1, length.out = num_knots ) )
+
+B15 <- bs(d2$year,
+        knots=knot_list[-c(1, num_knots)],
+        degree=3, intercept=TRUE)
+
+ms15 <- quap(
+  alist(
+    D ~ dnorm( mu, sigma ),
+    mu <- a + B %*% w,
+    a ~ dnorm( 100, 10 ),
+    w ~ dnorm( 0, 10 ),
+    sigma ~ dexp(1)
+  ), data=list(D=d2$doy, B=B15) ,
+  start = list( w=rep( 0, ncol(B15)))
+)
+post <- extract.samples( ms15 )
+
+
+mu <- link( ms15 )
+mu_PI <- apply( mu, 2, PI, 0.97 )
+mu_mean <- apply(mu, 2, mean )
+plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+     ylab  = "Day in Year", xlab = "Year")
+shade( mu_PI, d2$year, col=col.alpha("black", 0.3))
+lines(mu_mean ~ d2$year)
+abline(h=mean(post$a), lty=2, col=grau(0.5))
+mtext("15 knots")
+```
+
+The curve with 30 knots is less smooth and even wigglier than the curve with 15 knots.
+
+Let's now also change the width of the prior on the weights. I am going to change the standard deviation for the prior on the weights $w$ to 100 (before it was 10).
+```{r}
+ms <- quap(
+  alist(
+    D ~ dnorm( mu, sigma ),
+    mu <- a + B %*% w,
+    a ~ dnorm( 100, 10 ),
+    w ~ dnorm( 0, 100 ),
+    sigma ~ dexp(1)
+  ), data=list(D=d2$doy, B=B) ,
+  start = list( w=rep( 0, ncol(B)))
+)
+```
+Let's see what happens:
+```{r, fig.width=10, fig.height=4, echo=F}
+post <- extract.samples( ms )
+
+
+mu <- link( ms )
+mu_PI <- apply( mu, 2, PI, 0.97 )
+mu_mean <- apply(mu, 2, mean)
+plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+     ylab  = "Day in Year", xlab = "Year")
+shade( mu_PI, d2$year, col=col.alpha("black", 0.3))
+lines(mu_mean ~ d2$year)
+abline(h=mean(post$a), lty=2, col=grau(0.5))
+mtext("30 knots with prior w ~ N(0, 100)")
+```
+
+It got even wigglier! This is a bit difficult to see because the curve with 15 knots and the narrower priors was quite wiggly but it can for example be seen at the end to the right.
+
+More knots means there are more basis functions and so the curve can fit smaller local details. Fitting only a handful of knots will force the model to fit the more global trends: 
+
+```{r, fig.width=10, fig.height=4, echo=F}
+num_knots <- 5
+knot_list <- quantile( d2$year, probs = seq(0, 1, length.out = num_knots ) )
+
+B5 <- bs(d2$year,
+        knots=knot_list[-c(1, num_knots)],
+        degree=3, intercept=TRUE)
+
+ms5 <- quap(
+  alist(
+    D ~ dnorm( mu, sigma ),
+    mu <- a + B %*% w,
+    a ~ dnorm( 100, 10 ),
+    w ~ dnorm( 0, 10 ),
+    sigma ~ dexp(1)
+  ), data=list(D=d2$doy, B=B5) ,
+  start = list( w=rep( 0, ncol(B5)))
+)
+post <- extract.samples( ms5 )
+
+
+mu <- link( ms5 )
+mu_PI <- apply( mu, 2, PI, 0.97 )
+mu_mean <- apply(mu, 2, mean )
+plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+     ylab  = "Day in Year", xlab = "Year")
+shade( mu_PI, d2$year, col=col.alpha("black", 0.3))
+lines(mu_mean ~ d2$year)
+abline(h=mean(post$a), lty=2, col=grau(0.5))
+mtext("5 knots")
+```
+
+If we turn up the standard deviation of the prior we allow the weights to become larger.  If the standard deviation is small, the weights will be closer to 0 and thus wiggle around closer to the mean line. If the weights become larger, we allow the curve to have more peaks.
+Check what happens if we make the prior on $w$ extremely narrow:
+```{r, fig.width=10, fig.height=4, echo=F}
+num_knots <- 30
+knot_list <- quantile( d2$year, probs = seq(0, 1, length.out = num_knots ) )
+
+B30 <- bs(d2$year,
+        knots=knot_list[-c(1, num_knots)],
+        degree=3, intercept=TRUE)
+
+ms30 <- quap(
+  alist(
+    D ~ dnorm( mu, sigma ),
+    mu <- a + B %*% w,
+    a ~ dnorm( 100, 10 ),
+    w ~ dnorm( 0, 1 ),
+    sigma ~ dexp(1)
+  ), data=list(D=d2$doy, B=B30) ,
+  start = list( w=rep( 0, ncol(B30)))
+)
+post <- extract.samples( ms30 )
+
+
+mu <- link( ms30 )
+mu_PI <- apply( mu, 2, PI, 0.97 )
+mu_mean <- apply(mu, 2, mean )
+plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+     ylab  = "Day in Year", xlab = "Year")
+shade( mu_PI, d2$year, col=col.alpha("black", 0.3))
+lines(mu_mean ~ d2$year)
+abline(h=mean(post$a), lty=2, col=grau(0.5))
+mtext("30 knots with prior w ~ N(0, 1)")
+```
+
 
 ## Hard.
+The first hard questions use the !Kung data again, so we need to reload them:
+```{r}
+d <- Howell1
+```
+
 __4H1.__ !Kung census data: Provide predicted heights and 89% intervals for the following weights of individuals.
 ```{r}
 weights <- c(46.95, 43.72, 64.78, 32.59, 54.63)
@@ -395,7 +578,7 @@ mu.PI <- apply(mu, 2, PI, prob=0.89)
 sim.height <- sim( model18, data = list(weight = weight.seq ))
 height.PI <- apply(sim.height, 2, PI, prob=0.89)
 ```
-```{r, echo=F}
+```{r, echo=F, fig.height=5, fig.width=5}
 # plot everything
 plot(height ~ weight, data=d18, col=col.alpha(rangi2, 0.9), ylim=c(50, 180))   # the raw data
 lines(weight.seq, mu.mean)                                      # the MAP regression line
@@ -460,7 +643,7 @@ mu.PI <- apply(mu, 2, PI, prob=0.89)
 sim.height <- sim( model.l, data = list(weight = weight.seq))
 height.PI <- apply(sim.height, 2, PI, prob=0.89)
 ```
-```{r, echo=F}
+```{r, echo=F, fig.dim=c(5,5)}
 # the plot
 plot(height ~ weight, data=d, col=col.alpha(rangi2, 0.6))
 lines(weight.seq, mu.mean)                                      # the MAP regression line
@@ -473,7 +656,7 @@ Compared to the model above fit to only the children and also compared to the mo
 
 We can also visualize the model on log scale:
 
-```{r, echo=F}
+```{r, echo=F, fig.dim=c(5,5)}
 plot(height ~ log(weight), data=d, col=col.alpha(rangi2, 0.6))
 lines(log(weight.seq), mu.mean)
 shade(mu.PI, log(weight.seq))
@@ -483,7 +666,91 @@ mtext("The same model on log scale")
 
 Given the last two plots, I'd say the colleague was right: The logarithm of body weight scales very well with height.
 
-__4H4.__ [WIP]
+__4H4.__ Plot the prior predictive distribution for the parabolic polynomial regression model in the chapter.
+
+For the prior predictive check, we don't actually need to run the model code again. Just remember that we're fitting the following model:
+$$\begin{align*}
+h_i &\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &= \alpha + \beta_1 x_i + \beta_2 x_i^2 \\
+\alpha &\sim \text{Normal}(178, 20) \\
+\beta_1 &\sim  \text{Log-Normal}(0,1) \\
+\beta_2 &\sim \text{Normal}(0,1) \\
+\sigma &\sim \text{Uniform}(0, 50) 
+\end{align*}$$
+
+It suffices to generate samples from our priors and then plot the resulting curves:
+```{r}
+N <- 1000
+a <- rnorm( N, 178, 20 )
+b1 <- rlnorm( N, 0, 1 )
+b2 <- rnorm(N, 0, 1)
+sigma <- runif( N, 0, 50 )
+```
+```{r, echo=F, fig.dim=c(5,5)}
+plot( NULL, xlim=range(d$weight), ylim=c(-100, 400),
+      xlab="weight", ylab="height")
+abline( h = 0, lty=2 )
+abline( h=272, lty = 1, lwd=0.5)
+for (i in 1:100) curve( a[i] + b1[i] * x + b2[i] * x^2,
+                      from=min(d$weight), to=max(d$weight), add  = TRUE,
+                      col=col.alpha("black", 0.2))
+text(3, 283, "World's tallest person (272cm)", adj=c(0,0), cex=0.8)
+text(3, -30, "Embryo", adj=c(0,0), cex=0.8)
+mtext("Prior Predictive Check for the Parabolic Model")
+```
+
+The curves are all over the place and it is hard to see much from it.
+The next part of the question asks to modify the priors in a way so that the prior predictions stay within the biologically reasonable space.
+
+Let's recap some high school math.
+In the equation $f(x) = b_2x^2$, the larger $b_2$ is, the narrower will be the parabola:
+```{r, echo=F}
+curve( 0.1*x^2, from=-10, to=10, col="red")
+curve( 100*x^2, from=-10, to=10, col="black", add=T)
+legend("bottomright", c("0.1x²", "100x²"), , lty=c(1,1), col=c("red", "black"), bty="n")
+```
+As a negative $b_2$ would mean a downwards curve, we want $b_2$ to be positive.
+To keep $b_2$ positive, we can use the Log-Normal again. However, the standard deviation of the Log-Normal is a bit difficult to tune. A small standard deviation means the function is less skewed (has less values that are very high) but then it also has fewer values that are very small. Whereas a high standard deviation means there are many very small values but also a few very very big values. Overall, a distribution that is a bit hard to tune.
+I instead will use an Exponential with a high value for $\lambda$. In that case, most values will be small.
+```{r}
+N <- 1000
+a <- rnorm( N, 178, 20 )
+b1 <- rlnorm( N, 0, 1 )
+b2 <- rexp(N, 20)
+sigma <- runif( N, 0, 50 )
+```
+
+With these priors, the prior predi
+```{r, echo=F, fig.dim=c(5,5)}
+plot( NULL, xlim=range(d$weight), ylim=c(-100, 400),
+      xlab="weight", ylab="height")
+abline( h = 0, lty=2 )
+abline( h=272, lty = 1, lwd=0.5)
+for (i in 1:100) curve( a[i] + b1[i] * x + b2[i] * x^2,
+                      from=min(d$weight), to=max(d$weight), add  = TRUE,
+                      col=col.alpha("black", 0.2))
+text(3, 283, "World's tallest person (272cm)", adj=c(0,0), cex=0.8)
+text(3, -30, "Embryo", adj=c(0,0), cex=0.8)
+mtext("Prior Predictive Check for the Parabolic Model")
+```
+
+
+Let's fit the model again:
+```{r}
+d$weight_s <- ( d$weight - mean(d$weight) ) /sd(d$weight)
+d$weight_s2 <- d$weight_s ^2
+
+m_2 <- quap(
+          alist(
+            height ~ dnorm(mu, sigma) ,
+            mu <- a + b1*weight_s + b2*weight_s2 ,
+            a ~ dnorm(178, 20) ,
+            b1 ~ dlnorm(0,1),
+            b2 ~ dnorm(0,1),
+            sigma ~ dunif(0, 50)
+          ), data=d
+)
+```
 
 __4H5.__
 
