@@ -20,6 +20,7 @@ knitr::opts_chunk$set(echo = TRUE, dev="svglite",
                       fig.height = 5,
                       fig.width = 5,
                       comment=NA)
+knitr::opts_knit$set(global.par = T)
 options( digits = 3)
 library(printr)
 library(rethinking)
@@ -35,8 +36,29 @@ pretty_precis <- function(object) {
 prettify <- function(object, digits = 2) {knitr::kable(object, "html", 
                                                           digits = digits) %>% 
     kableExtra::kable_styling(full_width = F, position = "center")}
-```
 
+kable <- function(data, ...) {
+   knitr::kable(data, format = "html", digits=3, ...) %>% 
+    kableExtra::kable_styling(bootstrap_options = "striped", full_width = F, position = "center")
+}
+knit_print.data.frame <- function(x, ...) {
+  res <- paste(c("", "", kable(x)), collapse = "\n")
+  asis_output(res)
+}
+knit_print.precis <- function(x, ...) {
+  res <- paste(c("", "", x %>%
+                   as_tibble(rownames = "rowname") %>%
+                   column_to_rownames() %>%
+                   kable() ), collapse = "\n")
+  asis_output(res)
+}
+registerS3method("knit_print", "data.frame", knit_print.data.frame)
+registerS3method("knit_print", "tibble", knit_print.data.frame)
+registerS3method("knit_print", "precis", knit_print.precis)
+```
+```{r echo=F}
+par(bty="l")
+```
 These are my solutions to the practice questions of chapter 4, _Linear Models_, of the book "Statistical Rethinking" (version 2) by Richard McElreath.
 
 ## Easy.
@@ -209,7 +231,7 @@ $$\sigma \sim \text{Uniform}(0, 64).$$
 __4M7.__ Refit model `m4.3` from the chapter but omit the mean weight `xbar`. Compare the new model's posterior to that of the original model. In particular, look at the covariance among the parameters. What is different?
 
 First, let's load the data and fit the `m4.3` model again:
-```{r, eval=F}
+```{r}
 data("Howell1")
 d <- Howell1
 d2 <- d[ d$age >= 18, ]
@@ -226,25 +248,8 @@ m4.3 <- quap(
 )
 precis(m4.3)
 ```
-```{r, echo=F}
-data("Howell1")
-d <- Howell1
-d2 <- d[ d$age >= 18, ]
-xbar <- mean( d2$weight )
-m4.3 <- quap(
-        alist(
-          height ~ dnorm( mu, sigma),
-          mu <- a + b * ( weight - xbar ) ,
-          a ~ dnorm( 178, 20),
-          b ~ dlnorm( 0, 1),
-          sigma ~ dunif(0, 50)
-        ) ,
-        data = d2
-)
-pretty_precis(m4.3)
-```
 Now, we refit an uncentered version of the model:
-```{r, eval=F}
+```{r}
 m4.3_u <- quap(
         alist(
           height ~ dnorm( mu, sigma),
@@ -256,19 +261,6 @@ m4.3_u <- quap(
         data = d2
 )
 precis(m4.3_u)
-```
-```{r, echo=F}
-m4.3_u <- quap(
-        alist(
-          height ~ dnorm( mu, sigma),
-          mu <- a + b * weight ,
-          a ~ dnorm( 178, 20),
-          b ~ dlnorm( 0, 1),
-          sigma ~ dunif(0, 50)
-        ) ,
-        data = d2
-)
-pretty_precis(m4.3_u)
 ```
 
 The estimates for $\beta$ and $\sigma$ are still the same, only $\alpha$ is changed. This makes sense since now in the uncentered version, the meaning of $\alpha$ has changed. Before $\alpha$ was the average height for when $ x -\bar{x}$ was 0, that is for observations where the weight is equal to the average weight. Now, $\alpha$ is the average height for the case that the weight is 0. As there are no people with a weight of zero, this $\alpha$ is harder to interpret.
@@ -369,7 +361,7 @@ __4H2.__ Select the rows from the `Howell1` data with age below 18 years.
 (a) Fit a linear regression to these data, using `quap()`.
 
 I will use the same model as above but adapt the prior for $\alpha$ to account for lower heights:
-```{r, eval=F}
+```{r}
 d18 <- d[ d$age < 18, ]
 xbar <- mean( d18$weight )
 
@@ -384,23 +376,6 @@ model18 <- quap(
   data=d18
 )
 precis(model18)
-```
-```{r, echo=F}
-d18 <- d[ d$age < 18, ]
-xbar <- mean( d18$weight )
-# fit the model
-
-model18 <- quap(
-  alist(
-    height ~ dnorm( mu, sigma) ,
-    mu <- a + b* ( weight - xbar )  ,
-    a ~ dnorm( 156, 20) ,
-    b ~ dlnorm( 0, 1) ,
-    sigma ~ dunif(0, 50)
-  ),
-  data=d18
-)
-pretty_precis(model18)
 ```
 As above, since the weight values are centered, the intercept `a` corresponds to the average height, which is here 108.3. This is much lower than in the model above (but expected since the individuals in this data set are younger). The slope `b` is interpreted such that for every 10kg heavier, an individual is expected to be 27cm taller. The standard deviation `sigma` in this model is higher than in the one above, suggesting a higher uncertainty in the predictions.
 
@@ -444,7 +419,7 @@ h_i &\sim \text{Normal}(\mu_i, \sigma) \\
 \end{align*}$$
 The value $\bar{x}_l$ is the mean of the log-weights.
 Here the model description in R:
-```{r, eval=F}
+```{r}
 d <- Howell1
 xbarl <- mean( log( d$weight ) )
 
@@ -459,23 +434,6 @@ model.l <- quap(
   data=d
 )
 precis(model.l)
-```
-```{r, echo=F}
-d <- Howell1
-xbarl <- mean( log( d$weight))
-# fit the model
-
-model.l <- quap(
-  alist(
-    height ~ dnorm( mu, sigma) ,
-    mu <- a + b*( log( weight ) - xbarl ),
-    a ~ dnorm( 178, 20) ,
-    b ~ dlnorm( 0, 1) ,                
-    sigma ~ dunif(0, 50)
-  ),
-  data=d
-)
-pretty_precis(model.l)
 ```
 Interpreting these results is a bit more difficult since we transformed the weights using the logarithm. The intercept `a` corresponds to the average height of someone whose log-weight is equal to the mean of log-weights, i.e. whose weight is 31kg (this is equivalent to the geometric mean). 
 How to interpret the `b` value?

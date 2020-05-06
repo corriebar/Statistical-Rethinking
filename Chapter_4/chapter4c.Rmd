@@ -1,0 +1,423 @@
+---
+title: "Curvy Regression"
+author: Corrie
+date: "2020-05-05"
+slug: chp4-part-three
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      dev="svglite", 
+                      warning = F, message = F, 
+                      fig.height = 5,
+                      fig.width = 5,
+                      comment=NA)
+knitr::opts_knit$set(global.par = T)
+options( digits = 3)
+library(knitr)
+library(printr)
+library(rethinking)
+library(tidyverse)
+
+kable <- function(data, ...) {
+   knitr::kable(data, format = "html", digits=3, ...) %>% 
+    kableExtra::kable_styling(bootstrap_options = "striped", full_width = F, position = "center")
+}
+knit_print.data.frame <- function(x, ...) {
+  res <- paste(c("", "", kable(x)), collapse = "\n")
+  asis_output(res)
+}
+knit_print.precis <- function(x, ...) {
+  res <- paste(c("", "", x %>%
+                   as_tibble(rownames = "rowname") %>%
+                   column_to_rownames() %>%
+                   kable() ), collapse = "\n")
+  asis_output(res)
+}
+
+knit_print.matrix <- function(x, ...) {
+  res <- paste(c("", "", x %>% as_tibble %>% kable()), collapse = "\n")
+  asis_output(res)
+}
+registerS3method("knit_print", "data.frame", knit_print.data.frame)
+registerS3method("knit_print", "tibble", knit_print.data.frame)
+registerS3method("knit_print", "precis", knit_print.precis)
+registerS3method("knit_print", "matrix", knit_print.matrix)
+
+pretty_precis <- function(object) {
+  precis(object, digits=2) %>% 
+  as_tibble(rownames = "rowname") %>%
+  column_to_rownames() %>%
+  knitr::kable("html", digits = 2) %>% kableExtra::kable_styling(full_width = F, position = "center")
+
+}
+prettify <- function(object, digits = 2) {knitr::kable(object, "html", 
+                                                          digits = digits) %>% 
+    kableExtra::kable_styling(full_width = F, position = "center")}
+```
+```{r echo=F}
+par(bty="l")
+```
+These are code snippets and notes for the fourth chapter, _Geocentric Models_, , sections 5, of the book "Statistical Rethinking" (version 2) by Richard McElreath.
+
+
+### Polynomial Regression
+Standard linear models using a straight line to fit data are nice for their simplicity but a straight line is also very restrictive. Most data does not come in a straight line. We can use polynomial regression to extend the linear model.
+
+We'll work again with the !Kung data:
+```{r}
+library(rethinking)
+data("Howell1")
+d <- Howell1
+str(d)
+```
+
+But now we use the whole data, not just the adults. If we plot height and weight for the whole data, the relationship between the two is much more curvy than if we'd restrict to the adults:
+```{r}
+plot(height ~ weight, data=d)
+```
+
+Obviously, a straight line wouldn't be a good fit.
+
+We can use a polynomial regression such as e.g. a parabolic model for the mean height $\mu$:
+$$\mu_i = \alpha + \beta_1 x_i + \beta_2 x_i^2.$$
+The whole model then looks like this:
+$$\begin{align*}
+h_i &\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &= \alpha + \beta_1 x_i + \beta_2 x_i^2 \\
+\alpha &\sim \text{Normal}(178, 20) \\
+\beta_1 &\sim  \text{Log-Normal}(0,1) \\
+\beta_2 &\sim \text{Normal}(0,1) \\
+\sigma &\sim \text{Uniform}(0, 50) 
+\end{align*}$$
+
+Before implementing this model, we standardize the weight variable. This helps to prevent numerical glitches. We also precompute the squared weight so it doesn't need to be recalculated at each iteration:
+```{r}
+d$weight_s <- ( d$weight - mean(d$weight) ) /sd(d$weight)
+d$weight_s2 <- d$weight_s ^2
+```
+
+
+```{r}
+m4.5 <- quap(
+          alist(
+            height ~ dnorm(mu, sigma) ,
+            mu <- a + b1*weight_s + b2*weight_s2 ,
+            a ~ dnorm(178, 20) ,
+            b1 ~ dlnorm(0,1),
+            b2 ~ dnorm(0,1),
+            sigma ~ dunif(0, 50)
+          ), data=d
+)
+
+precis(m4.5)
+```
+
+While $\alpha$ the intercept still tells us the expected value of height when weight is at its mean value, it is no longer equal to the mean height in the data:
+```{r}
+mean(d$height)
+```
+Now, I found this a bit hard to understand, after all, if $x$ is zero, then $x^2$ is also zero right? The important difference here is, that $\alpha$ is the expected value.
+So before, in the straight line model the following holds:
+$$\begin{align*}
+\mathbb{E}[h_i] &= \mu \\
+&= \mathbb{E}[\alpha + \beta x_i] \\
+&= \alpha + \beta \mathbb{E}[x_i], 
+\end{align*}$$
+and since we normalized $x$ it holds that $\mathbb{E}[x_i]=0$ and thus $\alpha = \mathbb{E}[h_i]$.
+
+But now in the quadratic model, this changes to
+$$\begin{align*}
+\mathbb{E}[h_i] &= \mathbb{E}[\alpha + \beta_1 x_i + \beta_2 x_i^2] \\
+&= \alpha + \beta_1 \mathbb{E}[x_i] + \beta_2 \mathbb{E}[x_i^2] 
+\end{align*}$$
+And even while $\mathbb{E}[x_i]=0$ this does not imply in general that $\mathbb{E}[x_i^2]$ is also zero.
+
+This can also be seen (maybe easier than the formulas above) when calculating the mean of the squared variable:
+```{r}
+mean(d$weight_s2)
+```
+
+Since interpretation of the coefficients by themselves is difficult, we need to visualize the model:
+```{r}
+weight_seq <- seq(from=-2.2, to=2, length.out=30)
+pred_data <- list(weight_s=weight_seq, weight_s2=weight_seq^2)
+mu <- link(m4.5, data=pred_data)
+mu.mean <- apply(mu, 2, mean)
+mu.PI <- apply(mu, 2, PI, prob=0.89)
+sim.height <- sim(m4.5, data=pred_data)
+height.PI <- apply(sim.height, 2, PI, prob=0.89)
+
+plot(height ~ weight_s, d, col=col.alpha(rangi2, 0.5))
+lines(weight_seq, mu.mean)
+shade(mu.PI, weight_seq)
+shade(height.PI, weight_seq)
+mtext("quadratic")
+```
+
+We can go even curvier and fit a cubic model:
+
+$$\begin{align*}
+h_i &\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &= \alpha + \beta_1 x_i + \beta_2 x_i^2 + \beta_3 x_i^3 \\
+\alpha &\sim \text{Normal}(178, 20) \\
+\beta_1 &\sim  \text{Log-Normal}(0,1) \\
+\beta_2 &\sim \text{Normal}(0,1) \\
+\beta_3 &\sim \text{Normal}(0,1) \\
+\sigma &\sim \text{Uniform}(0, 50) 
+\end{align*}$$
+
+And in code:
+```{r}
+d$weight_s3 <- d$weight_s^3
+m4.6 <- quap(
+        alist(
+          height ~ dnorm(mu, sigma),
+          mu <- a + b1*weight_s + b2*weight_s2 + b3*weight_s3,
+          a ~ dnorm(178,20),
+          b1 ~ dlnorm(0,1),
+          b2 ~ dnorm(0,1),
+          b3 ~ dnorm(0,1),
+          sigma ~ dunif(0,50)
+        ), data=d
+)
+precis(m4.6)
+```
+
+Again, the coefficients are hard to interpret so here a plot of the model:
+```{r, echo=F}
+pred_data <- list(weight_s=weight_seq, weight_s2=weight_seq^2, weight_s3=weight_seq^3, weight_s4=weight_seq^4)
+mu <- link(m4.6, data=pred_data)
+mu.mean <- apply(mu, 2, mean)
+mu.PI <- apply(mu, 2, PI, prob=0.89)
+sim.height <- sim(m4.6, data=pred_data)
+height.PI <- apply(sim.height, 2, PI, prob=0.89)
+
+plot(height ~ weight_s, d, col=col.alpha(rangi2, 0.5))
+lines(weight_seq, mu.mean)
+shade(mu.PI, weight_seq)
+shade(height.PI, weight_seq)
+```
+
+As you can see, the model becomes more flexible the more higher-order terms we add. But note also, that changing the degree changed if the curve goes up or down in the end. If we'd go one degree higher, the curve would go down again. This is just how polynomials work but not really desirable when fitting data. Unless we have some theory that makes us think that the data is generated by a polynomial process, using higher-order polynomials can lead to unexpxted side results and are especially bad when extrapolating outside of the data.
+
+### Splines
+Splines are another way of getting very curvy and flexible regression lines. Unlike polynomial regression, they're a more local approach, meaning, they fit the data locally and instead of globally as the polynomial regression does.
+
+For the splines, we use the Cherry trees blossom data:
+```{r}
+data("cherry_blossoms")
+d <- cherry_blossoms
+precis(d)
+```
+
+The data contains the day of the year `doy` when the cherry trees first started to blossom that year:
+```{r, fig.width=10, fig.height=4, echo=1}
+plot( doy ~ year , data=d, col=col.alpha(rangi2, 0.5), pch=20, cex=1.4,
+      ylab="Day in Year")
+mtext("First Day of Cherry Blossom over the Years")
+```
+
+Let's start recreating Figur 4.12 from the chapter. For this, we first need to compute the knots. We will restrict ourselves in this example to only 5 knots which we'll place at even quantiles. Since the data is not evenly spread, this means the knots also won't be evenly spread:
+```{r}
+d2 <- d[ complete.cases(d$doy) , ]
+num_knots <- 5
+knot_list <- quantile( d2$year, probs = seq(0, 1, length.out = num_knots ) )
+knot_list
+```
+
+Of course, evenly spaced knots using `seq()` would also be thinkable.
+Since we have 5 knots, we have 5 basis functions and our model will look like this:
+$$\begin{align*}
+D_i &\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &= \alpha + w_1 B_{1,i} + w_2 B_{2,i} + w_3 B_{3,i} + w_4 B_{4,i} + w_5 B_{5,i} \\
+\alpha &\sim \text{Normal}(0, 10) \\
+w_j &\sim \text{Normal}(0, 10) \\
+\sigma &\sim \text{Exponential}(1)
+\end{align*}$$
+where $B_j$ are our basis functions. But what values do we use for e.g. $B_{1,i}$ for one observation?
+Let's have a look at how the basis functions look like. For this example, we use basis functions of degree 1, that is the basis functions are straight lines.
+In the book, Richard uses `lines()`and a matrix computed using the `{splines}` package but we can also handcode the splines:
+```{r, eval=F}
+spl1 <- c(0,1,0,1,0)
+spl2 <- c(1,0,1,0,1)
+plot( spl1 ~ knot_list, type="l")
+lines(spl2 ~ knot_list)
+```
+
+```{r, fig.width=10, fig.height=4, echo=F}
+spl1 <- c(0,1,0,1,0)
+spl2 <- c(1,0,1,0,1)
+plot( spl1 ~ knot_list, type="l", lwd=3.5, alpha=0.5, col=grau(0.3),
+      xlab = "year", ylab = "basis value", yaxt="n", ylim=c(0, 1.2))
+lines(spl2 ~ knot_list, lwd=3.5, alpha=0.5, col=grau(0.3))
+points( rep(1.095, 5) ~ knot_list, pch=3, cex=1.7)
+text( rep(0.9, 5) ~ knot_list, labels = 1:5)
+abline(v=1200, lty="dashed", lwd=3, col=col.alpha(rangi2, 0.8))
+points(c(1200, 1200), c(0.243, 0.757), cex=2, col=col.alpha(rangi2, 0.8), pch=20 )
+axis(side = 2, at=0:1)
+```
+
+So these are our basis functions. Basically, straight lines going from `( knot[i-1], 0 )` up to `( knot[i], 1 )` and from `( knot[i], 1 )` down to `( knot[i+1], 0)` again. That is, one basis function is actually two lines (except for the border knots).
+You can see that at each point, there are at most two lines. E.g. at the year 1200, there are the two lines between the first two knots. Using some highschool math, we can compute the linear equation for the two lines. The first line is the first going down line and the second is the first going up line:
+```{r}
+slope1 <- (1 - 0) / (knot_list[1] - knot_list[2])
+slope2 <- - slope1 # has the same slope but negative
+intercept1 <- 1 - slope1 * knot_list[1]
+intercept2 <- 0 - slope2 * knot_list[1]
+```
+```{r, echo=F}
+intercept1 <- unname(intercept1)
+intercept2 <- unname(intercept2)
+slope1 <- unname(slope1)
+slope2 <- unname(slope2)
+```
+We can then compute the value of $B_1$ for the year 1200 as follows:
+```{r}
+intercept1 + slope1 * 1200
+```
+
+And the same for the second basis function:
+```{r}
+intercept2 + slope2 * 1200
+```
+
+These are exactly the points where the vertical line at $x=1200$ crosses the two basis function lines.
+
+Now, we don't need to calculate this by hand for each observation in the data frame but can use the following function to do hat for us:
+
+```{r}
+library(splines)
+B <- bs(d2$year,
+        knots = knot_list[-c(1, num_knots)],
+        degree = 1,
+        intercept = TRUE )
+head(B) 
+```
+
+So for the first points (the data frame is chronologically sorted), only the first two basis functions will have values that are non-zero. For the last points it will then only be the last two basis function that are non-zero.
+
+We can now run this model to compute the values for the $w_j$ coefficients:
+```{r}
+m4.7a <- quap(
+  alist(
+    D ~ dnorm( mu, sigma ),
+    mu <- a + B %*% w,
+    a ~ dnorm( 100, 10 ),
+    w ~ dnorm( 0, 10 ),
+    sigma ~ dexp(1)
+  ), data=list(D=d2$doy, B=B) ,
+  start = list( w=rep( 0, ncol(B)))
+)
+precis(m4.7a, depth=2)
+```
+
+To compute the weighted splines, we can simply multiply the basis value times the weights:
+```{r, eval=F}
+post <- extract.samples( m4.7a )
+w <- apply( post$w, 2, mean )
+plot( w*spl1 ~ knot_list, type="l", ylim=c(-5, 5))
+lines(w*spl2 ~ knot_list)
+```
+```{r, fig.width=10, fig.height=4, echo=F}
+post <- extract.samples( m4.7a )
+w <- apply( post$w, 2, mean )
+plot(NULL, xlim=range(d2$year), ylim=c(-5.5,5),
+     xlab="year", ylab="basis * weight", yaxt="n")
+points( rep(4.9, 5) ~ knot_list, pch=3, cex=1.7)
+points( w*spl1 ~ knot_list, type="l", lwd=3.5, alpha=0.5, col=grau(0.3),
+      xlab = "year", ylab = "basis value")
+points(w*spl2 ~ knot_list, type="l", lwd=3.5, alpha=0.5, col=grau(0.3))
+abline(h=0, lty=2, col=grau(0.5))
+abline(v=1200, lty="dashed", lwd=3, col=col.alpha(rangi2, 0.8))
+axis(side = 2, at=0)
+```
+To get the final fitted curve, we then add these lines together. If we then add the intercept to it, we get $\mu$:
+```{r}
+a <- mean( post$a )
+mu <- a + w*spl1 + w*spl2
+```
+
+But of course, it is better to get $\mu$ from our posterior because we can then work better with the uncertainty:
+```{r, fig.width=10, fig.height=4, echo=1:4}
+mu <- link( m4.7a )
+mu_PI <- apply( mu, 2, PI, 0.97 )
+plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+     ylab  = "Day in Year", xlab = "Year")
+shade( mu_PI, d2$year, col=col.alpha("black", 0.3))
+abline(h=mean(post$a), lty=2, col=grau(0.5))
+```
+
+Now let's do the same with splines of degree 3 and more knots:
+```{r}
+num_knots <- 15
+knot_list <- quantile( d2$year, probs = seq(0, 1, length.out = num_knots ) )
+
+B <- bs(d2$year,
+        knots=knot_list[-c(1, num_knots)],
+        degree=3, intercept=TRUE)
+```
+
+Computing the values of a spline at a single point by hand is a bit more complicated now: Each point goes through 4 curves (degree + 1) and instead of straight lines, we need to compute polynomials of degree 3.
+This is a bit more involved, so I won't do it from hand here.
+
+The model looks the same as before:
+```{r}
+m4.7 <- quap(
+  alist(
+    D ~ dnorm( mu, sigma ),
+    mu <- a + B %*% w,
+    a ~ dnorm( 100, 10 ),
+    w ~ dnorm( 0, 10 ),
+    sigma ~ dexp(1)
+  ), data=list(D=d2$doy, B=B) ,
+  start = list( w=rep( 0, ncol(B)))
+)
+```
+
+And we get the following model fit:
+
+```{r, fig.height=7, fig.width=7, out.width='824px', out.height='980px', echo=F}
+par(mfrow=c(3, 1), mar=c(3,4,2.1,2), mgp=c(2,1,0))
+b1200 <- bs(c(1200),
+        knots=knot_list[-c(1, num_knots)],
+        degree=3, intercept=TRUE,
+        Boundary.knots=range(d2$year))
+plot( NULL,  xlab = "year", ylab = "basis value", yaxt="n", ylim=c(0, 1.2), xlim=range(d2$year))
+for (i in 1:ncol(B)) lines( d2$year, B[,i] , lwd=3.5, alpha=0.5, col=grau(0.3))
+points( rep(1.04, num_knots) ~ knot_list, pch=3, cex=1.7)
+text( rep(0.95, num_knots) ~ knot_list, labels = 1:num_knots)
+abline(v=1200, lty="dashed", lwd=3, col=col.alpha(rangi2, 0.8))
+points(rep(1200, 3+1), b1200[1,3:6], cex=2, col=col.alpha(rangi2, 0.8), pch=20 )
+axis(side = 2, at=0:1)
+
+
+
+
+post <- extract.samples( m4.7 )
+w <- apply( post$w, 2, mean )
+plot(NULL, xlim=range(d2$year), ylim=c(-5.5,5),
+     xlab="year", ylab="basis * weight", yaxt="n")
+points( rep(4.9, num_knots) ~ knot_list, pch=3, cex=1.7)
+for ( i in 1:ncol(B ) ) lines( d2$year, w[i]*B[,i], lwd=3.5, alpha=0.5, col=grau(0.3))
+abline(h=0, lty=2, col=grau(0.5))
+abline(v=1200, lty="dashed", lwd=3, col=col.alpha(rangi2, 0.8))
+axis(side = 2, at=0)
+
+mu <- link( m4.7 )
+mu_PI <- apply( mu, 2, PI, 0.97 )
+plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+     ylab  = "Day in Year", xlab = "Year")
+shade( mu_PI, d2$year, col=col.alpha("black", 0.3))
+abline(h=mean(post$a), lty=2, col=grau(0.5))
+```
+
