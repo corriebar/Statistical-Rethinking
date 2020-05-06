@@ -12,7 +12,7 @@ I am currently updating code snippets and exercise solution to follow the second
 ## Chapter 4
 - [Why everthing so normal](Chapter_4/chapter4.Rmd)
 - [First Linear Predictions](Chapter_4/chapter4b.Rmd)
-- [Polynomial Regression](Chapter_4/chapter4.c.R)
+- [Polynomial Regression](Chapter_4/chapter4c.Rmd)
 - [Exercises](Chapter_4/chapter4_Ex.Rmd)
 
 ## Chapter 5
