@@ -54,6 +54,7 @@ knit_print.precis <- function(x, ...) {
 registerS3method("knit_print", "data.frame", knit_print.data.frame)
 registerS3method("knit_print", "tibble", knit_print.data.frame)
 registerS3method("knit_print", "precis", knit_print.precis)
+
 ```
 ```{r echo=F}
 par(bty="l")
@@ -298,7 +299,7 @@ pairs( m4.3_u )
 What is happening here? Every time the slope parameter increases a bit, the intercept changes in the opposite direction, i.e. decreases.
 
 Compare the posterior predictions of both models:
-```{r, echo=F, fig.height=6, fig.width=10}
+```{r, echo=F, fig.height=5, fig.width=9}
 plot_posterior <- function(model) {
   weight.seq <- seq( from=25, to=70, by=1)
   
@@ -704,10 +705,10 @@ The next part of the question asks to modify the priors in a way so that the pri
 
 Let's recap some high school math.
 In the equation $f(x) = b_2x^2$, the larger $b_2$ is, the narrower will be the parabola:
-```{r, echo=F}
+```{r, echo=F, fig.height=5, fig.width=5}
 curve( 0.1*x^2, from=-10, to=10, col="red")
 curve( 100*x^2, from=-10, to=10, col="black", add=T)
-legend("bottomright", c("0.1x²", "100x²"), , lty=c(1,1), col=c("red", "black"), bty="n")
+legend("bottomright", c("0.1x²", "100x²"), lty=c(1,1), col=c("red", "black"), bty="n")
 ```
 As a negative $b_2$ would mean a downwards curve, we want $b_2$ to be positive.
 To keep $b_2$ positive, we can use the Log-Normal again. However, the standard deviation of the Log-Normal is a bit difficult to tune. A small standard deviation means the function is less skewed (has less values that are very high) but then it also has fewer values that are very small. Whereas a high standard deviation means there are many very small values but also a few very very big values. Overall, a distribution that is a bit hard to tune.
@@ -720,7 +721,8 @@ b2 <- rexp(N, 20)
 sigma <- runif( N, 0, 50 )
 ```
 
-With these priors, the prior predi
+With these priors, the prior predictions look as follow:
+
 ```{r, echo=F, fig.dim=c(5,5)}
 plot( NULL, xlim=range(d$weight), ylim=c(-100, 400),
       xlab="weight", ylab="height")
@@ -734,28 +736,325 @@ text(3, -30, "Embryo", adj=c(0,0), cex=0.8)
 mtext("Prior Predictive Check for the Parabolic Model")
 ```
 
+The new priors look more reasonable based on these curves. However, they are much more restrictive and it is hard to argue if the line should curve upwards or downwards. In the model fit in the chapter, the estimated parameter for $b_2$ is actually negative and curves downwards for high values of weight.
+To summarize, getting the priors right and interpretating the parameters for a polynomial regression is really difficult.
 
-Let's fit the model again:
-```{r}
-d$weight_s <- ( d$weight - mean(d$weight) ) /sd(d$weight)
-d$weight_s2 <- d$weight_s ^2
 
-m_2 <- quap(
-          alist(
-            height ~ dnorm(mu, sigma) ,
-            mu <- a + b1*weight_s + b2*weight_s2 ,
-            a ~ dnorm(178, 20) ,
-            b1 ~ dlnorm(0,1),
-            b2 ~ dnorm(0,1),
-            sigma ~ dunif(0, 50)
-          ), data=d
-)
+__4H5.__ Return to `data(cherry_blossoms)` and model the association between blossom date (`doy`) and March temperature.
+You may consider a linear model, a polynomial, or a spline on temperature.
+How well does temperature trend predict the blossom trend?
+
+First, let's plot the two variables.
+```{r, fig.height=5, fig.width=5}
+d <- cherry_blossoms
+plot( doy ~ temp, d, col=col.alpha(rangi2, 0.8), pch=20,
+      ylab = "Day of Year", xlab="Temperature [°C]")
+mtext("Temperature vs Day of Blossom")
 ```
 
-__4H5.__
+It looks like there is a negative relationship between the two: the higher the temperature, the earlier in the year does it start to blossom.
 
-__4H6.__
+Since there are many missing values, I'll restrict the data to cases where both `doy` and `temp` exist.
+```{r}
+d2 <- d[complete.cases(d[, c("doy", "temp")]), ] %>%
+  arrange(temp)
+```
 
-__4H7.__
+#### Linear Model
+First, I'll try a linear model:
+```{r}
+set.seed(2020)
+mean_temp <- mean(d2$temp)
+ml <- quap(
+  alist(
+    D ~ dnorm( mu, sigma ),
+    mu <- a + b*(temp - mean_temp),
+    a ~ dnorm( 100, 10 ),
+    b ~ dnorm( 0, 1 ),
+    sigma ~ dexp(1)
+  ), data=list(D=d2$doy, temp=d2$temp) 
+)
+precis(ml)
+```
+
+Indeed, the model estimates a negative slope $\beta$.
+Let's plot the model:
+```{r, echo=F, fig.height=5, fig.width=5}
+post <- extract.samples( ml )
+
+
+mu <- link( ml )
+mu_PI <- apply( mu, 2, PI, 0.89 )
+mu_mean <- apply(mu, 2, mean )
+doy_sim <- sim(ml)
+doy_PI <- apply( doy_sim, 2, PI, 0.89)
+plot(d2$temp, d2$doy, col=col.alpha(rangi2, 0.6), pch=20, 
+     ylab  = "Day in Year", xlab = "Temperature [°C]")
+lines(mu_mean ~ d2$temp)
+shade( mu_PI, d2$temp)
+shade( doy_PI, d2$temp)
+
+mtext("Linear Model")
+```
+
+The temperature does have some effect on the day of first blossom but note that the uncertainty is quite high.
+
+#### Polynomial Model
+I will try both a quadratic and a cubic model. 
+```{r}
+d2$temp_s <- (d2$temp - mean_temp) / sd(d2$temp)
+d2$temp_s2 <- d2$temp_s^2
+d2$temp_s3 <- d2$temp_s^3
+```
+The quadratic model:
+```{r}
+mquadratic <- quap(
+  alist(
+    D ~ dnorm( mu, sigma ),
+    mu <- a + b1*temp_s + b2*temp_s2,
+    a ~ dnorm( 100, 10 ),
+    b1 ~ dnorm( 0, 1 ),
+    b2  ~ dnorm(0, 1),
+    sigma ~ dexp(1)
+  ), data=list(D=d2$doy, temp_s=d2$temp_s, temp_s2 = d2$temp_s2) 
+)
+```
+And the cubic model:
+```{r}
+mcubic <- quap(
+  alist(
+    D ~ dnorm( mu, sigma ),
+    mu <- a + b1*temp_s + b2*temp_s2 + b3*temp_s3,
+    a ~ dnorm( 100, 10 ),
+    b1 ~ dnorm( 0, 1 ),
+    b2 ~ dnorm( 0, 1 ),
+    b3 ~ dnorm( 0, 1 ),
+    sigma ~ dexp(1)
+  ), data=list(D=d2$doy, temp_s=d2$temp_s, temp_s2 = d2$temp_s2,
+               temp_s3 = d2$temp_s3) 
+)
+```
+And this is what the models look like:
+```{r, echo=F, fig.height=5, fig.width=10}
+par(mfrow=c(1,2))
+temp_seq <- seq(from=-2.2, to=3.5, length.out = 100)            
+post <- extract.samples(mquadratic)                           
+# compute mu
+mu <- link( mquadratic, data = list(temp_s = temp_seq,
+                                    temp_s2 = temp_seq^2))
+mu_mean <- apply(mu, 2, mean)  # MAP line
+mu_PI <- apply(mu, 2, PI, prob=0.89)
+
+sim_doy <- sim( mquadratic, data = list(temp_s = temp_seq,
+                                    temp_s2 = temp_seq^2))
+doy_PI <- apply(sim_doy, 2, PI, prob=0.89)
+
+plot(doy ~ temp_s, data=d2, col=col.alpha(rangi2, 0.6),
+     ylab="Day of Year", xlab="Standardized Temperature")
+lines(temp_seq, mu_mean)                                      # the MAP regression line
+shade( mu_PI, temp_seq)                                     # draw PI region around the regression line
+shade( doy_PI, temp_seq)                                # draw PI region for the simulated heights
+mtext("Quadratic Model")
+
+
+post <- extract.samples(mcubic)                           
+# compute mu
+mu <- link( mcubic, data = list(temp_s = temp_seq,
+                                    temp_s2 = temp_seq^2,
+                                    temp_s3 = temp_seq^3))
+mu_mean <- apply(mu, 2, mean)  # MAP line
+mu_PI <- apply(mu, 2, PI, prob=0.89)
+
+sim_doy <- sim( mcubic, data = list(temp_s = temp_seq,
+                                    temp_s2 = temp_seq^2,
+                                    temp_s3 = temp_seq^3))
+doy_PI <- apply(sim_doy, 2, PI, prob=0.89)
+
+plot(doy ~ temp_s, data=d2, col=col.alpha(rangi2, 0.6),
+     ylab="Day of Year", xlab="Standardized Temperature")
+lines(temp_seq, mu_mean)                                      # the MAP regression line
+shade( mu_PI, temp_seq)                                     # draw PI region around the regression line
+shade( doy_PI, temp_seq)                                # draw PI region for the simulated heights
+mtext("Cubic Model")
+```
+
+Interestingly, the two models look pretty much the same as the linear model. So we don't gain anything from using a polynomial model, instead we only loose interpretability:
+```{r}
+precis(mcubic)
+```
+
+While the quadratic and cubic terms have very small parameters, almost close to 0, they still make the interpretation less forward. So in this case, nothing gained from polynomial regression.
+
+#### Splines
+Lastly, let's also check out how splines perform for this example.
+I will use 15 knots and the same priors as also used in the chapter on the weight.
+```{r}
+num_knots <- 15
+knot_list <- quantile( d2$temp, probs = seq(0, 1, length.out = num_knots ) )
+
+B <- bs(d2$temp,
+        knots=knot_list[-c(1, num_knots)],
+        degree=3, intercept=TRUE)
+
+ms <- quap(
+  alist(
+    D ~ dnorm( mu, sigma ),
+    mu <- a + B %*% w,
+    a ~ dnorm( 100, 10 ),
+    w ~ dnorm( 0, 10 ),
+    sigma ~ dexp(1)
+  ), data=list(D=d2$doy, B=B) ,
+  start = list( w=rep( 0, ncol(B)))
+)
+```
+And that's what the model looks like:
+
+```{r, fig.width=5, fig.height=5, echo=F}
+post <- extract.samples( ms )
+par(mfrow=c(1,1))
+mu <- link( ms )
+mu_PI <- apply( mu, 2, PI, 0.89 )
+mu_mean <- apply(mu, 2, mean )
+
+sim_doy <- sim( ms )
+doy_PI <- apply(sim_doy, 2, PI, prob=0.89)
+
+plot(d2$temp, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+     ylab  = "Day in Year", xlab = "Temperature [°C]")
+shade( mu_PI, d2$temp)
+shade( doy_PI, d2$temp)
+lines(mu_mean ~ d2$temp)
+mtext("Splines with 15 knots")
+```
+
+The splines are wigglier and have one especially weird dip just for temperatures below 6°C. Personally, I am sceptical this dip makes physically sense and it isn't just an artifact of the splines being too wiggly. Comparing the three models, in this case, I'd go with the simple linear model.
+
+__4H6.__ Simulate the prior predictive distribution for the cherry blossom spline in the chapter.
+Adjust the prior on the weights and observe what happens. What do you think the prior on the weight is doing?
+```{r, echo=F}
+d2 <- d[ complete.cases(d$doy) , ]
+```
+I will only draw 10 different samples for each weight so that the plot won't get too cluttered.
+```{r}
+num_knots <- 15
+knot_list <- quantile( d2$year, probs = seq(0, 1, length.out = num_knots ) )
+years <- seq(from=min(d2$year), to=max(d2$year), length.out = 100)
+
+B <- bs(years,
+        knots=knot_list[-c(1, num_knots)],
+        degree=3, intercept=TRUE)
+
+N <- 10
+w <- rnorm(N*ncol(B), 0, 10 )
+w <- matrix(w, nrow=ncol(B))
+```
+
+In the top, we have again the basis functions and in the bottom we see the basis functions multiplied with weight values samples from our prior:
+```{r, fig.height=8, fig.width=10, echo=F}
+par(mfrow=c(2, 1), mar=c(3,4,2.1,2), mgp=c(2,1,0))
+plot( NULL,  xlab = "year", ylab = "basis value", yaxt="n", ylim=c(0, 1.2), xlim=range(d2$year))
+for (i in 1:ncol(B)) lines( years, B[,i] , lwd=3.5, alpha=0.5, col=grau(0.3))
+points( rep(1.04, num_knots) ~ knot_list, pch=3, cex=1.7)
+text( rep(0.95, num_knots) ~ knot_list, labels = 1:num_knots)
+axis(side = 2, at=0:1)
+mtext("Basis functions")
+
+plot(NULL, xlim=range(d2$year), ylim=c(-30,30),
+     xlab="year", ylab="basis * weight", yaxt="n")
+for (j in 1:N) {
+  for ( i in 1:ncol(B ) ) lines( years, w[i, j]*B[,i], lwd=1, alpha=0.5, col=grau(0.3))
+}
+abline(h=0, lty=2, col=grau(0.5))
+axis(side = 2, at=c(-20, 0, 20))
+mtext("Basis times Prior w ~ N(0, 10)")
+
+```
+
+Compare this for example with the curves we get for our wider prior:
+```{r, fig.width=10, fig.height=4, echo=F}
+N <- 10
+w <- rnorm(N*ncol(B), 0, 100 )
+w <- matrix(w, nrow=ncol(B))
+par(mfrow=c(1,1))
+plot(NULL, xlim=range(d2$year), ylim=c(-30,30),
+     xlab="year", ylab="basis * weight", yaxt="n")
+for (j in 1:N) {
+  for ( i in 1:ncol(B ) ) lines( years, w[i, j]*B[,i], lwd=1, alpha=0.5, col=grau(0.3))
+}
+abline(h=0, lty=2, col=grau(0.5))
+axis(side = 2, at=c(-20,0,20) )
+mtext("Basis times Prior w ~ N(0, 100)")
+```
+
+With this wider prior, the curve go much higher and lower. With the standard deviation of the prior we can thus control how high or low the curve can wiggle away from the mean.
+
+__4H7.__ The cherry blossom spline in the chapter used an intercept $\alpha$, but technically it doesn't require one. The first basis functions could substitute for the intercept.
+Try refitting the cherry blossom spline without the intercept.
+
+Let's see what happens if we just omit the intercept:
+```{r}
+num_knots <- 15
+knot_list <- quantile( d2$year, probs = seq(0, 1, length.out = num_knots ) )
+
+B <- bs(d2$year,
+        knots=knot_list[-c(1, num_knots)],
+        degree=3, intercept=TRUE)
+```
+
+```{r}
+set.seed(20)
+m <- quap(
+  alist(
+    D ~ dnorm( mu, sigma ),
+    mu <- B %*% w,    # removed intercept
+    w ~ dnorm( 0, 10 ),
+    sigma ~ dexp(10)
+  ), data=list(D=d2$doy, B=B) ,
+  start = list( w=rep( 0, ncol(B)))
+)
+```
+Let's see the result:
+```{r, echo=F, fig.height=4, fig.width=10}
+mu <- link( m )
+mu_mean <- apply(mu, 2, mean)
+mu_PI <- apply( mu, 2, PI, 0.97 )
+plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+     ylab  = "Day in Year", xlab = "Year")
+shade( mu_PI, d2$year, col=col.alpha("black", 0.3))
+abline(h=mean(post$a), lty=2, col=grau(0.5))
+lines(mu_mean ~ d2$year)
+mtext("No Intercept")
+```
+
+This alsmost worked, except that we now have that the splines seem to come from far down to the left. This is probably since we specified that the weights are distributed around 0: $w \sim \text{Normal}(0, 10)$.
+Let's fix this by changing the prior on $w$ to this:
+$ w \sim \text{Normal}(100, 10)$. This is basically the prior we before had on the intercept.
+
+```{r}
+m <- quap(
+  alist(
+    D ~ dnorm( mu, sigma ),
+    mu <- B %*% w,    # removed intercept
+    w ~ dnorm( 100, 10 ),
+    sigma ~ dexp(10)
+  ), data=list(D=d2$doy, B=B) ,
+  start = list( w=rep( 0, ncol(B)))
+)
+```
+And the result:
+```{r, echo=F, fig.height=4, fig.width=10}
+mu <- link( m )
+mu_mean <- apply(mu, 2, mean)
+mu_PI <- apply( mu, 2, PI, 0.97 )
+plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+     ylab  = "Day in Year", xlab = "Year")
+shade( mu_PI, d2$year, col=col.alpha("black", 0.3))
+abline(h=mean(post$a), lty=2, col=grau(0.5))
+lines(mu_mean ~ d2$year)
+mtext("No Intercept - adapted prior")
+```
+
+Now, we basically got the same model as before that included the intercept.
+
 
 <small>[Full code.](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_4/chapter4_Ex.Rmd)<small>
