@@ -137,7 +137,7 @@ b2
 sigma
 </td>
 <td style="text-align:right;">
-5.78
+5.77
 </td>
 <td style="text-align:right;">
 0.176
@@ -235,7 +235,7 @@ sd
 a
 </td>
 <td style="text-align:right;">
-146.39
+146.40
 </td>
 <td style="text-align:right;">
 0.310
@@ -664,16 +664,16 @@ sd
 w[1]
 </td>
 <td style="text-align:right;">
-0.058
+0.03
 </td>
 <td style="text-align:right;">
 4.177
 </td>
 <td style="text-align:right;">
--6.62
+-6.64
 </td>
 <td style="text-align:right;">
-6.73
+6.71
 </td>
 </tr>
 <tr>
@@ -681,16 +681,16 @@ w[1]
 w[2]
 </td>
 <td style="text-align:right;">
-1.885
+1.86
 </td>
 <td style="text-align:right;">
 4.128
 </td>
 <td style="text-align:right;">
--4.71
+-4.74
 </td>
 <td style="text-align:right;">
-8.48
+8.46
 </td>
 </tr>
 <tr>
@@ -698,16 +698,16 @@ w[2]
 w[3]
 </td>
 <td style="text-align:right;">
-1.955
+1.93
 </td>
 <td style="text-align:right;">
 4.115
 </td>
 <td style="text-align:right;">
--4.62
+-4.65
 </td>
 <td style="text-align:right;">
-8.53
+8.50
 </td>
 </tr>
 <tr>
@@ -715,16 +715,16 @@ w[3]
 w[4]
 </td>
 <td style="text-align:right;">
-4.379
+4.35
 </td>
 <td style="text-align:right;">
 4.123
 </td>
 <td style="text-align:right;">
--2.21
+-2.24
 </td>
 <td style="text-align:right;">
-10.97
+10.94
 </td>
 </tr>
 <tr>
@@ -732,16 +732,16 @@ w[4]
 w[5]
 </td>
 <td style="text-align:right;">
--5.198
+-5.22
 </td>
 <td style="text-align:right;">
 4.141
 </td>
 <td style="text-align:right;">
--11.82
+-11.84
 </td>
 <td style="text-align:right;">
-1.42
+1.40
 </td>
 </tr>
 <tr>
@@ -749,16 +749,16 @@ w[5]
 a
 </td>
 <td style="text-align:right;">
-103.073
+103.10
 </td>
 <td style="text-align:right;">
 4.088
 </td>
 <td style="text-align:right;">
-96.54
+96.57
 </td>
 <td style="text-align:right;">
-109.61
+109.64
 </td>
 </tr>
 <tr>
@@ -766,7 +766,7 @@ a
 sigma
 </td>
 <td style="text-align:right;">
-6.069
+6.07
 </td>
 <td style="text-align:right;">
 0.148
@@ -792,7 +792,7 @@ mu &lt;- a + w*spl1 + w*spl2</code></pre>
 <p>But of course, it is better to get <span class="math inline">\(\mu\)</span> from our posterior because we can then work better with the uncertainty:</p>
 <pre class="r"><code>mu &lt;- link( m4.7a )
 mu_PI &lt;- apply( mu, 2, PI, 0.97 )
-plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.5), pch=20, cex=1.4,
      ylab  = &quot;Day in Year&quot;, xlab = &quot;Year&quot;)
 shade( mu_PI, d2$year, col=col.alpha(&quot;black&quot;, 0.3))</code></pre>
 <p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4c_files/figure-html/unnamed-chunk-25-1.svg" width="960" /></p>
@@ -818,4 +818,5 @@ This is a bit more involved, so I won’t do it from hand here.</p>
 )</code></pre>
 <p>And we get the following model fit:</p>
 <p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4c_files/figure-html/unnamed-chunk-28-1.svg" width="824px" height="980px" /></p>
+<p><small><a href="https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_4/chapter4c.Rmd">Full code.</a><small></p>
 </div>
