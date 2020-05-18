@@ -524,7 +524,7 @@ individual
 weight
 </th>
 <th style="text-align:right;">
-exptected_height
+expected_height
 </th>
 <th style="text-align:right;">
 PI_89_lower
@@ -894,7 +894,7 @@ sigma &lt;- runif( N, 0, 50 )</code></pre>
 <p>With these priors, the prior predictions look as follow:</p>
 <p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-41-1.png" width="480" /></p>
 <p>The new priors look more reasonable based on these curves. However, they are much more restrictive and it is hard to argue if the line should curve upwards or downwards. In the model fit in the chapter, the estimated parameter for <span class="math inline">\(b_2\)</span> is actually negative and curves downwards for high values of weight.
-To summarize, getting the priors right and interpretating the parameters for a polynomial regression is really difficult.</p>
+To summarize, getting the priors right and interpreting the parameters for a polynomial regression is really difficult.</p>
 <p><strong>4H5.</strong> Return to <code>data(cherry_blossoms)</code> and model the association between blossom date (<code>doy</code>) and March temperature.
 You may consider a linear model, a polynomial, or a spline on temperature.
 How well does temperature trend predict the blossom trend?</p>
@@ -1167,7 +1167,7 @@ ms &lt;- quap(
 )</code></pre>
 <p>And that’s what the model looks like:</p>
 <p><img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-52-1.png" width="480" /></p>
-<p>The splines are wigglier and have one especially weird dip just for temperatures below 6°C. Personally, I am sceptical this dip makes physically sense and it isn’t just an artifact of the splines being too wiggly. Comparing the three models, in this case, I’d go with the simple linear model.</p>
+<p>The splines are wigglier and have one especially weird dip just for temperatures below 6°C. Personally, I am skeptical this dip makes physically sense and it isn’t just an artifact of the splines being too wiggly. Comparing the three models, in this case, I’d go with the simple linear model.</p>
 <p><strong>4H6.</strong> Simulate the prior predictive distribution for the cherry blossom spline in the chapter.
 Adjust the prior on the weights and observe what happens. What do you think the prior on the weight is doing?</p>
 <p>I will only draw 10 different samples for each weight so that the plot won’t get too cluttered.</p>
@@ -1208,7 +1208,7 @@ m &lt;- quap(
 )</code></pre>
 <p>Let’s see the result:
 <img src="/projects/Statistical-Rethinking/Chapter_4/chapter4_Ex_files/figure-html/unnamed-chunk-59-1.png" width="960" /></p>
-<p>This alsmost worked, except that we now have that the splines seem to come from far down to the left. This is probably since we specified that the weights are distributed around 0: <span class="math inline">\(w \sim \text{Normal}(0, 10)\)</span>.
+<p>This almost worked, except that we now have that the splines seem to come from far down to the left. This is probably since we specified that the weights are distributed around 0: <span class="math inline">\(w \sim \text{Normal}(0, 10)\)</span>.
 Let’s fix this by changing the prior on <span class="math inline">\(w\)</span> to this:
 $ w (100, 10)$. This is basically the prior we before had on the intercept.</p>
 <pre class="r"><code>m &lt;- quap(

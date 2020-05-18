@@ -25,13 +25,6 @@ library(rethinking)
 library(tidyverse)
 library(knitr)
 
-pretty_precis <- function(object) {
-  precis(object, digits=2) %>% 
-  as_tibble(rownames = "rowname") %>%
-  column_to_rownames() %>%
-  knitr::kable("html", digits = 2) %>% kableExtra::kable_styling(full_width = F, position = "center")
-
-}
 prettify <- function(object, digits = 2) {knitr::kable(object, "html", 
                                                           digits = digits) %>% 
     kableExtra::kable_styling(full_width = F, position = "center")}
