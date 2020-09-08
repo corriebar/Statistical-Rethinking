@@ -1,0 +1,575 @@
+---
+title: "Spurious Associations"
+author: Corrie
+date: "2020-07-01"
+slug: chp5-part-one
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
+---
+\newcommand{\ind}{{\perp\!\!\!\perp}}
+\newcommand{\notind}{{\;\not\!\perp\!\!\!\perp\;}}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = F, message = F, 
+                      comment=NA)
+knitr::opts_knit$set(global.par = T)
+options( digits = 3)
+library(printr)
+library(rethinking)
+library(tidyverse)
+library(knitr)
+
+pretty_precis <- function(object) {
+  precis(object, digits=2) %>% 
+  as_tibble(rownames = "rowname") %>%
+  column_to_rownames() %>%
+  knitr::kable("html", digits = 2) %>% kableExtra::kable_styling(full_width = F, position = "center")
+
+}
+prettify <- function(object, digits = 2) {knitr::kable(object, "html", 
+                                                          digits = digits) %>% 
+    kableExtra::kable_styling(full_width = F, position = "center")}
+
+kable <- function(data, ...) {
+   knitr::kable(data, format = "html", digits=3, ...) %>% 
+    kableExtra::kable_styling(bootstrap_options = "striped", full_width = F, position = "center")
+}
+knit_print.data.frame <- function(x, ...) {
+  res <- paste(c("", "", kable(x)), collapse = "\n")
+  asis_output(res)
+}
+knit_print.precis <- function(x, ...) {
+  res <- paste(c("", "", x %>%
+                   as_tibble(rownames = "rowname") %>%
+                   column_to_rownames() %>%
+                   kable() ), collapse = "\n")
+  asis_output(res)
+}
+knit_print.matrix <- function(x, ...) {
+  res <- paste(c("", "", kable(x)), collapse="\n")
+  asis_output(res)
+}
+registerS3method("knit_print", "data.frame", knit_print.data.frame)
+registerS3method("knit_print", "tibble", knit_print.data.frame)
+registerS3method("knit_print", "precis", knit_print.precis)
+registerS3method("knit_print", "matrix", knit_print.matrix)
+
+```
+```{r echo=F}
+par(bty="l")
+```
+These are code snippets and notes for the fifth chapter, _The Many Variables & The Spurious Waffles_, section 1, of the book "Statistical Rethinking" (version 2) by Richard McElreath.
+
+## Spurious Waffles (and Marriages)
+In this chapter, we're looking at spurious correlations and how to think formally about causal inference. For this section, we'll work with the waffle-divorce data. The data contains the divorce rates of the 50 states of the US and various variables that could be used to explain their divorce rates. We'll  focus on the two variables median age at marriage and the marriage rates:
+```{r, echo=T}
+library(rethinking)
+data("WaffleDivorce")
+d <- WaffleDivorce
+
+# standardize variables
+d$D <- standardize( d$Divorce )
+d$M <- standardize( d$Marriage )
+d$A <- standardize( d$MedianAgeMarriage )
+```
+
+
+We start fitting a model using `quap()` to predict divorce rates using the median age at marriage as predictor.
+```{r, echo=T}
+# fit model
+m5.1 <- quap(
+  alist(
+    D ~ dnorm( mu, sigma),
+    mu <- a + bA*A,
+    a ~ dnorm(0, 0.1),
+    bA ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data=d
+)
+```
+
+##### Some notes on the priors:
+We standardized all our predictor variables, as well as the target variable. So if the (standardized) predictor variable $A$ is 1 for one observation, then this observation is one standard deviation away from the mean. If then $\beta_A = 1$, this would imply that we predict a change of $+1$ for the target variable, and since this one is also standardized this implies a change of a whole standard deviation for the divorce rate. So to get a feeling of what would be a good prior, we also need to look at the standard deviations of the variables:
+```{r}
+sd( d$MedianAgeMarriage )
+```
+And for the target variable:
+```{r}
+sd( d$Divorce )
+```
+So a change of 1.2 years in median age at marriage is associated with a full standard deviation change in the divorce rate, i.e. the divorce rate increases by 2 divorces per 1000 adults. This seems rather strong which is why a prior of $\text{Normal}(0, 0.5)$ is probably better fitted for $\beta_A$.
+
+We can also simulate from the priors:
+```{r}
+set.seed(10)
+prior <- extract.prior( m5.1 )
+mu <- link( m5.1, post=prior, data=list( A=c(-2, 2)))
+```
+```{r, fig.height=5, fig.width=10, echo=F}
+par(mfrow=c(1,2))
+plot( NULL, xlim=c(-2,2), ylim=c(-2,2) , xlab="Median age marriage (std)",
+      ylab = "Divorce rate (std)")
+mtext(expression(paste(beta[A] , "~ Normal(0,0.5)")  ) )
+for (i in 1:50 ) lines( c(-2,2), mu[i, ], col=col.alpha("black", 0.4) )
+
+
+# fit model
+m_prior <- quap(
+  alist(
+    D ~ dnorm( mu, sigma),
+    mu <- a + bA*A,
+    a ~ dnorm(0, 0.1),
+    bA ~ dnorm(0, 1),
+    sigma ~ dexp(1)
+  ), data=d
+)
+prior <- extract.prior( m_prior )
+mu <- link( m5.1, post=prior, data=list( A=c(-2, 2)))
+plot( NULL, xlim=c(-2,2), ylim=c(-2,2) , xlab="Median age marriage (std)",
+      ylab = "Divorce rate (std)")
+mtext(expression(paste(beta[A] , "~ Normal(0,1)")  ) )
+for (i in 1:50 ) lines( c(-2,2), mu[i, ], col=col.alpha("black", 0.4) )
+```
+
+If we compare the choosen prior with a just slightly flatter prior, we can see how the results get extreme very quick.
+
+Now, on to posterior predictions:
+
+```{r, echo=T, eval=F}
+# compute shaded confidence region
+A_seq <- seq(from=-3, to=3.2, length.out = 30)
+mu <- link( m5.1, data=list( A=A_seq ) )
+mu.mean <- apply( mu, 2, mean )
+mu.PI <- apply( mu, 2, PI )
+
+# plot it all
+plot( D ~ A, data=d, col=rangi2,
+      xlab="Median age marriage", ylab="Divorce rate")
+lines(A_seq, mu.mean, lwd=2 )
+shade( mu.PI, A_seq)
+```
+```{r, echo=F, fig.height=5, fig.width=10}
+# compute shaded confidence region
+A_seq <- seq(from=-3, to=3.2, length.out = 30)
+mu <- link( m5.1, data=list( A=A_seq ) )
+mu.mean <- apply( mu, 2, mean )
+mu.PI <- apply( mu, 2, PI )
+
+par(mfrow=c(1,2))
+# plot it all
+plot( D ~ A, data=d, col=rangi2,
+      xlab="Median age marriage", ylab="Divorce rate")
+lines(A_seq, mu.mean, lwd=2 )
+shade( mu.PI, A_seq)
+
+m5.2 <- quap(
+  alist(
+    D ~ dnorm( mu, sigma),
+    mu <- a + bM*M,
+    a ~ dnorm( 0, 0.2 ),
+    bM ~ dnorm(0, 0.5 ),
+    sigma ~ dexp( 1 )
+  ), data=d
+)
+
+M_seq <- seq(from=-3, to=3.2, length.out = 30)
+mu <- link( m5.2, data=list( M=M_seq ) )
+mu.mean <- apply( mu, 2, mean )
+mu.PI <- apply( mu, 2, PI )
+
+# plot it all
+plot( D ~ M, data=d, col=rangi2,
+      xlab="Marriage rate", ylab="Divorce rate")
+lines(M_seq, mu.mean, lwd=2 )
+shade( mu.PI, A_seq)
+```
+
+On the right, I've plotted the posterior predictions for a model using the marriage rate as predictor.
+We can see that both predictors have a relationship with the target variable, but just comparing the two bivariate regressions doesn't tell us which predictor is better. From the two regressions, we cannot say if the two predictors provide independent value, or if they're redundant, or if they eliminate each other.
+
+Before simply adding all variables into a single big regression model, let's think about possible causal relations between the variables.
+
+## Yo, DAG
+A _DAG_, short for _Directed Acyclic Graph_ is a causal graph that describes qualitative causal relationships among variables.
+
+A possible DAG for our example would be the following:
+
+```{r, echo=F, fig.height=2, fig.width=6}
+library(dagitty)
+dag5.1 <- dagitty( "dag{ A -> D; A -> M; M -> D}" )
+coordinates(dag5.1) <- list( x=c(A=0, D=1, M=2), y=c(A=0, D=1, M=0))
+drawdag( dag5.1 )
+```
+
+This means that
+
+(1) **A**ge directly influences **D**ivorce rate
+(2) **M**arriage rate directly influences **D**ivorce rate
+(3) **A**ge directly influences **M**arriage rates
+
+On top of the direct effect on the divorce rate, age of marriage also indirectly influences the divorce rate through its influence on the marriage.
+
+A DAG itself is only qualitative whereas the statistical model helps us determine the quantitative value that belongs to an arrow. However, if we take our model `m5.1` where we regressed $D$ on $A$, the model can only tell us about the _total_ influence of $A$ on $D$. Total means that it accounts for every possible path from $A$ to $D$, this includes the direct path $A \to D$ but also the indirect path $A \to M \to D$.
+
+But we could also consider other DAGs for our problems. E.g.
+
+```{r, echo=F, fig.height=2, fig.width=5}
+dag5.2 <- dagitty( "dag{ A -> D; A -> M}" )
+coordinates(dag5.2) <- list( x=c(A=0, D=1, M=2), y=c(A=0, D=1, M=0))
+drawdag( dag5.2 )
+```
+
+In this causal model, the association between marriage rate $M$ and the divorce rate $D$ arises entirely from the influence of age $A$ on the marriage rate $M$.
+
+Both DAGs are consistent with the output from our models `m5.1` and `m5.2`. To find out which DAG fits better, we need to carefully consider what each DAG implies and then check if the implications fit with the data we have.
+
+##### Plotting DAGs
+To plot DAGs, you can use the package [DAGitty](http://dagitty.net/). It is both an R package as well as browser-based tool. To plot the DAG from above, you write the following code:
+```{r, echo=T, fig.height=2, fig.width=5}
+library(dagitty)
+dag5.1 <- dagitty( "dag{ A -> D; A -> M; M -> D}" )
+coordinates(dag5.1) <- list( x=c(A=0, D=1, M=2), y=c(A=0, D=1, M=0))
+drawdag( dag5.1 )
+```
+
+It is a bit clunky to have to specify the coordinates manually for each node in the graph. There's another R package that works on top of dagitty and uses ggplot to arrange the graph: [ggdag](https://cran.r-project.org/web/packages/ggdag/vignettes/intro-to-ggdag.html). This way you don't have to specify the coordinates and can also use ggplot's functionality to further manipulate the graph:
+```{r, fig.width=3.1, fig.height=3.1}
+library(ggdag)
+dag <- dagitty( "dag{ A -> D; A -> M; M -> D}" )
+ggdag(dag, layout = "circle") +
+  theme_dag()
+```
+
+## Does this DAG fit?
+To check which causal model implied by a DAG fits better with our data, we need to consider the _testable implications_.
+
+If we look at the two DAGs we considered so far:
+
+```{r, echo=F, fig.height=2, fig.width=5}
+par(mfrow=c(1,2))
+drawdag( dag5.1 )
+drawdag( dag5.2 )
+```
+
+Both of these imply that some variables are independent of others under certain conditions. So while none of the variables here are completely independent of each other but some of them are _conditionally independent_. These conditional independencies are the model's testable implications. 
+They come in two forms:
+
+- statements about which variables should be associated with each other, 
+- statements about which variables become dis-associated when we condition on other variables.
+
+So let's consider the DAG above on the left. In this DAG, all variables are connected and so everything is associated with everything else. This is one testable implication:
+$$\begin{align*}
+D \notind A && D \notind M && A \notind M
+\end{align*}$$
+where $\notind$ means "not independent of". So we can take these and check if they conform our data. If we find that any of these pairs are not associated in the data then we know that this DAG doesn't fit our data. Let's check this in our data:
+```{r}
+cor(d[,c("A", "D", "M")])
+```
+
+Indeed, all three variables are all strongly associated with each other. 
+Or
+$D \ind M | A$.
+
+```{r, echo=T}
+
+# fit model
+m5.2 <- quap(
+  alist(
+    Divorce ~ dnorm( mu, sigma),
+    mu <- a + bR*M,
+    a ~ dnorm(10, 10),
+    bR ~ dnorm(0, 1),
+    sigma ~ dunif(0, 10)
+  ), data=d 
+)
+```
+
+
+```{r, echo=T}
+# compute shaded confidence region
+mu <- link(m5.2, data=data.frame(M=A_seq ) )
+mu.PI <- apply(mu, 2, PI)
+
+# plot it all
+plot( Divorce ~ M, data=d, col=rangi2 )
+abline( m5.2)
+shade( mu.PI, A_seq)
+```
+
+
+```{r, echo=T}
+# Fit a model with BOTH predictors
+m5.3 <- quap(
+  alist(
+    Divorce ~ dnorm( mu , sigma),
+    mu <- a + bR*M + bA*A,
+    a ~ dnorm( 10, 10) ,
+    bR ~ dnorm( 0, 1 ) ,
+    bA ~ dnorm( 0, 1 ) ,
+    sigma ~ dunif( 0, 10 )
+  ), data=d
+)
+
+precis(m5.3)
+```
+
+
+```{r, echo=T}
+plot( precis(m5.3) )
+```
+
+
+```{r, echo=T}
+# Different plots
+
+# Predictor residual plots
+# predict Marriage rate by Median Age Marriage
+m5.4 <- quap(
+  alist(
+    M ~ dnorm( mu, sigma) ,
+    mu <- a + b*A ,
+    a ~ dnorm( 0, 10),
+    b ~ dnorm(0, 1),
+    sigma ~ dunif(0, 10)
+  ), data = d
+)
+```
+
+
+```{r, echo=T}
+# compute residuals:
+# compute expected value at MAP, for each state
+mu.R <- coef(m5.4)['a'] + coef(m5.4)['b']*d$A
+# compute residuals for each state
+m.resid.R <- d$M - mu.R
+```
+
+
+```{r, echo=T}
+# plot residuals
+plot( M ~ A, d, col=rangi2 )
+abline( m5.4 )
+# loop over states
+for ( i in 1:length(m.resid.R) ){
+  x <- d$A[i]          # x location of line segment
+  y <- d$M[i]                   # observed endpoint of line segment
+  # draw the line segment
+  lines( c(x,x), c(mu.R[i], y), lwd=0.5, col=col.alpha("black", 0.7))
+}
+```
+
+
+```{r, echo=T}
+# predictor plot (Marriage rate)
+plot( d$Divorce ~ m.resid.R, col=rangi2 )
+abline( a=coef(m5.3)['a'], b=coef(m5.3)['bR'] )
+abline(v=0, lty=2)
+```
+
+
+```{r, echo=T}
+# the other way round: predict median age using marriage rate
+m5.5 <- quap(
+  alist(
+    A ~ dnorm( mu, sigma) ,
+    mu <- a + b*M ,
+    a ~ dnorm( 0, 10),
+    b ~ dnorm(0, 1),
+    sigma ~ dunif(0, 10)
+  ), data = d
+)
+```
+
+
+```{r, echo=T}
+# compute residuals:
+# compute expected value at MAP, for each state
+mu.A <- coef(m5.5)['a'] + coef(m5.4)['b']*d$M
+# compute residuals for each state
+m.resid.A <- d$A - mu.A
+```
+
+
+```{r, echo=T}
+# plot residuals
+plot( A ~ M, d, col=rangi2 )
+abline( m5.5 )
+# loop over states
+for ( i in 1:length(m.resid.A) ){
+  x <- d$M[i]          # x location of line segment
+  y <- d$A[i]                   # observed endpoint of line segment
+  # draw the line segment
+  lines( c(x,x), c(mu.A[i], y), lwd=0.5, col=col.alpha("black", 0.7))
+}
+```
+
+
+```{r, echo=T}
+# predictor plot (Median Age)
+plot( d$Divorce ~ m.resid.A, col=rangi2)
+abline(a=coef(m5.3)['a'], b=coef(m5.3)['bA'])
+abline(v=0, lty=2)
+```
+
+
+```{r, echo=T}
+# counterfactual plots
+# prepare new counterfactual data, holding Median Age fixed, vary Marriage rate
+A.avg <- mean( d$A )
+R.seq <- seq( from=-3, to=3, length.out = 30)
+pred.data <- data.frame(M = R.seq, 
+                        A=A.avg)
+```
+
+
+```{r, echo=T}
+# compute counterfactual mean divorce (mu)
+mu <- link( m5.3, data=pred.data )
+mu.mean <- apply(mu, 2, mean )
+mu.PI <- apply(mu, 2, PI)
+
+# simulate counterfactual divorce outcomes
+R.sim <- sim( m5.3, data=pred.data, n=1e4 )
+R.PI <- apply( R.sim, 2, PI)
+
+# display predictions, hiding raw data wit type="n"
+plot(Divorce ~ M, data=d, type="n")
+mtext("A = 0")
+lines( R.seq, mu.mean )
+shade( mu.PI, R.seq )
+shade( R.PI, R.seq )
+```
+
+
+```{r, echo=T}
+# same the other way, holding Rate fixed, vary Median Age
+R.avg <- mean( d$M )
+A.seq <- seq( from=-3, to=3, length.out = 30)
+pred.data <- data.frame(M = R.avg, 
+                        A=A.seq)
+
+# compute counterfactual mean divorce (mu)
+mu <- link( m5.3, data=pred.data )
+mu.mean <- apply(mu, 2, mean )
+mu.PI <- apply(mu, 2, PI)
+
+# simulate counterfactual divorce outcomes
+A.sim <- sim( m5.3, data=pred.data, n=1e4 )
+A.PI <- apply( A.sim, 2, PI)
+
+# display predictions, hiding raw data wit type="n"
+plot(Divorce ~ A, data=d, type="n")
+mtext("M = 0")
+lines( A.seq, mu.mean )
+shade( mu.PI, A.seq )
+shade( A.PI, A.seq )
+```
+
+
+```{r, echo=T}
+# Posterior prediction plots
+# call link without specifying new data
+# so it uses original data
+mu <- link( m5.3 )
+
+# summarize samples accross cases
+mu.mean <- apply(mu, 2, mean)
+mu.PI <- apply( mu, 2, PI )
+
+# simulate observations
+# again, no new data, so uses original data
+divorce.sim <- sim( m5.3, n=1e4 )
+divorce.PI <- apply(divorce.sim, 2, PI)
+
+# plot observed vs predicted (mean) divrorce rate
+plot( mu.mean ~ d$Divorce, col=rangi2, ylim=range(mu.PI),
+      xlab="Observed divorce", ylab="Predicted divroce")
+abline(a=0, b=1, lty=2 )
+for ( i in 1:nrow(d) ) 
+  lines( rep(d$Divorce[i], 2), c(mu.PI[1, i], mu.PI[2, i]), col=rangi2)
+identify( x=d$Divorce, y=mu.mean, labels=d$Loc, cex=0.8 )
+```
+
+
+```{r, echo=T}
+# residual plot showing the mean prediction error
+# compute residuals
+divorce.resid <- d$Divorce - mu.mean
+# get ordering by divorce rate
+o <- order(divorce.resid)
+# make the plot
+dotchart( divorce.resid[o], labels=d$Loc[o], xlim=c(-6,5), cex=0.6 )
+abline(v=0, col=col.alpha("black", 0.2))
+for (i in 1:nrow(d) ) {
+  j <- o[i]    # which State in order
+  lines( d$Divorce[j] - c(mu.PI[1, j], mu.PI[2, j]), rep(i,2) )
+  points( d$Divorce[j] - c(divorce.PI[1,j], divorce.PI[2, j]), rep(i,2) ,
+          pch=3, cex=0.6, col="gray")
+}
+```
+
+
+```{r, echo=T}
+# novel predictor residual plot
+d$d.resid <- divorce.resid
+d$WaffleHouses.d <- d$WaffleHouses / d$Population
+
+m5.6 <- quap(
+  alist(
+    d.resid ~ dnorm( mu, sigma) ,
+    mu <- a + b*WaffleHouses.d ,
+    a ~ dnorm( 0, 10),
+    b ~ dnorm(0, 1),
+    sigma ~ dunif(0, 10)
+  ), data = d
+)
+
+waffle.seq <- seq(from=-1, to=42, length.out = 30)
+mu <- link(m5.6, data.frame(WaffleHouses.d=waffle.seq) )
+mu.mean <- apply(mu, 2, mean)
+mu.PI <- apply(mu, 2, PI)
+
+
+plot(divorce.resid ~ d$WaffleHouses.d, col=rangi2,
+     xlab="Waffles per capita", ylab="Divorce error")
+lines(waffle.seq, mu.mean)
+shade(mu.PI, waffle.seq )
+```
+
+
+```{r, echo=T}
+# simulate spurious associations
+N <- 100
+x_real <- rnorm( N)
+x_spur <- rnorm( N, x_real )
+y <- rnorm( N, x_real )
+d <- data.frame(y, x_real, x_spur)
+
+pairs(d)
+```
+
+
+```{r, echo=T}
+m5.7 <- quap(
+  alist(
+    y ~ dnorm( mu, sigma) ,
+    mu <- a + bR*x_real + bS*x_spur,
+    a ~ dnorm( 0, 10 ),
+    bR ~ dnorm(0, 1),
+    bS ~ dnorm(0, 1),
+    sigma ~ dunif(0,10)
+  ), data = d
+)
+
+plot( precis(m5.7))
+```
+
+

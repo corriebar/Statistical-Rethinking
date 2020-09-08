@@ -31,7 +31,7 @@ pretty_precis <- function(object) {
 
 }
 ```
-These are code snippets and notes for the fourth chapter, _Geocentric Models_, , sections 1 to 3, of the book "Statistical Rethinking" (version 2) by Richard McElreath.
+These are code snippets and notes for the fourth chapter, _Geocentric Models_,  sections 1 to 3, of the book "Statistical Rethinking" (version 2) by Richard McElreath.
 
 ### Why normal distributions are normal
 
