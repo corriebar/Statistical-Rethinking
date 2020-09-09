@@ -16,7 +16,7 @@ I am currently updating code snippets and exercise solution to follow the second
 - [Exercises](Chapter_4/chapter4_Ex.Rmd)
 
 ## Chapter 5
-- [Spurious Associations](Chapter_5/chapter5a.R)
+- [Spurious Associations](Chapter_5/chapter5a.Rmd)
 - [Masked Relationships](Chapter_5/chapter5b.R)
 - [When adding variables hurt](Chapter_5/chapter5c.R)
 - [Categorical Variables](Chapter_5/chapter5d.R)
