@@ -13,6 +13,9 @@ tags:
 comments: yes
 image: 'images/tea_with_books.jpg'
 share: yes
+output:
+  blogdown::html_page:
+    toc: true
 ---
 \newcommand{\ind}{{\perp\!\!\!\perp}}
 \newcommand{\notind}{{\;\not\!\perp\!\!\!\perp\;}}
@@ -26,17 +29,6 @@ library(printr)
 library(rethinking)
 library(tidyverse)
 library(knitr)
-
-pretty_precis <- function(object) {
-  precis(object, digits=2) %>% 
-  as_tibble(rownames = "rowname") %>%
-  column_to_rownames() %>%
-  knitr::kable("html", digits = 2) %>% kableExtra::kable_styling(full_width = F, position = "center")
-
-}
-prettify <- function(object, digits = 2) {knitr::kable(object, "html", 
-                                                          digits = digits) %>% 
-    kableExtra::kable_styling(full_width = F, position = "center")}
 
 kable <- function(data, ...) {
    knitr::kable(data, format = "html", digits=3, ...) %>% 
@@ -66,9 +58,10 @@ registerS3method("knit_print", "matrix", knit_print.matrix)
 ```{r echo=F}
 par(bty="l")
 ```
+
 These are code snippets and notes for the fifth chapter, _The Many Variables & The Spurious Waffles_, section 1, of the book "Statistical Rethinking" (version 2) by Richard McElreath.
 
-I found the fifth chapter quite dense, so these notes are a bit more detailled.
+I found the fifth chapter quite dense, so these notes are a bit more detailed.
 
 ## Spurious Waffles (and Marriages)
 In this chapter, we're looking at spurious correlations and how to think formally about causal inference. For this section, we'll work with the waffle-divorce data. The data contains the divorce rates of the 50 states of the US and various variables that could be used to explain their divorce rates. We'll  focus on the two variables median age at marriage and the marriage rates:

@@ -13,12 +13,23 @@ tags:
 comments: yes
 image: 'images/tea_with_books.jpg'
 share: yes
+output:
+  blogdown::html_page:
+    toc: true
 ---
 
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 <script src="/rmarkdown-libs/kePrint/kePrint.js"></script>
 
+<div id="TOC">
+<ul>
+<li><a href="#why-normal-distributions-are-normal">Why normal distributions are normal</a></li>
+<li><a href="#a-gaussian-model-of-height">A Gaussian Model of Height</a></li>
+<li><a href="#quadratic-approximation-and-prior-predictive-checks">Quadratic Approximation and Prior Predictive Checks</a></li>
+</ul>
+</div>
 
-<p>These are code snippets and notes for the fourth chapter, <em>Geocentric Models</em>, , sections 1 to 3, of the book “Statistical Rethinking” (version 2) by Richard McElreath.</p>
+<p>These are code snippets and notes for the fourth chapter, <em>Geocentric Models</em>, sections 1 to 3, of the book “Statistical Rethinking” (version 2) by Richard McElreath.</p>
 <div id="why-normal-distributions-are-normal" class="section level3">
 <h3>Why normal distributions are normal</h3>
 <p>The chapter discusses linear models and starts with a recap on the normal distributions. Why is it such a commonly used distribution and how does it arise?</p>
@@ -249,7 +260,7 @@ sample.sigma &lt;- post$sigma[ sample.rows]</code></pre>
 154 155 </code></pre>
 <pre class="r"><code>PI( sample.sigma)</code></pre>
 <pre><code>  5%  94% 
-7.31 8.25 </code></pre>
+7.31 8.27 </code></pre>
 <div id="short-note-on-why-the-standard-deviation-is-less-normal" class="section level5">
 <h5>Short note on why the standard deviation is less normal:</h5>
 <p>Posterior of <span class="math inline">\(\sigma\)</span> tend to have a long-right hand tail. The reasons? Complex! But an intuition is that, because the standard deviation has to be positive, there is less uncertainty how small it is (it is bounded by 0 after all) and more uncertainty about how big it is.
@@ -333,7 +344,7 @@ sigma
 154 155 </code></pre>
 <pre class="r"><code>PI( sample.sigma )</code></pre>
 <pre><code>  5%  94% 
-7.31 8.25 </code></pre>
+7.31 8.27 </code></pre>
 <p>Let’s see what happens if we use a very narrow prior on <span class="math inline">\(\mu\)</span> instead:</p>
 <pre class="r"><code>m4.2 &lt;- quap( 
           alist(
@@ -503,15 +514,7 @@ sigma
 154
 </td>
 <td style="text-align:right;">
-8.02
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-155
-</td>
-<td style="text-align:right;">
-7.49
+7.61
 </td>
 </tr>
 <tr>
@@ -519,7 +522,31 @@ sigma
 154
 </td>
 <td style="text-align:right;">
-7.27
+7.59
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+155
+</td>
+<td style="text-align:right;">
+7.60
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+154
+</td>
+<td style="text-align:right;">
+7.92
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+154
+</td>
+<td style="text-align:right;">
+7.58
 </td>
 </tr>
 <tr>
@@ -528,22 +555,6 @@ sigma
 </td>
 <td style="text-align:right;">
 7.96
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-154
-</td>
-<td style="text-align:right;">
-7.90
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-155
-</td>
-<td style="text-align:right;">
-7.40
 </td>
 </tr>
 </tbody>
@@ -583,13 +594,13 @@ mu
 0.41
 </td>
 <td style="text-align:right;">
-153.96
+153.95
 </td>
 <td style="text-align:right;">
 155.27
 </td>
 <td style="text-align:left;">
-▁▁▁▅▇▂▁▁
+▁▁▅▇▂▁▁
 </td>
 </tr>
 <tr>
@@ -603,13 +614,13 @@ sigma
 0.29
 </td>
 <td style="text-align:right;">
-7.27
+7.26
 </td>
 <td style="text-align:right;">
-8.19
+8.21
 </td>
 <td style="text-align:left;">
-▁▁▁▂▅▇▇▃▁▁▁▁
+▁▁▁▁▂▅▇▇▃▁▁▁
 </td>
 </tr>
 </tbody>

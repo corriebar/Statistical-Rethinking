@@ -13,6 +13,9 @@ tags:
 comments: yes
 image: 'images/tea_with_books.jpg'
 share: yes
+output:
+  blogdown::html_page:
+    toc: true
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, dev="svglite", 

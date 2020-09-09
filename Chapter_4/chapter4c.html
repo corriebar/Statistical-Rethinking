@@ -13,9 +13,19 @@ tags:
 comments: yes
 image: 'images/tea_with_books.jpg'
 share: yes
+output:
+  blogdown::html_page:
+    toc: true
 ---
 
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 
+<div id="TOC">
+<ul>
+<li><a href="#polynomial-regression">Polynomial Regression</a></li>
+<li><a href="#splines">Splines</a></li>
+</ul>
+</div>
 
 <p>These are code snippets and notes for the fourth chapter, <em>Geocentric Models</em>, , sections 5, of the book “Statistical Rethinking” (version 2) by Richard McElreath.</p>
 <div id="polynomial-regression" class="section level3">
@@ -473,7 +483,7 @@ D_i &amp;\sim \text{Normal}(\mu_i, \sigma) \\
 w_j &amp;\sim \text{Normal}(0, 10) \\
 \sigma &amp;\sim \text{Exponential}(1)
 \end{align*}\]</span>
-where <span class="math inline">\(B_j\)</span> are our basis functions. But what values do we use for e.g. <span class="math inline">\(B_{1,i}\)</span> for one observation?
+where <span class="math inline">\(B_j\)</span> are our basis functions. But what values do we use for e.g. <span class="math inline">\(B_{1,i}\)</span> for one observation?
 Let’s have a look at how the basis functions look like. For this example, we use basis functions of degree 1, that is the basis functions are straight lines.
 In the book, Richard uses <code>lines()</code>and a matrix computed using the <code>{splines}</code> package but we can also hand code the splines:</p>
 <pre class="r"><code>spl1 &lt;- c(0,1,0,1,0)
@@ -664,16 +674,16 @@ sd
 w[1]
 </td>
 <td style="text-align:right;">
-0.03
+0.058
 </td>
 <td style="text-align:right;">
 4.177
 </td>
 <td style="text-align:right;">
--6.64
+-6.62
 </td>
 <td style="text-align:right;">
-6.71
+6.73
 </td>
 </tr>
 <tr>
@@ -681,16 +691,16 @@ w[1]
 w[2]
 </td>
 <td style="text-align:right;">
-1.86
+1.885
 </td>
 <td style="text-align:right;">
 4.128
 </td>
 <td style="text-align:right;">
--4.74
+-4.71
 </td>
 <td style="text-align:right;">
-8.46
+8.48
 </td>
 </tr>
 <tr>
@@ -698,16 +708,16 @@ w[2]
 w[3]
 </td>
 <td style="text-align:right;">
-1.93
+1.955
 </td>
 <td style="text-align:right;">
 4.115
 </td>
 <td style="text-align:right;">
--4.65
+-4.62
 </td>
 <td style="text-align:right;">
-8.50
+8.53
 </td>
 </tr>
 <tr>
@@ -715,16 +725,16 @@ w[3]
 w[4]
 </td>
 <td style="text-align:right;">
-4.35
+4.379
 </td>
 <td style="text-align:right;">
 4.123
 </td>
 <td style="text-align:right;">
--2.24
+-2.21
 </td>
 <td style="text-align:right;">
-10.94
+10.97
 </td>
 </tr>
 <tr>
@@ -732,16 +742,16 @@ w[4]
 w[5]
 </td>
 <td style="text-align:right;">
--5.22
+-5.197
 </td>
 <td style="text-align:right;">
 4.141
 </td>
 <td style="text-align:right;">
--11.84
+-11.82
 </td>
 <td style="text-align:right;">
-1.40
+1.42
 </td>
 </tr>
 <tr>
@@ -749,16 +759,16 @@ w[5]
 a
 </td>
 <td style="text-align:right;">
-103.10
+103.073
 </td>
 <td style="text-align:right;">
 4.088
 </td>
 <td style="text-align:right;">
-96.57
+96.54
 </td>
 <td style="text-align:right;">
-109.64
+109.61
 </td>
 </tr>
 <tr>
@@ -766,7 +776,7 @@ a
 sigma
 </td>
 <td style="text-align:right;">
-6.07
+6.069
 </td>
 <td style="text-align:right;">
 0.148

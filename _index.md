@@ -25,7 +25,7 @@ I started going through the book in spring 2018. As part of the [Berlin Bayesian
 - [Exercises]( {{< relref "Chapter_4/chapter4_Ex.html" >}})
 
 #### Chapter 5
-- [Spurious Associations](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_5/chapter5a.R)
+- [Spurious Association]( {{< relref "Chapter_5/chapter5a.html" >}} )
 - [Masked Relationships](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_5/chapter5b.R)
 - [When adding variables hurt](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_5/chapter5c.R)
 - [Categorical Variables](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_5/chapter5d.R)
