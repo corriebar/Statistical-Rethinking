@@ -25,13 +25,6 @@ library(rethinking)
 library(tidyverse)
 library(knitr)
 
-pretty_precis <- function(object) {
-  precis(object, digits=2) %>% 
-  as_tibble(rownames = "rowname") %>%
-  column_to_rownames() %>%
-  knitr::kable("html", digits = 2) %>% kableExtra::kable_styling(full_width = F, position = "center")
-
-}
 prettify <- function(object, digits = 2) {knitr::kable(object, "html", 
                                                           digits = digits) %>% 
     kableExtra::kable_styling(full_width = F, position = "center")}
@@ -292,7 +285,7 @@ Now, there's a quite strong negative correlation between the two parameters.
 
 The same in visual:
 
-```{r, fig.height=6, fig.width=6, echo=F}
+```{r, fig.height=7, fig.width=7, echo=F}
 pairs( m4.3_u )
 ```
 
@@ -366,7 +359,7 @@ post <- extract.samples( ms )
 mu <- link( ms )
 mu_PI <- apply( mu, 2, PI, 0.97 )
 mu_mean <- apply(mu, 2, mean )
-plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.5), pch=20, cex=1.4,
      ylab  = "Day in Year", xlab = "Year")
 shade( mu_PI, d2$year, col=col.alpha("black", 0.3))
 lines(mu_mean ~ d2$year)
@@ -399,7 +392,7 @@ post <- extract.samples( ms15 )
 mu <- link( ms15 )
 mu_PI <- apply( mu, 2, PI, 0.97 )
 mu_mean <- apply(mu, 2, mean )
-plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.5), pch=20, cex=1.4,
      ylab  = "Day in Year", xlab = "Year")
 shade( mu_PI, d2$year, col=col.alpha("black", 0.3))
 lines(mu_mean ~ d2$year)
@@ -430,7 +423,7 @@ post <- extract.samples( ms )
 mu <- link( ms )
 mu_PI <- apply( mu, 2, PI, 0.97 )
 mu_mean <- apply(mu, 2, mean)
-plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.5), pch=20, cex=1.4,
      ylab  = "Day in Year", xlab = "Year")
 shade( mu_PI, d2$year, col=col.alpha("black", 0.3))
 lines(mu_mean ~ d2$year)
@@ -466,7 +459,7 @@ post <- extract.samples( ms5 )
 mu <- link( ms5 )
 mu_PI <- apply( mu, 2, PI, 0.97 )
 mu_mean <- apply(mu, 2, mean )
-plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.5), pch=20, cex=1.4,
      ylab  = "Day in Year", xlab = "Year")
 shade( mu_PI, d2$year, col=col.alpha("black", 0.3))
 lines(mu_mean ~ d2$year)
@@ -500,7 +493,7 @@ post <- extract.samples( ms30 )
 mu <- link( ms30 )
 mu_PI <- apply( mu, 2, PI, 0.97 )
 mu_mean <- apply(mu, 2, mean )
-plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.5), pch=20, cex=1.4,
      ylab  = "Day in Year", xlab = "Year")
 shade( mu_PI, d2$year, col=col.alpha("black", 0.3))
 lines(mu_mean ~ d2$year)
@@ -536,7 +529,7 @@ Computing the mean and 89% compatibility interval using `PI()` gives us:
 height.PI <- apply(sim.height, 2, PI, prob=0.89)
 height.mean <- apply(sim.height, 2, mean)
 
-pred_df <- data.frame("individual"=1:5, "weight"=weights, "exptected_height"=height.mean, 
+pred_df <- data.frame("individual"=1:5, "weight"=weights, "expected_height"=height.mean, 
                       "PI_89_lower"=height.PI[1,], "PI_89_upper"=height.PI[2,])
 pred_df %>% prettify(digits = 3)
 ```
@@ -737,7 +730,7 @@ mtext("Prior Predictive Check for the Parabolic Model")
 ```
 
 The new priors look more reasonable based on these curves. However, they are much more restrictive and it is hard to argue if the line should curve upwards or downwards. In the model fit in the chapter, the estimated parameter for $b_2$ is actually negative and curves downwards for high values of weight.
-To summarize, getting the priors right and interpretating the parameters for a polynomial regression is really difficult.
+To summarize, getting the priors right and interpreting the parameters for a polynomial regression is really difficult.
 
 
 __4H5.__ Return to `data(cherry_blossoms)` and model the association between blossom date (`doy`) and March temperature.
@@ -747,7 +740,7 @@ How well does temperature trend predict the blossom trend?
 First, let's plot the two variables.
 ```{r, fig.height=5, fig.width=5}
 d <- cherry_blossoms
-plot( doy ~ temp, d, col=col.alpha(rangi2, 0.8), pch=20,
+plot( doy ~ temp, d, col=col.alpha(rangi2, 0.5), pch=20, cex=1.4,
       ylab = "Day of Year", xlab="Temperature [°C]")
 mtext("Temperature vs Day of Blossom")
 ```
@@ -788,7 +781,7 @@ mu_PI <- apply( mu, 2, PI, 0.89 )
 mu_mean <- apply(mu, 2, mean )
 doy_sim <- sim(ml)
 doy_PI <- apply( doy_sim, 2, PI, 0.89)
-plot(d2$temp, d2$doy, col=col.alpha(rangi2, 0.6), pch=20, 
+plot(d2$temp, d2$doy, col=col.alpha(rangi2, 0.5), pch=20, cex=1.4,
      ylab  = "Day in Year", xlab = "Temperature [°C]")
 lines(mu_mean ~ d2$temp)
 shade( mu_PI, d2$temp)
@@ -849,7 +842,7 @@ sim_doy <- sim( mquadratic, data = list(temp_s = temp_seq,
                                     temp_s2 = temp_seq^2))
 doy_PI <- apply(sim_doy, 2, PI, prob=0.89)
 
-plot(doy ~ temp_s, data=d2, col=col.alpha(rangi2, 0.6),
+plot(doy ~ temp_s, data=d2, col=col.alpha(rangi2, 0.5), pch=20, cex=1.4, 
      ylab="Day of Year", xlab="Standardized Temperature")
 lines(temp_seq, mu_mean)                                      # the MAP regression line
 shade( mu_PI, temp_seq)                                     # draw PI region around the regression line
@@ -870,7 +863,7 @@ sim_doy <- sim( mcubic, data = list(temp_s = temp_seq,
                                     temp_s3 = temp_seq^3))
 doy_PI <- apply(sim_doy, 2, PI, prob=0.89)
 
-plot(doy ~ temp_s, data=d2, col=col.alpha(rangi2, 0.6),
+plot(doy ~ temp_s, data=d2, col=col.alpha(rangi2, 0.5), pch=20, cex=1.4,
      ylab="Day of Year", xlab="Standardized Temperature")
 lines(temp_seq, mu_mean)                                      # the MAP regression line
 shade( mu_PI, temp_seq)                                     # draw PI region around the regression line
@@ -919,7 +912,7 @@ mu_mean <- apply(mu, 2, mean )
 sim_doy <- sim( ms )
 doy_PI <- apply(sim_doy, 2, PI, prob=0.89)
 
-plot(d2$temp, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+plot(d2$temp, d2$doy, col=col.alpha(rangi2, 0.5), pch=20, cex=1.4,
      ylab  = "Day in Year", xlab = "Temperature [°C]")
 shade( mu_PI, d2$temp)
 shade( doy_PI, d2$temp)
@@ -927,7 +920,7 @@ lines(mu_mean ~ d2$temp)
 mtext("Splines with 15 knots")
 ```
 
-The splines are wigglier and have one especially weird dip just for temperatures below 6°C. Personally, I am sceptical this dip makes physically sense and it isn't just an artifact of the splines being too wiggly. Comparing the three models, in this case, I'd go with the simple linear model.
+The splines are wigglier and have one especially weird dip just for temperatures below 6°C. Personally, I am skeptical this dip makes physically sense and it isn't just an artifact of the splines being too wiggly. Comparing the three models, in this case, I'd go with the simple linear model.
 
 __4H6.__ Simulate the prior predictive distribution for the cherry blossom spline in the chapter.
 Adjust the prior on the weights and observe what happens. What do you think the prior on the weight is doing?
@@ -1018,7 +1011,7 @@ Let's see the result:
 mu <- link( m )
 mu_mean <- apply(mu, 2, mean)
 mu_PI <- apply( mu, 2, PI, 0.97 )
-plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.5), pch=20, cex=1.4,
      ylab  = "Day in Year", xlab = "Year")
 shade( mu_PI, d2$year, col=col.alpha("black", 0.3))
 abline(h=mean(post$a), lty=2, col=grau(0.5))
@@ -1026,7 +1019,7 @@ lines(mu_mean ~ d2$year)
 mtext("No Intercept")
 ```
 
-This alsmost worked, except that we now have that the splines seem to come from far down to the left. This is probably since we specified that the weights are distributed around 0: $w \sim \text{Normal}(0, 10)$.
+This almost worked, except that we now have that the splines seem to come from far down to the left. This is probably since we specified that the weights are distributed around 0: $w \sim \text{Normal}(0, 10)$.
 Let's fix this by changing the prior on $w$ to this:
 $ w \sim \text{Normal}(100, 10)$. This is basically the prior we before had on the intercept.
 
@@ -1046,7 +1039,7 @@ And the result:
 mu <- link( m )
 mu_mean <- apply(mu, 2, mean)
 mu_PI <- apply( mu, 2, PI, 0.97 )
-plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.5), pch=20, cex=1.4,
      ylab  = "Day in Year", xlab = "Year")
 shade( mu_PI, d2$year, col=col.alpha("black", 0.3))
 abline(h=mean(post$a), lty=2, col=grau(0.5))

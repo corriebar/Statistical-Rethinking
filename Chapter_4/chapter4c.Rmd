@@ -351,7 +351,7 @@ But of course, it is better to get $\mu$ from our posterior because we can then 
 ```{r, fig.width=10, fig.height=4, echo=1:4}
 mu <- link( m4.7a )
 mu_PI <- apply( mu, 2, PI, 0.97 )
-plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.5), pch=20, cex=1.4,
      ylab  = "Day in Year", xlab = "Year")
 shade( mu_PI, d2$year, col=col.alpha("black", 0.3))
 abline(h=mean(post$a), lty=2, col=grau(0.5))
@@ -415,7 +415,7 @@ axis(side = 2, at=0)
 
 mu <- link( m4.7 )
 mu_PI <- apply( mu, 2, PI, 0.97 )
-plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.3), pch=20, 
+plot(d2$year, d2$doy, col=col.alpha(rangi2, 0.5), pch=20, cex=1.4,
      ylab  = "Day in Year", xlab = "Year")
 shade( mu_PI, d2$year, col=col.alpha("black", 0.3))
 abline(h=mean(post$a), lty=2, col=grau(0.5))
