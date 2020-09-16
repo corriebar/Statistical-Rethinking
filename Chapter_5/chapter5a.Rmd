@@ -10,6 +10,7 @@ categories:
 tags: 
   - Statistical Rethinking
   - Bayesian 
+  - Causal Inference
 comments: yes
 image: 'images/tea_with_books.jpg'
 share: yes
@@ -209,7 +210,7 @@ A _DAG_, short for _Directed Acyclic Graph_ is a causal graph that describes qua
 
 A possible DAG for our example would be the following:
 
-```{r, echo=F, fig.height=2, fig.width=6}
+```{r, echo=F, fig.height=2, fig.width=5}
 library(dagitty)
 dag5.1 <- dagitty( "dag{ A -> D; A -> M; M -> D}" )
 coordinates(dag5.1) <- list( x=c(A=0, D=1, M=2), y=c(A=0, D=1, M=0))

@@ -1,0 +1,500 @@
+---
+title: "Masked Relationship"
+author: Corrie
+date: "2020-09-09"
+slug: chp5-part-two
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+  - Causal Inference
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
+output:
+  blogdown::html_page:
+    toc: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      eval=F,
+                      warning = F, message = F, 
+                      comment=NA)
+knitr::opts_knit$set(global.par = T)
+options( digits = 3)
+library(printr)   # print r objects in knitr nicely
+library(rethinking)
+library(knitr)
+
+kable <- function(data, ...) {
+   knitr::kable(data, format = "html", digits=3, ...) %>% 
+    kableExtra::kable_styling(bootstrap_options = "striped", full_width = F, position = "center")
+}
+knit_print.data.frame <- function(x, ...) {
+  res <- paste(c("", "", kable(x)), collapse = "\n")
+  asis_output(res)
+}
+knit_print.precis <- function(x, ...) {
+  res <- paste(c("", "", x %>%
+                   as_tibble(rownames = "rowname") %>%
+                   column_to_rownames() %>%
+                   kable() ), collapse = "\n")
+  asis_output(res)
+}
+knit_print.matrix <- function(x, ...) {
+  res <- paste(c("", "", kable(x)), collapse="\n")
+  asis_output(res)
+}
+registerS3method("knit_print", "data.frame", knit_print.data.frame)
+registerS3method("knit_print", "tibble", knit_print.data.frame)
+registerS3method("knit_print", "precis", knit_print.precis)
+registerS3method("knit_print", "matrix", knit_print.matrix)
+
+```
+```{r echo=F}
+par(bty="l")
+```
+These are code snippets and notes for the fifth chapter, _The Many Variables & The Spurious Waffles_, section 2, of the book "Statistical Rethinking" (version 2) by Richard McElreath.
+
+I found the fifth chapter quite dense, so these notes are a bit more detailed.
+
+## Hidden Influence in Milk
+In the section about [spurious associations]({{< relref "../Chapter_5/chapter5a.html" >}}) we used multiple regression to eliminate variables that seemed to have an influence when comparing bivariate relationships but whose association vanishes when introducing more variables to the regression. Now the opposite can also happen: there might be no bivariate association between variables because two variables mask each other. We will explore this using the `milk` data set to compare the caloric content of milk in primates with their brain size. We will see later that the variable of the body mass also plays a role.
+```{r}
+library(rethinking)
+data(milk)
+d <- milk
+str(d)
+```
+
+Let's first standardize the necessary variables:
+```{r, fig.height=5.5, fig.width=5.5}
+d$K <- standardize( d$kcal.per.g )
+d$N <- standardize( d$neocortex.perc )
+d$M <- standardize( log(d$mass ) )
+```
+
+We first try a bivariate regression:
+$$\begin{align*} 
+K_i &\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &= \alpha + \beta_N N_i
+\end{align*}$$
+
+We first run this as a `quap()` model with vague priors. However, there are some missing values in the data and we need to take care of them first (otherwise the model will throw an error)
+```{r}
+dcc <- d[ complete.cases(d$K, d$N, d$M), ]
+```
+So now the model with the new data frame without the missing values:
+```{r}
+m5.5_draft <- quap(
+  alist(
+    K ~ dnorm( mu, sigma ),
+    mu <- a + bN*N,
+    a ~ dnorm(0, 1),
+    bN ~ dnorm(0, 1),
+    sigma ~ dexp( 1 )
+  ), data=dcc
+)
+```
+
+Let's do a quick check first how reasonable these priors are. While these models are still quite simple so these probably won't hurt but once we do more complex models, good priors become more important.
+
+```{r, eval=F}
+prior <- extract.prior( m5.5_draft )
+xseq <- c(-2, 2)
+mu <- link( m5.5_draft, post=prior, data=list(N=xseq))
+plot(NULL, xlim=xseq, ylim=xseq)
+for (i in 1:50) lines( xseq, mu[i,], col=col.alpha("black", 0.3))
+```
+```{r, echo=F, fig.height=4.5, fig.width=9}
+par(mfrow=c(1,2))
+prior <- extract.prior( m5.5_draft )
+xseq <- c(-2, 2)
+mu <- link( m5.5_draft, post=prior, data=list(N=xseq))
+plot(NULL, xlim=xseq, ylim=xseq, xlab="kilocal per g (std)", ylab="neocortex percent (std)")
+for (i in 1:50) lines( xseq, mu[i,], col=col.alpha("black", 0.3))
+mtext("a ~ dnorm(0, 1)\nbN ~ dnorm(0, 1)")
+
+m5.5 <- quap(
+  alist(
+    K ~ dnorm( mu, sigma),
+    mu <- a + bN*N,
+    a ~ dnorm(0, 0.2),
+    bN ~ dnorm(0, 0.5),
+    sigma ~ dexp( 1 )
+  ), data=dcc
+)
+
+prior <- extract.prior( m5.5 )
+xseq <- c(-2, 2)
+mu <- link( m5.5, post=prior, data=list(N=xseq))
+plot(NULL, xlim=xseq, ylim=xseq, xlab="kilocal per g (std)", ylab="neocortex percent (std)")
+for (i in 1:50) lines( xseq, mu[i,], col=col.alpha("black", 0.3))
+mtext("a ~ dnorm(0, 0.2)\nbN ~ dnorm(0, 0.5)")
+```
+
+The prior on the left is rather crazy: for the average value of $K$, we can end up with very extreme values of $N$. It would be better to tighten $\alpha$ so that it's closer to the average value of the outcome variable (i.e. 0). Also, the slope can be extremely steep suggesting very unrealistic associations between the two variables, better to tigthen $\beta$ as well. Better priors (more realistic priors) would be the one in the right plot, coming from this model:
+```{r}
+m5.5 <- quap(
+  alist(
+    K ~ dnorm( mu, sigma),
+    mu <- a + bN*N,
+    a ~ dnorm(0, 0.2),
+    bN ~ dnorm(0, 0.5),
+    sigma ~ dexp( 1 )
+  ), data=dcc
+)
+precis(m5.5)
+```
+
+The estimate for $\beta$ is not very strong and its uncertainty interval includes 0. The same thing in visual:
+
+
+The parameter coefficient estaimtes:
+```{r}
+plot( precis( m5.5))
+```
+And the model together with the posterior mean line and interval:
+```{r, fig.height=4.5, fig.width=4.5}
+xseq <- seq( from=min(dcc$N) - 0.15, to=max(dcc$N) + 0.15, length.out = 30)
+mu <- link( m5.5, data=list(N=xseq))
+mu_mean <- apply(mu, 2, mean)
+mu_PI <- apply(mu, 2, PI)
+plot( K ~ N, data=dcc,
+      xlab="neocortex percent (std)", ylab="kilocal per g (std)")
+lines( xseq, mu_mean, lwd=2 )
+shade( mu_PI, xseq)
+```
+
+The relationship is very weak and the uncertainty interval also includes lines with no slope or even slight negative slope.
+
+Let's consider a model with the (log) body mass instead:
+
+```{r}
+m5.6 <- quap(
+  alist(
+    K ~ dnorm( mu, sigma) ,
+    mu <- a + bM*M,
+    a ~ dnorm(0, 0.2),
+    bM ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data=dcc
+)
+precis(m5.6)
+```
+
+And the model together with the posterior mean line and interval:
+```{r, fig.height=4.5, fig.width=4.5, echo=F}
+xseq <- seq( from=min(dcc$M) - 0.15, to=max(dcc$M) + 0.15, length.out = 30)
+mu <- link( m5.6, data=list(M=xseq))
+mu_mean <- apply(mu, 2, mean)
+mu_PI <- apply(mu, 2, PI)
+plot( K ~ M, data=dcc,
+      xlab="log body mass (std)", ylab="kilocal per g (std)")
+lines( xseq, mu_mean, lwd=2 )
+shade( mu_PI, xseq)
+```
+
+The association seems stronger than for the neocortex percent but it is still highly uncertain and includes many possible weaker (as well as stronger) relationships.
+
+Now let's see what happens when we use both variables in a regression:
+
+$$\begin{align*} 
+K_i &\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &= \alpha + \beta_N N_i + \beta_K K_i \\
+\alpha &\sim \text{Normal}(0, 0.2) \\
+\beta_N &\sim \text{Normal}(0, 0.5) \\
+\beta_M &\sim \text{Normal}(0, 0.5) \\
+\sigma &\sim \text{Exponential}(1)
+\end{align*}$$
+And the code for the model:
+```{r}
+m5.7 <- quap(
+  alist(
+    K ~ dnorm( mu, sigma),
+    mu <- a + bN*N + bM*M,
+    a ~ dnorm(0, 0.2),
+    bN ~ dnorm(0, 0.5),
+    bM ~ dnorm(0, 0.5),
+    sigma ~ dexp( 1 )
+  ), data=dcc
+)
+precis(m5.7)
+```
+
+For both variables, the observed effect increased:
+
+```{r}
+plot( coeftab( m5.5, m5.6, m5.7 ), pars=c("bM", "bN") )
+```
+
+## The Causal Reasoning behind it
+So what does this mean?
+What happened is that both variables are correlated with the outcome but one is positively correlated (neocortex percent) and one is negatively correlated (body mass). On top of that, they're both positively correlated with each other. In this specific situation, bigger species such as apes (high body mass) have milks will less energy. But species with more neocortex ("smarter ones") tend to have richer milk. These correlations make it hard to see what's really happening. 
+
+```{r, fig.height=5.5, fig.width=5.5}
+pairs( ~ K + M + N, dcc)
+```
+
+While the association between $K$ and $M$ and $K$ and $N$ are not as clear in the plot, the positive correlation between $M$ and $N$ becomes very clear.
+
+Let's get some DAGs going. There are at least three DAGs consistent with these data:
+```{r, echo=F, fig.height=2, fig.width=8}
+par(mfrow=c(1,3))
+library(dagitty)
+dag5.7a <- dagitty( "dag{ M -> K; M -> N; N -> K}" )
+coordinates(dag5.7a) <- list( x=c(M=0, K=1, N=2), y=c(M=0, K=1, N=0))
+drawdag( dag5.7a , cex=1.5)
+
+dag5.7b <- dagitty( "dag{ M -> K; M <- N; N -> K}" )
+coordinates(dag5.7b) <- list( x=c(M=0, K=1, N=2), y=c(M=0, K=1, N=0))
+drawdag( dag5.7b, cex=1.5 )
+
+dag5.7c <- dagitty( "dag{ M -> K; M <- U; U-> N; N -> K}" )
+coordinates(dag5.7c) <- list( x=c(M=0, K=1, N=2, U=1), y=c(M=0, K=1, N=0, U=0))
+drawdag( dag5.7c , shapes = c(U="c"), cex=1.5, radius = 4.1 )
+```
+```{r, results='hide'}
+dev.off()
+par(mfrow=c(1,1), bty="l")
+```
+
+1. The body mass influences the neocortex and both influence the milk energy content.
+2. The neocortex influences the body mass and both influence the milk energy content.
+3. An unobserved variable $U$ influences both the body mass and the neocortex which both influence the milk energy content.
+
+How do we know which one is the correct one? The (not so satisfying) answer is we can't know, at least not from the data alone. All three graphs imply the same set of conditional independencies (there are none). To pick one, we need to make use of our scientific knowledge.
+
+### Markov Equivalence
+A set of DAGs is known as a _Markov Equivalence_ set if they all have the same implied conditional independencies.
+WeWe can use `{{daggity}}` to compute the _Markov Equivalence_ set of a specific DAG.
+```{r}
+dag5.7 <- dagitty( "dag{
+                   M -> K <- N
+                   M -> N }")
+coordinates(dag5.7) <- list(x=c(M=0,K=1,N=2), y=c(M=0.5, K=1,N=0.5))
+MElist <- equivalentDAGs(dag5.7)
+str(MElist)
+```
+```{r}
+n_me <- length(MElist)
+par(mfrow=c(2,3))
+for (i in 1:n_me) {
+  drawdag( MElist[i] , shapes = c(U="c"), cex=1.5, radius = 4.1 )
+}
+```
+
+
+Let's make some more counterfactual plots.
+```{r, fig.height=4.5, fig.width=9}
+par(mfrow=c(1,2))
+xseq <- seq(from=min(dcc$N)-0.15, to=max(dcc$N)+0.15, length.out = 30)
+mu <- link( m5.7, data=data.frame(N=xseq, M=0))
+mu_mean <- apply(mu, 2, mean)
+mu_PI <- apply(mu, 2, PI)
+plot(NULL, xlim=range(dcc$N), ylim=range(dcc$K),
+     xlab="neocortex percent (std)", ylab="kilocal per g (std)")
+lines(xseq, mu_mean, lwd=2)
+shade(mu_PI, xseq)
+mtext("Counterfactual holding M = 0")
+
+xseq <- seq(from=min(dcc$M)-0.15, to=max(dcc$M)+0.15, length.out = 30)
+mu <- link( m5.7, data=data.frame(M=xseq, N=0))
+mu_mean <- apply(mu, 2, mean)
+mu_PI <- apply(mu, 2, PI)
+plot(NULL, xlim=range(dcc$M), ylim=range(dcc$K),
+     xlab="log body mass (std)", ylab="kilocal per g (std)")
+lines(xseq, mu_mean, lwd=2)
+shade(mu_PI, xseq)
+mtext("Counterfactual holding N = 0")
+```
+
+## Simulating a Masking Ball
+Sometimes it helps to better understand the DAGs and their implied associations by using some simulations.
+
+Let's simulate data for the first DAG
+```{r, fig.height=2, fig.width=2.8, echo=F}
+dag5.7a <- dagitty( "dag{ M -> K; M -> N; N -> K}" )
+coordinates(dag5.7a) <- list( x=c(M=0, K=1, N=2), y=c(M=0, K=1, N=0))
+drawdag( dag5.7a , cex=1.2)
+```
+```{r, results='hide'}
+dev.off()
+par(mfrow=c(1,1), bty="l")
+```
+```{r}
+n <- 100
+M <- rnorm( n )
+N <- rnorm( n, M )
+K <- rnorm( n, N - M)
+d_sim <- data.frame(K=K, N=N, M=M)
+```
+
+
+The second DAG:
+```{r, fig.height=2, fig.width=2.8, echo=F}
+dag5.7b <- dagitty( "dag{ M -> K; M <- N; N -> K}" )
+coordinates(dag5.7b) <- list( x=c(M=0, K=1, N=2), y=c(M=0, K=1, N=0))
+drawdag( dag5.7b, cex=1.2 )
+```
+```{r, results='hide'}
+dev.off()
+par(mfrow=c(1,1), bty="l")
+```
+
+```{r}
+n <- 100
+N <- rnorm( n )
+M <- rnorm( n, N )
+K <- rnorm( n, N - M)
+d_sim2 <- data.frame(K=K, N=N, M=N)
+```
+
+And the third DAG:
+```{r, fig.height=2, fig.width=2.8, echo=F}
+dag5.7c <- dagitty( "dag{ M -> K; M <- U; U-> N; N -> K}" )
+coordinates(dag5.7c) <- list( x=c(M=0, K=1, N=2, U=1), y=c(M=0, K=1, N=0, U=0))
+drawdag( dag5.7c , shapes = c(U="c"), cex=1.2, radius = 4, )
+```
+```{r, results='hide'}
+dev.off()
+par(mfrow=c(1,1), bty="l")
+```
+
+```{r}
+n <- 100
+U <- rnorm ( n )
+N <- rnorm( n, U )
+M <- rnorm( n, U )
+K <- rnorm( n, N - M)
+d_sim2 <- data.frame(K=K, N=N, M=N)
+```
+
+```{r}
+plot( precis(m5.6) )
+
+lm.seq <- seq(from=-2.5, to=4.7, length.out = 30)
+pred.data <- data.frame( log.mass=lm.seq)
+
+mu <- link(m5.6, data=pred.data, n=1e4)
+mu.mean <- apply(mu, 2, mean)
+mu.PI <- apply(mu, 2, PI)
+
+plot(kcal.per.g ~ log.mass, data=dcc, col=rangi2)
+lines(lm.seq, mu.mean)
+lines( lm.seq, mu.PI[1,], lty=2)
+lines( lm.seq, mu.PI[2,], lty=2)
+
+
+# fit model with both predictors together
+m5.7 <- map(
+  alist(
+    kcal.per.g ~ dnorm(mu, sigma) ,
+    mu <- a + bn*neocortex.perc + bm*log.mass ,
+    a ~ dnorm( 0, 100),
+    bn ~ dnorm(0, 1), 
+    bm ~ dnorm(0, 1),
+    sigma ~ dunif(0, 1)
+  ), data=dcc
+)
+
+precis(m5.7)
+plot( precis(m5.7))
+# quite large stdev for intercept a
+# compare with the single bivariate models
+precis(m5.6)
+precis(m5.5, digits=3)
+# mass now has less of an influence, while bn has a stronger influence
+
+# counterfactual plots
+# vary neocortex.perc, keep mass fixed
+mean.log.mass <- mean(log(dcc$mass))
+np.seq <- 0:100
+pred.data <- data.frame(
+  neocortex.perc=np.seq,
+  log.mass=mean.log.mass
+)
+
+mu <- link( m5.7, data=pred.data, n=1e4)
+mu.mean <- apply(mu, 2, mean)
+mu.PI <- apply( mu, 2, PI )
+
+plot(kcal.per.g ~ neocortex.perc, data=dcc, type="n")
+lines( np.seq, mu.mean)
+lines( np.seq, mu.PI[1,], lty=2)
+lines( np.seq, mu.PI[2,], lty=2)
+
+# vary mass, keep neocortex.perc fixed
+mean.neocortex.perc <- mean(dcc$neocortex.perc)
+lm.seq <- seq(from=-2.5, to=4.7, length.out = 30)
+pred.data <- data.frame(
+  neocortex.perc=mean.neocortex.perc,
+  log.mass=lm.seq
+)
+
+mu <- link( m5.7, data=pred.data, n=1e4)
+mu.mean <- apply(mu, 2, mean)
+mu.PI <- apply(mu, 2, PI)
+
+plot(kcal.per.g ~ log.mass, data=dcc, type="n")
+lines( lm.seq, mu.mean )
+lines( lm.seq, mu.PI[1,], lty=2)
+lines( lm.seq, mu.PI[2,], lty=2)
+
+# counterfactual plots show a strong association with both variables (but in opposite direction!)
+
+
+
+# synthetic masked association
+N <- 100
+rho <- 0.7                           # correlation between x_pos and x_neg
+x_pos <- rnorm( N )                  # x_pos as Gaussian
+x_neg <- rnorm( N, rho*x_pos,        # x_neg correlated with x_pos
+                sqrt(1-rho^2) )
+y <- rnorm( N, x_pos - x_neg)        # y equally associated with x_pos, x_eg
+d <- data.frame( y, x_pos, x_neg )
+pairs(d)
+
+# bivariate models
+m5.8 <- map(
+  alist(
+    y ~ dnorm( mu, sigma) ,
+    mu <- a + bp*x_pos ,
+    a ~ dnorm( 0, 10),
+    bp ~ dnorm(0, 10),
+    sigma ~ dunif(0, 10)
+  ), data=d
+)
+plot( precis(m5.8))
+
+m5.9 <- map(
+  alist(
+    y ~ dnorm( mu, sigma) ,
+    mu <- a +  bn*x_neg,
+    a ~ dnorm( 0, 10),
+    bn ~ dnorm(0, 10),
+    sigma ~ dunif(0, 10)
+  ), data=d
+)
+plot( precis( m5.9))
+
+# multivariate model
+m5.10 <- map(
+  alist(
+    y ~ dnorm( mu, sigma) ,
+    mu <- a + bp*x_pos + bn*x_neg,
+    a ~ dnorm( 0, 10),
+    bp ~ dnorm(0, 10),
+    bn ~ dnorm(0, 10),
+    sigma ~ dunif(0, 10)
+  ), data=d
+)
+
+par(mfrow=c(3,1))
+plot( precis(m5.10), main="Multivariate Regression")
+plot( precis(m5.9), main="Bivariate Regression, x_pos")
+plot( precis(m5.9), main="Bivariate Regression x_neg")
+```
