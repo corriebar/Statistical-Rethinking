@@ -55,7 +55,7 @@ registerS3method("knit_print", "precis", knit_print.precis)
 ```{r echo=F}
 par(bty="l")
 ```
-These are my solutions to the practice questions of chapter 4, _Linear Models_, of the book "Statistical Rethinking" (version 2) by Richard McElreath.
+These are my solutions to the practice questions of chapter 4, _Linear Models_, of the book [Statistical Rethinking](https://xcelab.net/rm/statistical-rethinking/) (version 2) by Richard McElreath.
 
 ## Easy.
 __4E1.__ In the model definition below, which line is the likelihood:

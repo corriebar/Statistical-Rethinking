@@ -40,7 +40,7 @@ prettify <- function(object, rownames = NA) {knitr::kable(object, "html",
                                                           row.names = rownames) %>% 
     kableExtra::kable_styling(full_width = F, position = "center")}
 ```
-These are code snippets and notes for the fourth chapter, _Geocentric Models_, , sections 4, of the book "Statistical Rethinking" (version 2) by Richard McElreath.
+These are code snippets and notes for the fourth chapter, _Geocentric Models_, , sections 4, of the book [Statistical Rethinking](https://xcelab.net/rm/statistical-rethinking/) (version 2) by Richard McElreath.
 
 In this section, we work with our first prediction model where we use the weight to predict the height of a person. We again use the !Kung data and restrict to adults above 18.
 ```{r}

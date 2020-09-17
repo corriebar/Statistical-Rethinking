@@ -1,0 +1,749 @@
+---
+title: "Categorical Variables"
+author: Corrie
+date: "2020-09-16"
+slug: chp5-part-two
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
+output:
+  blogdown::html_page:
+    toc: true
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+
+
+<p>These are code snippets and notes for the fifth chapter, <em>The Many Variables &amp; The Spurious Waffles</em>, section 2, of the book <a href="https://xcelab.net/rm/statistical-rethinking/">Statistical Rethinking</a> (version 2) by Richard McElreath.</p>
+<pre class="r"><code># Chapter 5 - Categorical variables
+library(rethinking)
+# binary categories
+data(&quot;Howell1&quot;)
+d &lt;- Howell1
+str(d)</code></pre>
+<pre><code>&#39;data.frame&#39;:   544 obs. of  4 variables:
+ $ height: num  152 140 137 157 145 ...
+ $ weight: num  47.8 36.5 31.9 53 41.3 ...
+ $ age   : num  63 63 65 41 51 35 32 27 19 54 ...
+ $ male  : int  1 0 0 1 0 1 0 1 0 1 ...</code></pre>
+<pre class="r"><code># fit model using the variable male as predictor
+m5.15 &lt;- map(
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu &lt;- a + bm*male,
+    a ~ dnorm(178, 100),
+    bm ~ dnorm(0, 10),
+    sigma ~ dunif(0, 50)
+  ), data=d
+)
+precis(m5.15)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+<th style="text-align:right;">
+5.5%
+</th>
+<th style="text-align:right;">
+94.5%
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+a
+</td>
+<td style="text-align:right;">
+134.83
+</td>
+<td style="text-align:right;">
+1.592
+</td>
+<td style="text-align:right;">
+132.29
+</td>
+<td style="text-align:right;">
+137.4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+bm
+</td>
+<td style="text-align:right;">
+7.28
+</td>
+<td style="text-align:right;">
+2.283
+</td>
+<td style="text-align:right;">
+3.63
+</td>
+<td style="text-align:right;">
+10.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sigma
+</td>
+<td style="text-align:right;">
+27.31
+</td>
+<td style="text-align:right;">
+0.828
+</td>
+<td style="text-align:right;">
+25.99
+</td>
+<td style="text-align:right;">
+28.6
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>plot(precis(m5.15))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_5/chapter5d_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<pre class="r"><code># to get average heigt of males, use sample:
+post &lt;- extract.samples(m5.15)
+mu.male &lt;- post$a + post$bm
+PI(mu.male)</code></pre>
+<pre><code> 5% 94% 
+139 145 </code></pre>
+<pre class="r"><code>m5.15b &lt;- map(
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu &lt;- af*(1-male) + am*male,
+    af ~ dnorm( 178, 100),
+    am ~ dnorm( 178, 100),
+    sigma ~ dunif(0, 50)
+  ), data=d
+)
+precis(m5.15b)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+<th style="text-align:right;">
+5.5%
+</th>
+<th style="text-align:right;">
+94.5%
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+af
+</td>
+<td style="text-align:right;">
+134.6
+</td>
+<td style="text-align:right;">
+1.612
+</td>
+<td style="text-align:right;">
+132
+</td>
+<td style="text-align:right;">
+137.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+am
+</td>
+<td style="text-align:right;">
+142.3
+</td>
+<td style="text-align:right;">
+1.703
+</td>
+<td style="text-align:right;">
+140
+</td>
+<td style="text-align:right;">
+145.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sigma
+</td>
+<td style="text-align:right;">
+27.3
+</td>
+<td style="text-align:right;">
+0.828
+</td>
+<td style="text-align:right;">
+26
+</td>
+<td style="text-align:right;">
+28.6
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>plot(precis(m5.15b))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_5/chapter5d_files/figure-html/unnamed-chunk-2-2.png" width="672" /></p>
+<pre class="r"><code># Many categories
+data(milk)
+d &lt;- milk
+unique(d$clade)</code></pre>
+<pre><code>[1] Strepsirrhine    New World Monkey Old World Monkey Ape             
+Levels: Ape New World Monkey Old World Monkey Strepsirrhine</code></pre>
+<pre class="r"><code># create a dummy variable for new world monkey
+( d$clade.NWM &lt;- ifelse( d$clade == &quot;New World Monkey&quot;, 1, 0) )</code></pre>
+<pre><code> [1] 0 0 0 0 0 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</code></pre>
+<pre class="r"><code># more dummy variables
+d$clade.OWM &lt;- ifelse( d$clade == &quot;Old World Monkey&quot;, 1, 0 )
+d$clade.S &lt;- ifelse( d$clade == &quot;Strepsirrhine&quot;, 0, 1 )
+
+
+m5.16 &lt;- map(
+  alist(
+    kcal.per.g ~ dnorm( mu, sigma),
+    mu &lt;- a + b.NWM*clade.NWM + b.OWM*clade.OWM + b.S*clade.S,
+    a ~ dnorm( 0.6, 10),
+    c(b.NWM, b.OWM, b.S) ~ dnorm(0, 1),
+    sigma ~ dunif( 0, 10)
+  ), data = d
+)
+precis( m5.16)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+<th style="text-align:right;">
+5.5%
+</th>
+<th style="text-align:right;">
+94.5%
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+a
+</td>
+<td style="text-align:right;">
+0.508
+</td>
+<td style="text-align:right;">
+0.051
+</td>
+<td style="text-align:right;">
+0.426
+</td>
+<td style="text-align:right;">
+0.590
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+b.NWM
+</td>
+<td style="text-align:right;">
+0.168
+</td>
+<td style="text-align:right;">
+0.054
+</td>
+<td style="text-align:right;">
+0.082
+</td>
+<td style="text-align:right;">
+0.254
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+b.OWM
+</td>
+<td style="text-align:right;">
+0.242
+</td>
+<td style="text-align:right;">
+0.060
+</td>
+<td style="text-align:right;">
+0.145
+</td>
+<td style="text-align:right;">
+0.338
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+b.S
+</td>
+<td style="text-align:right;">
+0.038
+</td>
+<td style="text-align:right;">
+0.064
+</td>
+<td style="text-align:right;">
+-0.064
+</td>
+<td style="text-align:right;">
+0.140
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sigma
+</td>
+<td style="text-align:right;">
+0.114
+</td>
+<td style="text-align:right;">
+0.015
+</td>
+<td style="text-align:right;">
+0.090
+</td>
+<td style="text-align:right;">
+0.139
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># compare: all dummy variables included
+d$clade.Ape &lt;- ifelse( d$clade == &quot;Ape&quot;, 1, 0)
+m5.16b &lt;- map(
+  alist(
+    kcal.per.g ~ dnorm( mu, sigma),
+    mu &lt;- a + b.NWM*clade.NWM + b.OWM*clade.OWM + b.S*clade.S + b.Ape*clade.Ape,
+    a ~ dnorm( 0.6, 10),
+    c(b.NWM, b.OWM, b.S,b.Ape) ~ dnorm(0, 1),
+    sigma ~ dunif( 0, 10)
+  ), data = d
+)
+
+m5.16c &lt;- map(
+  alist(
+    kcal.per.g ~ dnorm( mu, sigma),
+    mu &lt;- b.NWM*clade.NWM + b.OWM*clade.OWM + b.S*clade.S + b.Ape*clade.Ape,
+    c(b.NWM, b.OWM, b.S,b.Ape) ~ dnorm(0, 10),
+    sigma ~ dunif( 0, 10)
+  ), data = d
+)
+m5.16d &lt;- map(
+  alist(
+    kcal.per.g ~ dnorm( mu, sigma),
+    mu &lt;- b.NWM*(1 - clade.OWM - clade.S - clade.Ape) + b.OWM*clade.OWM + b.S*clade.S + b.Ape*clade.Ape,
+    c(b.NWM, b.OWM, b.S,b.Ape) ~ dnorm(0, 10),
+    sigma ~ dunif( 0, 10)
+  ), data = d
+)
+
+precis( m5.16b)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+<th style="text-align:right;">
+5.5%
+</th>
+<th style="text-align:right;">
+94.5%
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+a
+</td>
+<td style="text-align:right;">
+0.508
+</td>
+<td style="text-align:right;">
+0.051
+</td>
+<td style="text-align:right;">
+0.427
+</td>
+<td style="text-align:right;">
+0.590
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+b.NWM
+</td>
+<td style="text-align:right;">
+0.075
+</td>
+<td style="text-align:right;">
+0.501
+</td>
+<td style="text-align:right;">
+-0.726
+</td>
+<td style="text-align:right;">
+0.876
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+b.OWM
+</td>
+<td style="text-align:right;">
+0.149
+</td>
+<td style="text-align:right;">
+0.502
+</td>
+<td style="text-align:right;">
+-0.653
+</td>
+<td style="text-align:right;">
+0.951
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+b.S
+</td>
+<td style="text-align:right;">
+0.131
+</td>
+<td style="text-align:right;">
+0.502
+</td>
+<td style="text-align:right;">
+-0.671
+</td>
+<td style="text-align:right;">
+0.933
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+b.Ape
+</td>
+<td style="text-align:right;">
+-0.093
+</td>
+<td style="text-align:right;">
+0.501
+</td>
+<td style="text-align:right;">
+-0.894
+</td>
+<td style="text-align:right;">
+0.708
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sigma
+</td>
+<td style="text-align:right;">
+0.115
+</td>
+<td style="text-align:right;">
+0.015
+</td>
+<td style="text-align:right;">
+0.090
+</td>
+<td style="text-align:right;">
+0.139
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>par(mfrow=c(4,1))
+plot(precis( m5.16))
+plot(precis( m5.16b))
+plot(precis( m5.16c))
+plot(precis(m5.16d))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_5/chapter5d_files/figure-html/unnamed-chunk-2-3.png" width="672" /></p>
+<pre class="r"><code>par(mfrow=c(1,1))
+# we get a non-identifiable model with huge standard deviations
+
+# to get the average milk energy in each category use samples
+post &lt;- extract.samples(m5.16)
+
+# compute averages for each category
+mu.ape &lt;- post$a
+mu.NWM &lt;- post$a + post$b.NWM
+mu.OWM &lt;- post$a + post$b.OWM
+mu.S &lt;- post$a + post$b.S
+
+# summarize using precis
+precis( data.frame( mu.ape, mu.NWM, mu.OWM, mu.S))</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+<th style="text-align:right;">
+5.5%
+</th>
+<th style="text-align:right;">
+94.5%
+</th>
+<th style="text-align:left;">
+histogram
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+mu.ape
+</td>
+<td style="text-align:right;">
+0.508
+</td>
+<td style="text-align:right;">
+0.051
+</td>
+<td style="text-align:right;">
+0.425
+</td>
+<td style="text-align:right;">
+0.589
+</td>
+<td style="text-align:left;">
+▁▁▂▇▇▃▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mu.NWM
+</td>
+<td style="text-align:right;">
+0.675
+</td>
+<td style="text-align:right;">
+0.073
+</td>
+<td style="text-align:right;">
+0.557
+</td>
+<td style="text-align:right;">
+0.792
+</td>
+<td style="text-align:left;">
+▁▁▁▃▇▇▇▃▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mu.OWM
+</td>
+<td style="text-align:right;">
+0.749
+</td>
+<td style="text-align:right;">
+0.077
+</td>
+<td style="text-align:right;">
+0.624
+</td>
+<td style="text-align:right;">
+0.872
+</td>
+<td style="text-align:left;">
+▁▁▁▂▅▇▇▅▂▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mu.S
+</td>
+<td style="text-align:right;">
+0.547
+</td>
+<td style="text-align:right;">
+0.038
+</td>
+<td style="text-align:right;">
+0.488
+</td>
+<td style="text-align:right;">
+0.608
+</td>
+<td style="text-align:left;">
+▁▁▁▁▂▃▇▇▇▃▂▁▁▁▁
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>plot( precis( data.frame( mu.ape, mu.NWM, mu.OWM, mu.S) ))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_5/chapter5d_files/figure-html/unnamed-chunk-2-4.png" width="672" /></p>
+<pre class="r"><code># to get estimated difference between two monkey groups:
+diff.NWM.OWM &lt;- mu.NWM - mu.OWM
+quantile( diff.NWM.OWM, probs=c(0.025, 0.5, 0.975))</code></pre>
+<pre><code>   2.5%     50%   97.5% 
+-0.1932 -0.0733  0.0445 </code></pre>
+<pre class="r"><code># Unique intercepts approach
+(d$clade_id &lt;- coerce_index(d$clade))</code></pre>
+<pre><code> [1] 4 4 4 4 4 2 2 2 2 2 2 2 2 2 3 3 3 3 3 3 1 1 1 1 1 1 1 1 1</code></pre>
+<pre class="r"><code># fit model with one intercept for each group
+m5.16_alt &lt;- map(
+  alist(
+    kcal.per.g ~ dnorm( mu, sigma ),
+    mu &lt;- a[clade_id],
+    a[clade_id] ~ dnorm( 0.6, 10),
+    sigma ~ dunif(0, 10)
+  ), data=d
+)
+precis(m5.16_alt, depth=2)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+<th style="text-align:right;">
+5.5%
+</th>
+<th style="text-align:right;">
+94.5%
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+a[1]
+</td>
+<td style="text-align:right;">
+0.546
+</td>
+<td style="text-align:right;">
+0.038
+</td>
+<td style="text-align:right;">
+0.485
+</td>
+<td style="text-align:right;">
+0.607
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+a[2]
+</td>
+<td style="text-align:right;">
+0.714
+</td>
+<td style="text-align:right;">
+0.038
+</td>
+<td style="text-align:right;">
+0.653
+</td>
+<td style="text-align:right;">
+0.775
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+a[3]
+</td>
+<td style="text-align:right;">
+0.788
+</td>
+<td style="text-align:right;">
+0.047
+</td>
+<td style="text-align:right;">
+0.714
+</td>
+<td style="text-align:right;">
+0.863
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+a[4]
+</td>
+<td style="text-align:right;">
+0.508
+</td>
+<td style="text-align:right;">
+0.051
+</td>
+<td style="text-align:right;">
+0.426
+</td>
+<td style="text-align:right;">
+0.590
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sigma
+</td>
+<td style="text-align:right;">
+0.115
+</td>
+<td style="text-align:right;">
+0.015
+</td>
+<td style="text-align:right;">
+0.090
+</td>
+<td style="text-align:right;">
+0.139
+</td>
+</tr>
+</tbody>
+</table>

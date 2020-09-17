@@ -26,7 +26,7 @@ I started going through the book in spring 2018. As part of the [Berlin Bayesian
 
 #### Chapter 5
 - [Spurious Association]( {{< relref "Chapter_5/chapter5a.html" >}} )
-- [Masked Relationships](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_5/chapter5b.R)
+- [Masked Relationships]( {{< relref "Chapter_5/chapter5b.html" >}} )
 - [When adding variables hurt](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_5/chapter5c.R)
 - [Categorical Variables](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_5/chapter5d.R)
 - [Ordinary Least Squares](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_5/chapter5e.R)

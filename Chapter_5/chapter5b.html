@@ -1,4 +1,25 @@
-<script src="chapter5b_files/header-attrs-2.3/header-attrs.js"></script>
+---
+title: "Masked Relationship"
+author: Corrie
+date: "2020-09-16"
+slug: chp5-part-two
+layout: "single-projects"
+categories:
+  - R
+  - Statistical Rethinking
+tags: 
+  - Statistical Rethinking
+  - Bayesian 
+  - Causal Inference
+comments: yes
+image: 'images/tea_with_books.jpg'
+share: yes
+output:
+  blogdown::html_page:
+    toc: true
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 
 <div id="TOC">
 <ul>
@@ -11,15 +32,23 @@
 </ul>
 </div>
 
-<p>These are code snippets and notes for the fifth chapter, <em>The Many Variables &amp; The Spurious Waffles</em>, section 2, of the book “Statistical Rethinking” (version 2) by Richard McElreath.</p>
-<p>I found the fifth chapter quite dense, so these notes are a bit more detailed.</p>
+<p>These are code snippets and notes for the fifth chapter, <em>The Many Variables &amp; The Spurious Waffles</em>, section 2, of the book <a href="https://xcelab.net/rm/statistical-rethinking/">Statistical Rethinking</a> (version 2) by Richard McElreath.</p>
 <div id="hidden-influence-in-milk" class="section level2">
 <h2>Hidden Influence in Milk</h2>
-<p>In the section about [spurious associations]({{&lt; relref “../Chapter_5/chapter5a.html” &gt;}}) we used multiple regression to eliminate variables that seemed to have an influence when comparing bivariate relationships but whose association vanishes when introducing more variables to the regression. Now the opposite can also happen: there might be no bivariate association between variables because two variables mask each other. We will explore this using the <code>milk</code> data set to compare the caloric content of milk in primates with their brain size. We will see later that the variable of the body mass also plays a role.</p>
+<p>In the previous section about <a href="../chp5-part-one">spurious associations</a> we used multiple regression to eliminate variables that seemed to have an influence when comparing bivariate relationships but whose association vanishes when introducing more variables to the regression. Now the opposite can also happen: there might be no bivariate association between variables because two variables mask each other. We will explore this using the <code>milk</code> data set to compare the caloric content of milk in primates with their brain size. We will see later that the variable of the body mass also plays a role.</p>
 <pre class="r"><code>library(rethinking)
 data(milk)
 d &lt;- milk
 str(d)</code></pre>
+<pre><code>&#39;data.frame&#39;:   29 obs. of  8 variables:
+ $ clade         : Factor w/ 4 levels &quot;Ape&quot;,&quot;New World Monkey&quot;,..: 4 4 4 4 4 2 2 2 2 2 ...
+ $ species       : Factor w/ 29 levels &quot;A palliata&quot;,&quot;Alouatta seniculus&quot;,..: 11 8 9 10 16 2 1 6 28 27 ...
+ $ kcal.per.g    : num  0.49 0.51 0.46 0.48 0.6 0.47 0.56 0.89 0.91 0.92 ...
+ $ perc.fat      : num  16.6 19.3 14.1 14.9 27.3 ...
+ $ perc.protein  : num  15.4 16.9 16.9 13.2 19.5 ...
+ $ perc.lactose  : num  68 63.8 69 71.9 53.2 ...
+ $ mass          : num  1.95 2.09 2.51 1.62 2.19 5.25 5.37 2.51 0.71 0.68 ...
+ $ neocortex.perc: num  55.2 NA NA NA NA ...</code></pre>
 <p>Let’s first standardize the necessary variables:</p>
 <pre class="r"><code>d$K &lt;- standardize( d$kcal.per.g )
 d$N &lt;- standardize( d$neocortex.perc )
@@ -47,6 +76,7 @@ xseq &lt;- c(-2, 2)
 mu &lt;- link( m5.5_draft, post=prior, data=list(N=xseq))
 plot(NULL, xlim=xseq, ylim=xseq)
 for (i in 1:50) lines( xseq, mu[i,], col=col.alpha(&quot;black&quot;, 0.3))</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_5/chapter5b_files/figure-html/unnamed-chunk-7-1.png" width="864" /></p>
 <p>The prior on the left is rather crazy: for the average value of <span class="math inline">\(K\)</span>, we can end up with very extreme values of <span class="math inline">\(N\)</span>. It would be better to tighten <span class="math inline">\(\alpha\)</span> so that it’s closer to the average value of the outcome variable (i.e. 0). Also, the slope can be extremely steep suggesting very unrealistic associations between the two variables, better to tigthen <span class="math inline">\(\beta\)</span> as well. Better priors (more realistic priors) would be the one in the right plot, coming from this model:</p>
 <pre class="r"><code>m5.5 &lt;- quap(
   alist(
@@ -58,10 +88,84 @@ for (i in 1:50) lines( xseq, mu[i,], col=col.alpha(&quot;black&quot;, 0.3))</cod
   ), data=dcc
 )
 precis(m5.5)</code></pre>
-<p>The estimate for <span class="math inline">\(\beta\)</span> is not very strong and its uncertainty interval includes 0. The same thing in visual:</p>
-<p>The parameter coefficient estaimtes:</p>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+<th style="text-align:right;">
+5.5%
+</th>
+<th style="text-align:right;">
+94.5%
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+a
+</td>
+<td style="text-align:right;">
+0.040
+</td>
+<td style="text-align:right;">
+0.154
+</td>
+<td style="text-align:right;">
+-0.207
+</td>
+<td style="text-align:right;">
+0.287
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+bN
+</td>
+<td style="text-align:right;">
+0.133
+</td>
+<td style="text-align:right;">
+0.224
+</td>
+<td style="text-align:right;">
+-0.224
+</td>
+<td style="text-align:right;">
+0.491
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sigma
+</td>
+<td style="text-align:right;">
+1.000
+</td>
+<td style="text-align:right;">
+0.165
+</td>
+<td style="text-align:right;">
+0.737
+</td>
+<td style="text-align:right;">
+1.263
+</td>
+</tr>
+</tbody>
+</table>
+<p>The estimate for <span class="math inline">\(\beta\)</span> is not very strong and its uncertainty interval includes 0. Let’s look at this in a bit more visual.</p>
+<p>The parameter coefficient estimates:</p>
 <pre class="r"><code>plot( precis( m5.5))</code></pre>
-<p>And the model together with the posterior mean line and interval:</p>
+<p><img src="/projects/Statistical-Rethinking/Chapter_5/chapter5b_files/figure-html/unnamed-chunk-10-1.png" width="672" />
+And the model together with the posterior mean line and interval:</p>
 <pre class="r"><code>xseq &lt;- seq( from=min(dcc$N) - 0.15, to=max(dcc$N) + 0.15, length.out = 30)
 mu &lt;- link( m5.5, data=list(N=xseq))
 mu_mean &lt;- apply(mu, 2, mean)
@@ -70,6 +174,7 @@ plot( K ~ N, data=dcc,
       xlab=&quot;neocortex percent (std)&quot;, ylab=&quot;kilocal per g (std)&quot;)
 lines( xseq, mu_mean, lwd=2 )
 shade( mu_PI, xseq)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_5/chapter5b_files/figure-html/unnamed-chunk-11-1.png" width="432" /></p>
 <p>The relationship is very weak and the uncertainty interval also includes lines with no slope or even slight negative slope.</p>
 <p>Let’s consider a model with the (log) body mass instead:</p>
 <pre class="r"><code>m5.6 &lt;- quap(
@@ -82,7 +187,81 @@ shade( mu_PI, xseq)</code></pre>
   ), data=dcc
 )
 precis(m5.6)</code></pre>
-<p>And the model together with the posterior mean line and interval:</p>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+<th style="text-align:right;">
+5.5%
+</th>
+<th style="text-align:right;">
+94.5%
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+a
+</td>
+<td style="text-align:right;">
+0.047
+</td>
+<td style="text-align:right;">
+0.151
+</td>
+<td style="text-align:right;">
+-0.195
+</td>
+<td style="text-align:right;">
+0.288
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+bM
+</td>
+<td style="text-align:right;">
+-0.283
+</td>
+<td style="text-align:right;">
+0.193
+</td>
+<td style="text-align:right;">
+-0.591
+</td>
+<td style="text-align:right;">
+0.026
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sigma
+</td>
+<td style="text-align:right;">
+0.949
+</td>
+<td style="text-align:right;">
+0.157
+</td>
+<td style="text-align:right;">
+0.698
+</td>
+<td style="text-align:right;">
+1.200
+</td>
+</tr>
+</tbody>
+</table>
+<p>And again the model together with the posterior mean line and interval. For easier comparison, I also add the posterior plot from the neocortex model.
+<img src="/projects/Statistical-Rethinking/Chapter_5/chapter5b_files/figure-html/unnamed-chunk-13-1.png" width="864" /></p>
 <p>The association seems stronger than for the neocortex percent but it is still highly uncertain and includes many possible weaker (as well as stronger) relationships.</p>
 <p>Now let’s see what happens when we use both variables in a regression:</p>
 <p><span class="math display">\[\begin{align*} 
@@ -105,211 +284,162 @@ And the code for the model:</p>
   ), data=dcc
 )
 precis(m5.7)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+<th style="text-align:right;">
+5.5%
+</th>
+<th style="text-align:right;">
+94.5%
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+a
+</td>
+<td style="text-align:right;">
+0.068
+</td>
+<td style="text-align:right;">
+0.134
+</td>
+<td style="text-align:right;">
+-0.146
+</td>
+<td style="text-align:right;">
+0.282
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+bN
+</td>
+<td style="text-align:right;">
+0.675
+</td>
+<td style="text-align:right;">
+0.248
+</td>
+<td style="text-align:right;">
+0.278
+</td>
+<td style="text-align:right;">
+1.072
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+bM
+</td>
+<td style="text-align:right;">
+-0.703
+</td>
+<td style="text-align:right;">
+0.221
+</td>
+<td style="text-align:right;">
+-1.056
+</td>
+<td style="text-align:right;">
+-0.350
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sigma
+</td>
+<td style="text-align:right;">
+0.738
+</td>
+<td style="text-align:right;">
+0.132
+</td>
+<td style="text-align:right;">
+0.526
+</td>
+<td style="text-align:right;">
+0.950
+</td>
+</tr>
+</tbody>
+</table>
 <p>For both variables, the observed effect increased:</p>
 <pre class="r"><code>plot( coeftab( m5.5, m5.6, m5.7 ), pars=c(&quot;bM&quot;, &quot;bN&quot;) )</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_5/chapter5b_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p>In the upper part are the coefficients for the body mass and in the lower part the coefficients for the neocortex.</p>
 </div>
 <div id="the-causal-reasoning-behind-it" class="section level2">
 <h2>The Causal Reasoning behind it</h2>
-<p>So what does this mean?
-What happened is that both variables are correlated with the outcome but one is positively correlated (neocortex percent) and one is negatively correlated (body mass). On top of that, they’re both positively correlated with each other. In this specific situation, bigger species such as apes (high body mass) have milks will less energy. But species with more neocortex (“smarter ones”) tend to have richer milk. These correlations make it hard to see what’s really happening.</p>
+<p>So what does this mean?</p>
+<p>What happened is that both variables are correlated with the outcome but one is positively correlated (neocortex percent) and one is negatively correlated (body mass). On top of that, they’re both positively correlated with each other. In this specific situation, bigger species such as apes (high body mass) have milks will less energy. But species with more neocortex (“smarter ones”) tend to have richer milk. These correlations make it hard to see what’s really happening.</p>
 <pre class="r"><code>pairs( ~ K + M + N, dcc)</code></pre>
-<p>While the association between <span class="math inline">\(K\)</span> and <span class="math inline">\(M\)</span> and <span class="math inline">\(K\)</span> and <span class="math inline">\(N\)</span> are not as clear in the plot, the positive correlation between <span class="math inline">\(M\)</span> and <span class="math inline">\(N\)</span> becomes very clear.</p>
-<p>Let’s get some DAGs going. There are at least three DAGs consistent with these data:</p>
-<pre class="r"><code>dev.off()
-par(mfrow=c(1,1), bty=&quot;l&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_5/chapter5b_files/figure-html/unnamed-chunk-17-1.png" width="528" /></p>
+<p>While the association between <span class="math inline">\(K\)</span> and <span class="math inline">\(M\)</span> and <span class="math inline">\(K\)</span> and <span class="math inline">\(N\)</span> are not as clear in the plot, the positive correlation between <span class="math inline">\(M\)</span> and <span class="math inline">\(N\)</span> is quite strong.</p>
+<p>Let’s get some DAGs going. There are at least three DAGs consistent with these data:
+<img src="/projects/Statistical-Rethinking/Chapter_5/chapter5b_files/figure-html/unnamed-chunk-18-1.png" width="768" /></p>
 <ol style="list-style-type: decimal">
 <li>The body mass influences the neocortex and both influence the milk energy content.</li>
 <li>The neocortex influences the body mass and both influence the milk energy content.</li>
 <li>An unobserved variable <span class="math inline">\(U\)</span> influences both the body mass and the neocortex which both influence the milk energy content.</li>
 </ol>
 <p>How do we know which one is the correct one? The (not so satisfying) answer is we can’t know, at least not from the data alone. All three graphs imply the same set of conditional independencies (there are none). To pick one, we need to make use of our scientific knowledge.</p>
+<p>Let’s make some more counterfactual plots.
+<img src="/projects/Statistical-Rethinking/Chapter_5/chapter5b_files/figure-html/unnamed-chunk-20-1.png" width="864" /></p>
 <div id="markov-equivalence" class="section level3">
 <h3>Markov Equivalence</h3>
 <p>A set of DAGs is known as a <em>Markov Equivalence</em> set if they all have the same implied conditional independencies.
-WeWe can use <code>{{daggity}}</code> to compute the <em>Markov Equivalence</em> set of a specific DAG.</p>
+We can use <code>{{daggity}}</code> to compute the <em>Markov Equivalence</em> set of a specific DAG.</p>
 <pre class="r"><code>dag5.7 &lt;- dagitty( &quot;dag{
                    M -&gt; K &lt;- N
                    M -&gt; N }&quot;)
 coordinates(dag5.7) &lt;- list(x=c(M=0,K=1,N=2), y=c(M=0.5, K=1,N=0.5))
-MElist &lt;- equivalentDAGs(dag5.7)
-str(MElist)</code></pre>
-<pre class="r"><code>n_me &lt;- length(MElist)
-par(mfrow=c(2,3))
-for (i in 1:n_me) {
-  drawdag( MElist[i] , shapes = c(U=&quot;c&quot;), cex=1.5, radius = 4.1 )
-}</code></pre>
-<p>Let’s make some more counterfactual plots.</p>
-<pre class="r"><code>par(mfrow=c(1,2))
-xseq &lt;- seq(from=min(dcc$N)-0.15, to=max(dcc$N)+0.15, length.out = 30)
-mu &lt;- link( m5.7, data=data.frame(N=xseq, M=0))
-mu_mean &lt;- apply(mu, 2, mean)
-mu_PI &lt;- apply(mu, 2, PI)
-plot(NULL, xlim=range(dcc$N), ylim=range(dcc$K),
-     xlab=&quot;neocortex percent (std)&quot;, ylab=&quot;kilocal per g (std)&quot;)
-lines(xseq, mu_mean, lwd=2)
-shade(mu_PI, xseq)
-mtext(&quot;Counterfactual holding M = 0&quot;)
-
-xseq &lt;- seq(from=min(dcc$M)-0.15, to=max(dcc$M)+0.15, length.out = 30)
-mu &lt;- link( m5.7, data=data.frame(M=xseq, N=0))
-mu_mean &lt;- apply(mu, 2, mean)
-mu_PI &lt;- apply(mu, 2, PI)
-plot(NULL, xlim=range(dcc$M), ylim=range(dcc$K),
-     xlab=&quot;log body mass (std)&quot;, ylab=&quot;kilocal per g (std)&quot;)
-lines(xseq, mu_mean, lwd=2)
-shade(mu_PI, xseq)
-mtext(&quot;Counterfactual holding N = 0&quot;)</code></pre>
+MElist &lt;- equivalentDAGs(dag5.7)</code></pre>
+<p>The object <code>MElist</code> then contains all DAGs with the same implied conditional independencies:
+<img src="/projects/Statistical-Rethinking/Chapter_5/chapter5b_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<p>Most of these DAGs are probably not reasonable from a scientific standpoint. That’s where domain knowledge is needed to distinguish the reasonable DAG from the silly one.</p>
 </div>
 </div>
 <div id="simulating-a-masking-ball" class="section level2">
 <h2>Simulating a Masking Ball</h2>
 <p>Sometimes it helps to better understand the DAGs and their implied associations by using some simulations.</p>
-<p>Let’s simulate data for the first DAG</p>
-<pre class="r"><code>dev.off()
-par(mfrow=c(1,1), bty=&quot;l&quot;)</code></pre>
+<p>Let’s simulate data for the first DAG:
+<img src="/projects/Statistical-Rethinking/Chapter_5/chapter5b_files/figure-html/unnamed-chunk-24-1.png" width="268.8" /></p>
 <pre class="r"><code>n &lt;- 100
 M &lt;- rnorm( n )
 N &lt;- rnorm( n, M )
 K &lt;- rnorm( n, N - M)
-d_sim &lt;- data.frame(K=K, N=N, M=M)</code></pre>
-<p>The second DAG:</p>
-<pre class="r"><code>dev.off()
-par(mfrow=c(1,1), bty=&quot;l&quot;)</code></pre>
+d_sim &lt;- data.frame(K=K, N=N, M=M)
+pairs(d_sim)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_5/chapter5b_files/figure-html/unnamed-chunk-26-1.png" width="480" /></p>
+<p>The second DAG:
+<img src="/projects/Statistical-Rethinking/Chapter_5/chapter5b_files/figure-html/unnamed-chunk-27-1.png" width="268.8" /></p>
 <pre class="r"><code>n &lt;- 100
 N &lt;- rnorm( n )
 M &lt;- rnorm( n, N )
 K &lt;- rnorm( n, N - M)
-d_sim2 &lt;- data.frame(K=K, N=N, M=N)</code></pre>
-<p>And the third DAG:</p>
-<pre class="r"><code>dev.off()
-par(mfrow=c(1,1), bty=&quot;l&quot;)</code></pre>
+d_sim2 &lt;- data.frame(K=K, N=N, M=N)
+pairs(d_sim2)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_5/chapter5b_files/figure-html/unnamed-chunk-29-1.png" width="480" /></p>
+<p>And the third DAG:
+<img src="/projects/Statistical-Rethinking/Chapter_5/chapter5b_files/figure-html/unnamed-chunk-30-1.png" width="268.8" /></p>
 <pre class="r"><code>n &lt;- 100
 U &lt;- rnorm ( n )
 N &lt;- rnorm( n, U )
 M &lt;- rnorm( n, U )
 K &lt;- rnorm( n, N - M)
-d_sim2 &lt;- data.frame(K=K, N=N, M=N)</code></pre>
-<pre class="r"><code>plot( precis(m5.6) )
-
-lm.seq &lt;- seq(from=-2.5, to=4.7, length.out = 30)
-pred.data &lt;- data.frame( log.mass=lm.seq)
-
-mu &lt;- link(m5.6, data=pred.data, n=1e4)
-mu.mean &lt;- apply(mu, 2, mean)
-mu.PI &lt;- apply(mu, 2, PI)
-
-plot(kcal.per.g ~ log.mass, data=dcc, col=rangi2)
-lines(lm.seq, mu.mean)
-lines( lm.seq, mu.PI[1,], lty=2)
-lines( lm.seq, mu.PI[2,], lty=2)
-
-
-# fit model with both predictors together
-m5.7 &lt;- map(
-  alist(
-    kcal.per.g ~ dnorm(mu, sigma) ,
-    mu &lt;- a + bn*neocortex.perc + bm*log.mass ,
-    a ~ dnorm( 0, 100),
-    bn ~ dnorm(0, 1), 
-    bm ~ dnorm(0, 1),
-    sigma ~ dunif(0, 1)
-  ), data=dcc
-)
-
-precis(m5.7)
-plot( precis(m5.7))
-# quite large stdev for intercept a
-# compare with the single bivariate models
-precis(m5.6)
-precis(m5.5, digits=3)
-# mass now has less of an influence, while bn has a stronger influence
-
-# counterfactual plots
-# vary neocortex.perc, keep mass fixed
-mean.log.mass &lt;- mean(log(dcc$mass))
-np.seq &lt;- 0:100
-pred.data &lt;- data.frame(
-  neocortex.perc=np.seq,
-  log.mass=mean.log.mass
-)
-
-mu &lt;- link( m5.7, data=pred.data, n=1e4)
-mu.mean &lt;- apply(mu, 2, mean)
-mu.PI &lt;- apply( mu, 2, PI )
-
-plot(kcal.per.g ~ neocortex.perc, data=dcc, type=&quot;n&quot;)
-lines( np.seq, mu.mean)
-lines( np.seq, mu.PI[1,], lty=2)
-lines( np.seq, mu.PI[2,], lty=2)
-
-# vary mass, keep neocortex.perc fixed
-mean.neocortex.perc &lt;- mean(dcc$neocortex.perc)
-lm.seq &lt;- seq(from=-2.5, to=4.7, length.out = 30)
-pred.data &lt;- data.frame(
-  neocortex.perc=mean.neocortex.perc,
-  log.mass=lm.seq
-)
-
-mu &lt;- link( m5.7, data=pred.data, n=1e4)
-mu.mean &lt;- apply(mu, 2, mean)
-mu.PI &lt;- apply(mu, 2, PI)
-
-plot(kcal.per.g ~ log.mass, data=dcc, type=&quot;n&quot;)
-lines( lm.seq, mu.mean )
-lines( lm.seq, mu.PI[1,], lty=2)
-lines( lm.seq, mu.PI[2,], lty=2)
-
-# counterfactual plots show a strong association with both variables (but in opposite direction!)
-
-
-
-# synthetic masked association
-N &lt;- 100
-rho &lt;- 0.7                           # correlation between x_pos and x_neg
-x_pos &lt;- rnorm( N )                  # x_pos as Gaussian
-x_neg &lt;- rnorm( N, rho*x_pos,        # x_neg correlated with x_pos
-                sqrt(1-rho^2) )
-y &lt;- rnorm( N, x_pos - x_neg)        # y equally associated with x_pos, x_eg
-d &lt;- data.frame( y, x_pos, x_neg )
-pairs(d)
-
-# bivariate models
-m5.8 &lt;- map(
-  alist(
-    y ~ dnorm( mu, sigma) ,
-    mu &lt;- a + bp*x_pos ,
-    a ~ dnorm( 0, 10),
-    bp ~ dnorm(0, 10),
-    sigma ~ dunif(0, 10)
-  ), data=d
-)
-plot( precis(m5.8))
-
-m5.9 &lt;- map(
-  alist(
-    y ~ dnorm( mu, sigma) ,
-    mu &lt;- a +  bn*x_neg,
-    a ~ dnorm( 0, 10),
-    bn ~ dnorm(0, 10),
-    sigma ~ dunif(0, 10)
-  ), data=d
-)
-plot( precis( m5.9))
-
-# multivariate model
-m5.10 &lt;- map(
-  alist(
-    y ~ dnorm( mu, sigma) ,
-    mu &lt;- a + bp*x_pos + bn*x_neg,
-    a ~ dnorm( 0, 10),
-    bp ~ dnorm(0, 10),
-    bn ~ dnorm(0, 10),
-    sigma ~ dunif(0, 10)
-  ), data=d
-)
-
-par(mfrow=c(3,1))
-plot( precis(m5.10), main=&quot;Multivariate Regression&quot;)
-plot( precis(m5.9), main=&quot;Bivariate Regression, x_pos&quot;)
-plot( precis(m5.9), main=&quot;Bivariate Regression x_neg&quot;)</code></pre>
+d_sim2 &lt;- data.frame(K=K, N=N, M=N)
+pairs(d_sim2)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_5/chapter5b_files/figure-html/unnamed-chunk-32-1.png" width="480" /></p>
+<p><small><a href="https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_5/chapter5b.Rmd">Full code.</a><small></p>
 </div>

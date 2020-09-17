@@ -70,7 +70,7 @@ prettify <- function(object, digits = 2) {knitr::kable(object, "html",
 ```{r echo=F}
 par(bty="l")
 ```
-These are code snippets and notes for the fourth chapter, _Geocentric Models_, , sections 5, of the book "Statistical Rethinking" (version 2) by Richard McElreath.
+These are code snippets and notes for the fourth chapter, _Geocentric Models_, , sections 5, of the book [Statistical Rethinking](https://xcelab.net/rm/statistical-rethinking/) (version 2) by Richard McElreath.
 
 
 ### Polynomial Regression

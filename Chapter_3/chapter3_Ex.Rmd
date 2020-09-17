@@ -13,13 +13,16 @@ tags:
 comments: yes
 image: 'images/tea_with_books.jpg'
 share: yes
+output:
+  blogdown::html_page:
+    toc: true
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(printr)
 ```
 
-These are my solutions to the practice questions of chapter 3, _Sampling the Imaginary_, of the book "Statistical Rethinking" (version 2) by Richard McElreath.
+These are my solutions to the practice questions of chapter 3, _Sampling the Imaginary_, of the book [Statistical Rethinking](https://xcelab.net/rm/statistical-rethinking/) (version 2) by Richard McElreath.
 
 ## Easy.
 The Easy problems use the samples from the globe tossing example: 
