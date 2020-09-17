@@ -27,15 +27,15 @@ I started going through the book in spring 2018. As part of the [Berlin Bayesian
 #### Chapter 5
 - [Spurious Association]( {{< relref "Chapter_5/chapter5a.html" >}} )
 - [Masked Relationships]( {{< relref "Chapter_5/chapter5b.html" >}} )
-- [When adding variables hurt](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_5/chapter5c.R)
-- [Categorical Variables](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_5/chapter5d.R)
-- [Ordinary Least Squares](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_5/chapter5e.R)
+- [Categorical Variables]( {{< relref "Chapter_5/chapter5d.html" >}} )
 - [Exercises]({{< relref "Chapter_5/Chapter5_Ex.html" >}} )
 
 #### Chapter 6
+- [When adding variables hurt](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_5/chapter5c.R)
 - [Overfitting](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_6/chapter6a.R)
 - [Information Theory and Model Performance]( {{< relref "Chapter_6/chapter6b.html" >}} )
 - [Using Information Criteria]({{< relref "Chapter_6/chapter6c.html" >}} )
+- [Ordinary Least Squares](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_5/chapter5e.R)
 - [Exercises]({{< relref "Chapter_6/chapter6_Ex.html" >}} )
 
 #### Chapter 7

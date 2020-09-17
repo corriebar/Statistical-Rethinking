@@ -1,8 +1,8 @@
 ---
 title: "Categorical Variables"
 author: Corrie
-date: "2020-09-16"
-slug: chp5-part-two
+date: "2020-09-17"
+slug: chp5-part-three
 layout: "single-projects"
 categories:
   - R
@@ -20,11 +20,22 @@ output:
 
 <script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 
+<div id="TOC">
+<ul>
+<li><a href="#the-problem-with-dummies">The Problem with Dummies</a></li>
+<li><a href="#the-index-variable-approach">The Index Variable Approach</a></li>
+<li><a href="#more-categories">More Categories</a></li>
+<li><a href="#even-more-categories">Even More Categories</a></li>
+<li><a href="#notes-of-caution">Notes of Caution</a></li>
+</ul>
+</div>
 
 <p>These are code snippets and notes for the fifth chapter, <em>The Many Variables &amp; The Spurious Waffles</em>, section 2, of the book <a href="https://xcelab.net/rm/statistical-rethinking/">Statistical Rethinking</a> (version 2) by Richard McElreath.</p>
-<pre class="r"><code># Chapter 5 - Categorical variables
-library(rethinking)
-# binary categories
+<p>In this section, we go through different ways how to add categorical variables to our models.</p>
+<div id="the-problem-with-dummies" class="section level2">
+<h2>The Problem with Dummies</h2>
+<p>In the simplest case we only have two categories, e.g. male and female. We are going to use the Kalahari data again to illustrate how to add binary categorical variables.</p>
+<pre class="r"><code>library(rethinking)
 data(&quot;Howell1&quot;)
 d &lt;- Howell1
 str(d)</code></pre>
@@ -33,488 +44,22 @@ str(d)</code></pre>
  $ weight: num  47.8 36.5 31.9 53 41.3 ...
  $ age   : num  63 63 65 41 51 35 32 27 19 54 ...
  $ male  : int  1 0 0 1 0 1 0 1 0 1 ...</code></pre>
-<pre class="r"><code># fit model using the variable male as predictor
-m5.15 &lt;- map(
-  alist(
-    height ~ dnorm(mu, sigma),
-    mu &lt;- a + bm*male,
-    a ~ dnorm(178, 100),
-    bm ~ dnorm(0, 10),
-    sigma ~ dunif(0, 50)
-  ), data=d
-)
-precis(m5.15)</code></pre>
-<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-</th>
-<th style="text-align:right;">
-mean
-</th>
-<th style="text-align:right;">
-sd
-</th>
-<th style="text-align:right;">
-5.5%
-</th>
-<th style="text-align:right;">
-94.5%
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-a
-</td>
-<td style="text-align:right;">
-134.83
-</td>
-<td style="text-align:right;">
-1.592
-</td>
-<td style="text-align:right;">
-132.29
-</td>
-<td style="text-align:right;">
-137.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-bm
-</td>
-<td style="text-align:right;">
-7.28
-</td>
-<td style="text-align:right;">
-2.283
-</td>
-<td style="text-align:right;">
-3.63
-</td>
-<td style="text-align:right;">
-10.9
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sigma
-</td>
-<td style="text-align:right;">
-27.31
-</td>
-<td style="text-align:right;">
-0.828
-</td>
-<td style="text-align:right;">
-25.99
-</td>
-<td style="text-align:right;">
-28.6
-</td>
-</tr>
-</tbody>
-</table>
-<pre class="r"><code>plot(precis(m5.15))</code></pre>
-<p><img src="/projects/Statistical-Rethinking/Chapter_5/chapter5d_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
-<pre class="r"><code># to get average heigt of males, use sample:
-post &lt;- extract.samples(m5.15)
-mu.male &lt;- post$a + post$bm
-PI(mu.male)</code></pre>
-<pre><code> 5% 94% 
-139 145 </code></pre>
-<pre class="r"><code>m5.15b &lt;- map(
-  alist(
-    height ~ dnorm(mu, sigma),
-    mu &lt;- af*(1-male) + am*male,
-    af ~ dnorm( 178, 100),
-    am ~ dnorm( 178, 100),
-    sigma ~ dunif(0, 50)
-  ), data=d
-)
-precis(m5.15b)</code></pre>
-<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-</th>
-<th style="text-align:right;">
-mean
-</th>
-<th style="text-align:right;">
-sd
-</th>
-<th style="text-align:right;">
-5.5%
-</th>
-<th style="text-align:right;">
-94.5%
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-af
-</td>
-<td style="text-align:right;">
-134.6
-</td>
-<td style="text-align:right;">
-1.612
-</td>
-<td style="text-align:right;">
-132
-</td>
-<td style="text-align:right;">
-137.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-am
-</td>
-<td style="text-align:right;">
-142.3
-</td>
-<td style="text-align:right;">
-1.703
-</td>
-<td style="text-align:right;">
-140
-</td>
-<td style="text-align:right;">
-145.1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sigma
-</td>
-<td style="text-align:right;">
-27.3
-</td>
-<td style="text-align:right;">
-0.828
-</td>
-<td style="text-align:right;">
-26
-</td>
-<td style="text-align:right;">
-28.6
-</td>
-</tr>
-</tbody>
-</table>
-<pre class="r"><code>plot(precis(m5.15b))</code></pre>
-<p><img src="/projects/Statistical-Rethinking/Chapter_5/chapter5d_files/figure-html/unnamed-chunk-2-2.png" width="672" /></p>
-<pre class="r"><code># Many categories
-data(milk)
-d &lt;- milk
-unique(d$clade)</code></pre>
-<pre><code>[1] Strepsirrhine    New World Monkey Old World Monkey Ape             
-Levels: Ape New World Monkey Old World Monkey Strepsirrhine</code></pre>
-<pre class="r"><code># create a dummy variable for new world monkey
-( d$clade.NWM &lt;- ifelse( d$clade == &quot;New World Monkey&quot;, 1, 0) )</code></pre>
-<pre><code> [1] 0 0 0 0 0 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</code></pre>
-<pre class="r"><code># more dummy variables
-d$clade.OWM &lt;- ifelse( d$clade == &quot;Old World Monkey&quot;, 1, 0 )
-d$clade.S &lt;- ifelse( d$clade == &quot;Strepsirrhine&quot;, 0, 1 )
-
-
-m5.16 &lt;- map(
-  alist(
-    kcal.per.g ~ dnorm( mu, sigma),
-    mu &lt;- a + b.NWM*clade.NWM + b.OWM*clade.OWM + b.S*clade.S,
-    a ~ dnorm( 0.6, 10),
-    c(b.NWM, b.OWM, b.S) ~ dnorm(0, 1),
-    sigma ~ dunif( 0, 10)
-  ), data = d
-)
-precis( m5.16)</code></pre>
-<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-</th>
-<th style="text-align:right;">
-mean
-</th>
-<th style="text-align:right;">
-sd
-</th>
-<th style="text-align:right;">
-5.5%
-</th>
-<th style="text-align:right;">
-94.5%
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-a
-</td>
-<td style="text-align:right;">
-0.508
-</td>
-<td style="text-align:right;">
-0.051
-</td>
-<td style="text-align:right;">
-0.426
-</td>
-<td style="text-align:right;">
-0.590
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-b.NWM
-</td>
-<td style="text-align:right;">
-0.168
-</td>
-<td style="text-align:right;">
-0.054
-</td>
-<td style="text-align:right;">
-0.082
-</td>
-<td style="text-align:right;">
-0.254
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-b.OWM
-</td>
-<td style="text-align:right;">
-0.242
-</td>
-<td style="text-align:right;">
-0.060
-</td>
-<td style="text-align:right;">
-0.145
-</td>
-<td style="text-align:right;">
-0.338
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-b.S
-</td>
-<td style="text-align:right;">
-0.038
-</td>
-<td style="text-align:right;">
-0.064
-</td>
-<td style="text-align:right;">
--0.064
-</td>
-<td style="text-align:right;">
-0.140
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sigma
-</td>
-<td style="text-align:right;">
-0.114
-</td>
-<td style="text-align:right;">
-0.015
-</td>
-<td style="text-align:right;">
-0.090
-</td>
-<td style="text-align:right;">
-0.139
-</td>
-</tr>
-</tbody>
-</table>
-<pre class="r"><code># compare: all dummy variables included
-d$clade.Ape &lt;- ifelse( d$clade == &quot;Ape&quot;, 1, 0)
-m5.16b &lt;- map(
-  alist(
-    kcal.per.g ~ dnorm( mu, sigma),
-    mu &lt;- a + b.NWM*clade.NWM + b.OWM*clade.OWM + b.S*clade.S + b.Ape*clade.Ape,
-    a ~ dnorm( 0.6, 10),
-    c(b.NWM, b.OWM, b.S,b.Ape) ~ dnorm(0, 1),
-    sigma ~ dunif( 0, 10)
-  ), data = d
-)
-
-m5.16c &lt;- map(
-  alist(
-    kcal.per.g ~ dnorm( mu, sigma),
-    mu &lt;- b.NWM*clade.NWM + b.OWM*clade.OWM + b.S*clade.S + b.Ape*clade.Ape,
-    c(b.NWM, b.OWM, b.S,b.Ape) ~ dnorm(0, 10),
-    sigma ~ dunif( 0, 10)
-  ), data = d
-)
-m5.16d &lt;- map(
-  alist(
-    kcal.per.g ~ dnorm( mu, sigma),
-    mu &lt;- b.NWM*(1 - clade.OWM - clade.S - clade.Ape) + b.OWM*clade.OWM + b.S*clade.S + b.Ape*clade.Ape,
-    c(b.NWM, b.OWM, b.S,b.Ape) ~ dnorm(0, 10),
-    sigma ~ dunif( 0, 10)
-  ), data = d
-)
-
-precis( m5.16b)</code></pre>
-<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-</th>
-<th style="text-align:right;">
-mean
-</th>
-<th style="text-align:right;">
-sd
-</th>
-<th style="text-align:right;">
-5.5%
-</th>
-<th style="text-align:right;">
-94.5%
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-a
-</td>
-<td style="text-align:right;">
-0.508
-</td>
-<td style="text-align:right;">
-0.051
-</td>
-<td style="text-align:right;">
-0.427
-</td>
-<td style="text-align:right;">
-0.590
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-b.NWM
-</td>
-<td style="text-align:right;">
-0.075
-</td>
-<td style="text-align:right;">
-0.501
-</td>
-<td style="text-align:right;">
--0.726
-</td>
-<td style="text-align:right;">
-0.876
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-b.OWM
-</td>
-<td style="text-align:right;">
-0.149
-</td>
-<td style="text-align:right;">
-0.502
-</td>
-<td style="text-align:right;">
--0.653
-</td>
-<td style="text-align:right;">
-0.951
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-b.S
-</td>
-<td style="text-align:right;">
-0.131
-</td>
-<td style="text-align:right;">
-0.502
-</td>
-<td style="text-align:right;">
--0.671
-</td>
-<td style="text-align:right;">
-0.933
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-b.Ape
-</td>
-<td style="text-align:right;">
--0.093
-</td>
-<td style="text-align:right;">
-0.501
-</td>
-<td style="text-align:right;">
--0.894
-</td>
-<td style="text-align:right;">
-0.708
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sigma
-</td>
-<td style="text-align:right;">
-0.115
-</td>
-<td style="text-align:right;">
-0.015
-</td>
-<td style="text-align:right;">
-0.090
-</td>
-<td style="text-align:right;">
-0.139
-</td>
-</tr>
-</tbody>
-</table>
-<pre class="r"><code>par(mfrow=c(4,1))
-plot(precis( m5.16))
-plot(precis( m5.16b))
-plot(precis( m5.16c))
-plot(precis(m5.16d))</code></pre>
-<p><img src="/projects/Statistical-Rethinking/Chapter_5/chapter5d_files/figure-html/unnamed-chunk-2-3.png" width="672" /></p>
-<pre class="r"><code>par(mfrow=c(1,1))
-# we get a non-identifiable model with huge standard deviations
-
-# to get the average milk energy in each category use samples
-post &lt;- extract.samples(m5.16)
-
-# compute averages for each category
-mu.ape &lt;- post$a
-mu.NWM &lt;- post$a + post$b.NWM
-mu.OWM &lt;- post$a + post$b.OWM
-mu.S &lt;- post$a + post$b.S
-
-# summarize using precis
-precis( data.frame( mu.ape, mu.NWM, mu.OWM, mu.S))</code></pre>
+<p>There is the variable <code>male</code> that consists of 0’s and 1’s. It is 1 if the individual is male and 0 if female. This is called an <strong>Indicator Variable</strong> or in an ML context also known as <strong>Dummy Variable</strong>.
+One way to include the <code>male</code> variable in our model is to use the indicator variable directly:</p>
+<p><span class="math display">\[\begin{align*}
+h_i &amp;\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &amp;= \alpha + \beta_m m_i \\
+\alpha &amp;\sim \text{Normal}(178, 20) \\
+\beta_m &amp;\sim \text{Normal}(0, 10) \\
+\sigma &amp;\sim \text{Uniform}(0, 50)
+\end{align*}\]</span></p>
+<p>Now what happens in this model? If <span class="math inline">\(m_i = 0\)</span>, that is, an individual is female, then the <span class="math inline">\(\beta_m m_i\)</span> term is 0 and the predicted mean (for women) is <span class="math inline">\(\alpha\)</span>. If however <span class="math inline">\(m_i = 1\)</span> then the predicted mean (for men) is <span class="math inline">\(\alpha + \beta_m\)</span>. This means <span class="math inline">\(\alpha\)</span> does not represent the average height of the total population anymore but the average height for one of our categories, in this case the female category. <span class="math inline">\(\beta_m\)</span> then gives us the difference between average female and average male height.</p>
+<p>This can make it harder to assign sensible priors. We can’t just assign the same prior for each category since one category is encoded in <span class="math inline">\(\alpha\)</span> and the other category is encoded as the difference in the slope <span class="math inline">\(\beta\)</span>.</p>
+<p>Another important point to take into account with this approach is that we assume more uncertainty for male height. The male height is constructed from two parameters and two priors and thus has more uncertainty than female height which only uses one parameter and one prior.</p>
+<p>Let’s simulate this from the prior:</p>
+<pre class="r"><code>mu_female &lt;- rnorm( 1e4, 178, 20 )
+mu_male &lt;- rnorm( 1e4, 178, 20 ) + rnorm( 1e4, 0, 10 )
+precis( data.frame( mu_female, mu_male ))</code></pre>
 <table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -540,106 +85,75 @@ histogram
 <tbody>
 <tr>
 <td style="text-align:left;">
-mu.ape
+mu_female
 </td>
 <td style="text-align:right;">
-0.508
+178
 </td>
 <td style="text-align:right;">
-0.051
+20.0
 </td>
 <td style="text-align:right;">
-0.425
+146
 </td>
 <td style="text-align:right;">
-0.589
+210
 </td>
 <td style="text-align:left;">
-▁▁▂▇▇▃▁▁
+▁▁▁▂▃▇▇▇▅▃▁▁▁▁
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-mu.NWM
+mu_male
 </td>
 <td style="text-align:right;">
-0.675
+178
 </td>
 <td style="text-align:right;">
-0.073
+22.7
 </td>
 <td style="text-align:right;">
-0.557
+142
 </td>
 <td style="text-align:right;">
-0.792
+215
 </td>
 <td style="text-align:left;">
-▁▁▁▃▇▇▇▃▁▁▁
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mu.OWM
-</td>
-<td style="text-align:right;">
-0.749
-</td>
-<td style="text-align:right;">
-0.077
-</td>
-<td style="text-align:right;">
-0.624
-</td>
-<td style="text-align:right;">
-0.872
-</td>
-<td style="text-align:left;">
-▁▁▁▂▅▇▇▅▂▁▁▁
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-mu.S
-</td>
-<td style="text-align:right;">
-0.547
-</td>
-<td style="text-align:right;">
-0.038
-</td>
-<td style="text-align:right;">
-0.488
-</td>
-<td style="text-align:right;">
-0.608
-</td>
-<td style="text-align:left;">
-▁▁▁▁▂▃▇▇▇▃▂▁▁▁▁
+▁▁▁▃▇▇▃▁▁
 </td>
 </tr>
 </tbody>
 </table>
-<pre class="r"><code>plot( precis( data.frame( mu.ape, mu.NWM, mu.OWM, mu.S) ))</code></pre>
-<p><img src="/projects/Statistical-Rethinking/Chapter_5/chapter5d_files/figure-html/unnamed-chunk-2-4.png" width="672" /></p>
-<pre class="r"><code># to get estimated difference between two monkey groups:
-diff.NWM.OWM &lt;- mu.NWM - mu.OWM
-quantile( diff.NWM.OWM, probs=c(0.025, 0.5, 0.975))</code></pre>
-<pre><code>   2.5%     50%   97.5% 
--0.1932 -0.0733  0.0445 </code></pre>
-<pre class="r"><code># Unique intercepts approach
-(d$clade_id &lt;- coerce_index(d$clade))</code></pre>
-<pre><code> [1] 4 4 4 4 4 2 2 2 2 2 2 2 2 2 3 3 3 3 3 3 1 1 1 1 1 1 1 1 1</code></pre>
-<pre class="r"><code># fit model with one intercept for each group
-m5.16_alt &lt;- map(
+<p>The standard deviation of <code>mu_male</code> is slightly higher than the one for <code>mu_female</code>.</p>
+<p><img src="/projects/Statistical-Rethinking/Chapter_5/chapter5d_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+</div>
+<div id="the-index-variable-approach" class="section level2">
+<h2>The Index Variable Approach</h2>
+<p>Instead of using dummy variables, we can also use an index variable.</p>
+<pre class="r"><code>d$sex &lt;- ifelse( d$male == 1, 2, 1)
+str(d$sex)</code></pre>
+<pre><code> num [1:544] 2 1 1 2 1 2 1 2 1 2 ...</code></pre>
+<p>We assign each category an integer. In this example “1” means female and “2” means male. The ordering doesn’t matter, it could be either way, the integers are just labels (that are easier to read for the machine than strings).
+The mathematical model to incorporate this variable than looks like this:
+<span class="math display">\[\begin{align*}
+h_i &amp;\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &amp;= \alpha_{sex[i]} \\
+\alpha_j &amp;\sim \text{Normal}(178, 20) \\
+\beta_m &amp;\sim \text{Normal}(0, 10) \\
+\sigma &amp;\sim \text{Uniform}(0, 50)
+\end{align*}\]</span></p>
+<p>We now fit one <span class="math inline">\(\alpha\)</span> parameter for each category so <span class="math inline">\(\alpha\)</span> is actually a vector consisting of <span class="math inline">\(\alpha_1\)</span> and <span class="math inline">\(\alpha_2\)</span>. Now we can assign the same prior to both categories.</p>
+<p>Let’s fit this model:</p>
+<pre class="r"><code>m5.8 &lt;- quap(
   alist(
-    kcal.per.g ~ dnorm( mu, sigma ),
-    mu &lt;- a[clade_id],
-    a[clade_id] ~ dnorm( 0.6, 10),
-    sigma ~ dunif(0, 10)
-  ), data=d
+    height ~ dnorm( mu, sigma ),
+    mu &lt;- a[sex],
+    a[sex] ~ dnorm( 178, 20),
+    sigma ~ dunif(0, 50)
+  ), data = d
 )
-precis(m5.16_alt, depth=2)</code></pre>
+precis( m5.8, depth = 2)</code></pre>
 <table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -665,16 +179,16 @@ sd
 a[1]
 </td>
 <td style="text-align:right;">
-0.546
+134.9
 </td>
 <td style="text-align:right;">
-0.038
+1.607
 </td>
 <td style="text-align:right;">
-0.485
+132
 </td>
 <td style="text-align:right;">
-0.607
+137.5
 </td>
 </tr>
 <tr>
@@ -682,50 +196,16 @@ a[1]
 a[2]
 </td>
 <td style="text-align:right;">
-0.714
+142.6
 </td>
 <td style="text-align:right;">
-0.038
+1.697
 </td>
 <td style="text-align:right;">
-0.653
+140
 </td>
 <td style="text-align:right;">
-0.775
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-a[3]
-</td>
-<td style="text-align:right;">
-0.788
-</td>
-<td style="text-align:right;">
-0.047
-</td>
-<td style="text-align:right;">
-0.714
-</td>
-<td style="text-align:right;">
-0.863
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-a[4]
-</td>
-<td style="text-align:right;">
-0.508
-</td>
-<td style="text-align:right;">
-0.051
-</td>
-<td style="text-align:right;">
-0.426
-</td>
-<td style="text-align:right;">
-0.590
+145.3
 </td>
 </tr>
 <tr>
@@ -733,17 +213,190 @@ a[4]
 sigma
 </td>
 <td style="text-align:right;">
-0.115
+27.3
 </td>
 <td style="text-align:right;">
-0.015
+0.828
 </td>
 <td style="text-align:right;">
-0.090
+26
 </td>
 <td style="text-align:right;">
-0.139
+28.6
 </td>
 </tr>
 </tbody>
 </table>
+<p>Now the interpretation of the parameters is also easier: <code>a[1]</code> is the average height for women and <code>a[2]</code> is the average height for men, no need to first compute the difference.
+If we are interested in the difference, we can directly calculate it like this from the posterior:</p>
+<pre class="r"><code>post &lt;- extract.samples( m5.8 )
+post$diff_fm &lt;- post$a[,1] - post$a[,2]
+precis( post, depth = 2)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+<th style="text-align:right;">
+5.5%
+</th>
+<th style="text-align:right;">
+94.5%
+</th>
+<th style="text-align:left;">
+histogram
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+sigma
+</td>
+<td style="text-align:right;">
+27.32
+</td>
+<td style="text-align:right;">
+0.826
+</td>
+<td style="text-align:right;">
+26.0
+</td>
+<td style="text-align:right;">
+28.64
+</td>
+<td style="text-align:left;">
+▁▁▁▁▃▅▇▇▃▂▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+a[1]
+</td>
+<td style="text-align:right;">
+134.92
+</td>
+<td style="text-align:right;">
+1.614
+</td>
+<td style="text-align:right;">
+132.4
+</td>
+<td style="text-align:right;">
+137.54
+</td>
+<td style="text-align:left;">
+▁▁▁▁▂▅▇▇▅▂▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+a[2]
+</td>
+<td style="text-align:right;">
+142.59
+</td>
+<td style="text-align:right;">
+1.716
+</td>
+<td style="text-align:right;">
+139.8
+</td>
+<td style="text-align:right;">
+145.35
+</td>
+<td style="text-align:left;">
+▁▁▁▂▃▇▇▇▃▂▁▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+diff_fm
+</td>
+<td style="text-align:right;">
+-7.67
+</td>
+<td style="text-align:right;">
+2.375
+</td>
+<td style="text-align:right;">
+-11.5
+</td>
+<td style="text-align:right;">
+-3.88
+</td>
+<td style="text-align:left;">
+▁▁▁▃▇▇▃▁▁▁
+</td>
+</tr>
+</tbody>
+</table>
+<p>This kind of calculation, computing the difference, is also called a <strong>contrast</strong>.</p>
+</div>
+<div id="more-categories" class="section level2">
+<h2>More Categories</h2>
+<p>Very often, we have more than two categories. If we wanted to use the indicator approach, we have to add new variables for each category but one. So if there are <span class="math inline">\(k\)</span> categories, we’d need <span class="math inline">\(k-1\)</span> dummy variables. This can very quickly become unfeasible and it also is difficult to assign reasonable priors to each. The index approach scales better in this case.</p>
+<p>Let’s show this with an example using the <code>milk</code> data.</p>
+<pre class="r"><code>data(milk)
+d &lt;- milk
+levels(d$clade)</code></pre>
+<pre><code>[1] &quot;Ape&quot;              &quot;New World Monkey&quot; &quot;Old World Monkey&quot; &quot;Strepsirrhine&quot;   </code></pre>
+<p>The variable <code>clade</code> encodes the taxonomy membership of each species. We can compute an index variable as follow:</p>
+<pre class="r"><code>d$clade_id &lt;- as.integer(d$clade)</code></pre>
+<p>We will fit this mathematical model:
+<span class="math display">\[\begin{align*}
+K_i &amp;\sim \text{Normal}(\mu_i, \sigma)\\
+\mu_i &amp;= \alpha_{CLADE[i]} &amp; \text{for } j = 1..4\\
+\alpha_j &amp;\sim \text{Normal}(0, 0.5) \\
+\sigma &amp;\sim \text{Exponential}(1)
+\end{align*}\]</span>
+And in R:</p>
+<pre class="r"><code>d$K &lt;- standardize( d$kcal.per.g )
+m5.9 &lt;- quap(
+  alist(
+    K ~ dnorm( mu, sigma) ,
+    mu &lt;- a[clade_id],
+    a[clade_id] ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data=d
+)
+labels &lt;- paste( &quot;a[&quot;, 1:4, &quot;]: &quot;, levels(d$clade), sep=&quot;&quot;)
+plot(precis( m5.9, depth=2, pars=&quot;a&quot;), labels = labels,
+     xlab = &quot;expected kcal (std)&quot;)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_5/chapter5d_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+</div>
+<div id="even-more-categories" class="section level2">
+<h2>Even More Categories</h2>
+<p>We can also add more than one categorical variable. Imagine, these primates would be sorted into the Harry Potter houses: [1] Gryffindor, [2] Hufflepuff, [3] Ravenclaw, [4] Slytherin.
+We could add this variable as follow:</p>
+<pre class="r"><code>set.seed(63)
+d$house &lt;- sample( rep(1:4, each = 8), size=nrow(d))
+m5.10 &lt;- quap(
+  alist(
+    K ~ dnorm( mu, sigma),
+    mu &lt;- a[clade_id] + h[house],
+    a[clade_id]  ~ dnorm(0, 0.5),
+    h[house] ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data=d
+)</code></pre>
+<p><img src="/projects/Statistical-Rethinking/Chapter_5/chapter5d_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>Using this random seed, only Slytherin has an effect on the expected kcal.</p>
+</div>
+<div id="notes-of-caution" class="section level2">
+<h2>Notes of Caution</h2>
+<p>There are a few things to be aware of when working with categorical variables:</p>
+<ul>
+<li>Don’t accidentally encode your categorical variables in the model as continuous. If we’d for example use the index variable for the clade variable in the model, this would apply that New World Monkeys are somehow twice as “clade” as Apes. This is obviously meaningless.</li>
+<li>If two categories are both different from 0 this still does not mean that there difference is different from 0. Same when having two categories where only one is far away from zero. The difference might still not be “significant”. We always must compute the difference explicitly using the posterior.</li>
+<li><strong>Categories are itself a model decision.</strong> Nothing in the world is really categorical and pretty much all categorical variables are man-made. When working with survey data for example, using only male and female as categories might not be enough and e.g. non-binary should be added. Categorization can also have funny side-effects such as when deciding for kids in which group they compete in sports. If the birth year is used, kids born early in the year have an advantage over kids born later in the year and thus <a href="https://www.sciencedaily.com/releases/2010/02/100202101251.htm">sport stars are more often born in January</a>. <br>
+Sometimes, it can make sense to merge categories. This should always be guided by scientific theory and not by if a category is significant or not.</li>
+</ul>
+<p><small><a href="https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_5/chapter5d.Rmd">Full code.</a><small></p>
+</div>

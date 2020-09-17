@@ -1,8 +1,8 @@
 ---
 title: "Categorical Variables"
 author: Corrie
-date: "2020-09-16"
-slug: chp5-part-two
+date: "2020-09-17"
+slug: chp5-part-three
 layout: "single-projects"
 categories:
   - R
@@ -58,135 +58,165 @@ par(bty="l")
 ```
 These are code snippets and notes for the fifth chapter, _The Many Variables & The Spurious Waffles_, section 2, of the book [Statistical Rethinking](https://xcelab.net/rm/statistical-rethinking/) (version 2) by Richard McElreath.
 
+In this section, we go through different ways how to add categorical variables to our models.
+
+## The Problem with Dummies
+In the simplest case we only have two categories, e.g. male and female. We are going to use the Kalahari data again to illustrate how to add binary categorical variables.
 ```{r}
-# Chapter 5 - Categorical variables
 library(rethinking)
-# binary categories
 data("Howell1")
 d <- Howell1
 str(d)
+```
 
-# fit model using the variable male as predictor
-m5.15 <- map(
+There is the variable `male` that consists of 0's and 1's. It is 1 if the individual is male and 0 if female. This is called an __Indicator Variable__ or in an ML context also known as __Dummy Variable__.
+One way to include the `male` variable in our model is to use the indicator variable directly:
+
+$$\begin{align*}
+h_i &\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &= \alpha + \beta_m m_i \\
+\alpha &\sim \text{Normal}(178, 20) \\
+\beta_m &\sim \text{Normal}(0, 10) \\
+\sigma &\sim \text{Uniform}(0, 50)
+\end{align*}$$
+
+Now what happens in this model? If $m_i = 0$, that is, an individual is female, then the $\beta_m m_i$ term is 0 and the predicted mean (for women) is $\alpha$. If however $m_i = 1$ then the predicted mean (for men) is $\alpha + \beta_m$. This means $\alpha$ does not represent the average height of the total population anymore but the average height for one of our categories, in this case the female category. $\beta_m$ then gives us the difference between average female and average male height. 
+
+This can make it harder to assign sensible priors. We can't just assign the same prior for each category since one category is encoded in $\alpha$ and the other category is encoded as the difference in the slope $\beta$.
+
+Another important point to take into account with this approach is that we assume more uncertainty for male height. The male height is constructed from two parameters and two priors and thus has more uncertainty than female height which only uses one parameter and one prior.
+
+Let's simulate this from the prior:
+```{r}
+mu_female <- rnorm( 1e4, 178, 20 )
+mu_male <- rnorm( 1e4, 178, 20 ) + rnorm( 1e4, 0, 10 )
+precis( data.frame( mu_female, mu_male ))
+```
+
+The standard deviation of `mu_male` is slightly higher than the one for `mu_female`.
+
+```{r, echo=F}
+dens(mu_female, col="tomato", lwd=2)
+dens(mu_male, add = TRUE, col="steelblue", lwd=2)
+legend("topright", legend=c("male", "female"),
+       bty="n", lty = 1, col=c("steelblue", "tomato"), lwd=2)
+```
+
+## The Index Variable Approach
+Instead of using dummy variables, we can also use an index variable.
+```{r}
+d$sex <- ifelse( d$male == 1, 2, 1)
+str(d$sex)
+```
+
+We assign each category an integer. In this example "1" means female and "2" means male. The ordering doesn't matter, it could be either way, the integers are just labels (that are easier to read for the machine than strings). 
+The mathematical model to incorporate this variable than looks like this:
+$$\begin{align*}
+h_i &\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &= \alpha_{sex[i]} \\
+\alpha_j &\sim \text{Normal}(178, 20) \\
+\beta_m &\sim \text{Normal}(0, 10) \\
+\sigma &\sim \text{Uniform}(0, 50)
+\end{align*}$$
+
+We now fit one $\alpha$ parameter for each category so $\alpha$ is actually a vector consisting of $\alpha_1$ and $\alpha_2$. Now we can assign the same prior to both categories.
+
+Let's fit this model:
+```{r}
+m5.8 <- quap(
   alist(
-    height ~ dnorm(mu, sigma),
-    mu <- a + bm*male,
-    a ~ dnorm(178, 100),
-    bm ~ dnorm(0, 10),
+    height ~ dnorm( mu, sigma ),
+    mu <- a[sex],
+    a[sex] ~ dnorm( 178, 20),
     sigma ~ dunif(0, 50)
-  ), data=d
+  ), data = d
 )
-precis(m5.15)
-plot(precis(m5.15))
-# to get average heigt of males, use sample:
-post <- extract.samples(m5.15)
-mu.male <- post$a + post$bm
-PI(mu.male)
+precis( m5.8, depth = 2)
+```
 
-m5.15b <- map(
-  alist(
-    height ~ dnorm(mu, sigma),
-    mu <- af*(1-male) + am*male,
-    af ~ dnorm( 178, 100),
-    am ~ dnorm( 178, 100),
-    sigma ~ dunif(0, 50)
-  ), data=d
-)
-precis(m5.15b)
-plot(precis(m5.15b))
+Now the interpretation of the parameters is also easier: `a[1]` is the average height for women and `a[2]` is the average height for men, no need to first compute the difference.
+If we are interested in the difference, we can directly calculate it like this from the posterior:
+```{r}
+post <- extract.samples( m5.8 )
+post$diff_fm <- post$a[,1] - post$a[,2]
+precis( post, depth = 2)
+```
 
+This kind of calculation, computing the difference, is also called a __contrast__.
 
-# Many categories
+## More Categories
+Very often, we have more than two categories. If we wanted to use the indicator approach, we have to add new variables for each category but one. So if there are $k$ categories, we'd need $k-1$ dummy variables. This can very quickly become unfeasible and it also is difficult to assign reasonable priors to each. The index approach scales better in this case.
+
+Let's show this with an example using the `milk` data.
+```{r}
 data(milk)
 d <- milk
-unique(d$clade)
+levels(d$clade)
+```
 
-# create a dummy variable for new world monkey
-( d$clade.NWM <- ifelse( d$clade == "New World Monkey", 1, 0) )
-# more dummy variables
-d$clade.OWM <- ifelse( d$clade == "Old World Monkey", 1, 0 )
-d$clade.S <- ifelse( d$clade == "Strepsirrhine", 0, 1 )
+The variable `clade` encodes the taxonomy membership of each species. We can compute an index variable as follow:
+```{r}
+d$clade_id <- as.integer(d$clade)
+```
 
-
-m5.16 <- map(
+We will fit this mathematical model:
+$$\begin{align*}
+K_i &\sim \text{Normal}(\mu_i, \sigma)\\
+\mu_i &= \alpha_{CLADE[i]} & \text{for } j = 1..4\\
+\alpha_j &\sim \text{Normal}(0, 0.5) \\
+\sigma &\sim \text{Exponential}(1)
+\end{align*}$$
+And in R:
+```{r}
+d$K <- standardize( d$kcal.per.g )
+m5.9 <- quap(
   alist(
-    kcal.per.g ~ dnorm( mu, sigma),
-    mu <- a + b.NWM*clade.NWM + b.OWM*clade.OWM + b.S*clade.S,
-    a ~ dnorm( 0.6, 10),
-    c(b.NWM, b.OWM, b.S) ~ dnorm(0, 1),
-    sigma ~ dunif( 0, 10)
-  ), data = d
-)
-precis( m5.16)
-
-# compare: all dummy variables included
-d$clade.Ape <- ifelse( d$clade == "Ape", 1, 0)
-m5.16b <- map(
-  alist(
-    kcal.per.g ~ dnorm( mu, sigma),
-    mu <- a + b.NWM*clade.NWM + b.OWM*clade.OWM + b.S*clade.S + b.Ape*clade.Ape,
-    a ~ dnorm( 0.6, 10),
-    c(b.NWM, b.OWM, b.S,b.Ape) ~ dnorm(0, 1),
-    sigma ~ dunif( 0, 10)
-  ), data = d
-)
-
-m5.16c <- map(
-  alist(
-    kcal.per.g ~ dnorm( mu, sigma),
-    mu <- b.NWM*clade.NWM + b.OWM*clade.OWM + b.S*clade.S + b.Ape*clade.Ape,
-    c(b.NWM, b.OWM, b.S,b.Ape) ~ dnorm(0, 10),
-    sigma ~ dunif( 0, 10)
-  ), data = d
-)
-m5.16d <- map(
-  alist(
-    kcal.per.g ~ dnorm( mu, sigma),
-    mu <- b.NWM*(1 - clade.OWM - clade.S - clade.Ape) + b.OWM*clade.OWM + b.S*clade.S + b.Ape*clade.Ape,
-    c(b.NWM, b.OWM, b.S,b.Ape) ~ dnorm(0, 10),
-    sigma ~ dunif( 0, 10)
-  ), data = d
-)
-
-precis( m5.16b)
-par(mfrow=c(4,1))
-plot(precis( m5.16))
-plot(precis( m5.16b))
-plot(precis( m5.16c))
-plot(precis(m5.16d))
-par(mfrow=c(1,1))
-# we get a non-identifiable model with huge standard deviations
-
-# to get the average milk energy in each category use samples
-post <- extract.samples(m5.16)
-
-# compute averages for each category
-mu.ape <- post$a
-mu.NWM <- post$a + post$b.NWM
-mu.OWM <- post$a + post$b.OWM
-mu.S <- post$a + post$b.S
-
-# summarize using precis
-precis( data.frame( mu.ape, mu.NWM, mu.OWM, mu.S))
-plot( precis( data.frame( mu.ape, mu.NWM, mu.OWM, mu.S) ))
-
-# to get estimated difference between two monkey groups:
-diff.NWM.OWM <- mu.NWM - mu.OWM
-quantile( diff.NWM.OWM, probs=c(0.025, 0.5, 0.975))
-
-
-# Unique intercepts approach
-(d$clade_id <- coerce_index(d$clade))
-# fit model with one intercept for each group
-m5.16_alt <- map(
-  alist(
-    kcal.per.g ~ dnorm( mu, sigma ),
+    K ~ dnorm( mu, sigma) ,
     mu <- a[clade_id],
-    a[clade_id] ~ dnorm( 0.6, 10),
-    sigma ~ dunif(0, 10)
+    a[clade_id] ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
   ), data=d
 )
-precis(m5.16_alt, depth=2)
+labels <- paste( "a[", 1:4, "]: ", levels(d$clade), sep="")
+plot(precis( m5.9, depth=2, pars="a"), labels = labels,
+     xlab = "expected kcal (std)")
 ```
 
 
+## Even More Categories
+We can also add more than one categorical variable. Imagine, these primates would be sorted into the Harry Potter houses: [1] Gryffindor, [2] Hufflepuff, [3] Ravenclaw, [4] Slytherin.
+We could add this variable as follow:
+```{r}
+set.seed(63)
+d$house <- sample( rep(1:4, each = 8), size=nrow(d))
+m5.10 <- quap(
+  alist(
+    K ~ dnorm( mu, sigma),
+    mu <- a[clade_id] + h[house],
+    a[clade_id]  ~ dnorm(0, 0.5),
+    h[house] ~ dnorm(0, 0.5),
+    sigma ~ dexp(1)
+  ), data=d
+)
+```
+
+
+```{r, echo=F}
+labels <- paste( "a[", 1:4, "]: ", levels(d$clade), sep="")
+labels_houses <- paste( "h[", 1:4, "]: ", c("Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"), sep="")
+plot(precis( m5.10, depth=2, pars=c("a", "h")), labels = c(labels, labels_houses),
+     xlab = "expected kcal (std)")
+```
+
+Using this random seed, only Slytherin has an effect on the expected kcal.
+
+## Notes of Caution
+
+There are a few things to be aware of when working with categorical variables:
+
+- Don't accidentally encode your categorical variables in the model as continuous. If we'd for example use the index variable for the clade variable in the model, this would apply that New World Monkeys are somehow twice as "clade" as Apes. This is obviously meaningless.
+- If two categories are both different from 0 this still does not mean that there difference is different from 0. Same when having two categories where only one is far away from zero. The difference might still not be "significant". We always must compute the difference explicitly using the posterior.
+-  __Categories are itself a model decision.__ Nothing in the world is really categorical and pretty much all categorical variables are man-made. When working with survey data for example, using only male and female as categories might not be enough and e.g. non-binary should be added. Categorization can also have funny side-effects such as when deciding for kids in which group they compete in sports. If the birth year is used, kids born early in the year have an advantage over kids born later in the year and thus [sport stars are more often born in January](https://www.sciencedaily.com/releases/2010/02/100202101251.htm). <br>
+Sometimes, it can make sense to merge categories. This should always be guided by scientific theory and not by if a category is significant or not.
+
+<small>[Full code.](https://github.com/corriebar/Statistical-Rethinking/blob/master/Chapter_5/chapter5d.Rmd)<small>
