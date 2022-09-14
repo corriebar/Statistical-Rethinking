@@ -43,12 +43,12 @@ I started going through the book in spring 2018. As part of the [Berlin Bayesian
 - [Exercises]({{< relref "Chapter_7/chapter7_Ex.html" >}} )
 
 #### Chapter 8
-- [MCMC]({{ < relref "Chapter_8/chapter8.html" >}} )
-- [Exercises]({{ < relref "Chapter_8/chapter8_Ex.html" >}} )
+- [MCMC]({{< relref "Chapter_8/chapter8.html" >}} )
+- [Exercises]({{< relref "Chapter_8/chapter8_Ex.html" >}} )
 
 #### Chapter 10
-- [Binomial Regression]({{ < relref "Chapter_10/chapter10a.html" >}} )
-- [Poisson Regression]({{ < relref "Chapter_10/chapter10b.html" >}} )
-- [Other Count Regressions]({{ < relref "Chapter_10/chapter10c.html" >}} )
-- [Exercises]({{ < relref "Chapter_10/chapter10_Ex.html" >}} )
+- [Binomial Regression]({{< relref "Chapter_10/chapter10a.html" >}} )
+- [Poisson Regression]({{< relref "Chapter_10/chapter10b.html" >}} )
+- [Other Count Regressions]({{< relref "Chapter_10/chapter10c.html" >}} )
+- [Exercises]({{< relref "Chapter_10/chapter10_Ex.html" >}} )
 
