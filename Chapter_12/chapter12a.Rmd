@@ -67,7 +67,7 @@ post$da <- post$a[,1] - post$a[,2]
 precis( post, depth=2)
 ```
 
-`a[1]` is the log-odds of admission for male applicants which is lower than `a[2]`, the log-odds for female applicants. This might suggest there is a diffenrece in admission rates by gender, but the posterior difference `da` is highly uncertain with probability mass both above and below zero.
+`a[1]` is the log-odds of admission for male applicants which is lower than `a[2]`, the log-odds for female applicants. This might suggest there is a difference in admission rates by gender, but the posterior difference `da` is highly uncertain with probability mass both above and below zero.
 
 We can visualize the posterior Beta-distribution:
 ```{r}
